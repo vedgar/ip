@@ -1,2 +1,3 @@
-# ip
-Interpretacija programa
+# Interpretacija programa
+
+Repozitorij za kod koji ćemo pisati.
