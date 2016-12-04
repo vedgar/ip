@@ -1,0 +1,2 @@
+# ip
+Interpretacija programa
