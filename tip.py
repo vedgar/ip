@@ -97,7 +97,7 @@ class SQL(enum.Enum):
     def __repr__(self):
         return self.name
 
-SQL_ključne_riječi = 'SELECT FROM CREATE TABLE'.upper().split()
+SQL_ključne_riječi = 'SELECT FROM CREATE TABLE'.split()
 SQL_operatori = list('*,();')
 
 def sql_lex(kôd):
@@ -152,7 +152,8 @@ class SQLParser(Parser):
         elif što == SQL.IME:
             naredba.stupci = []
             while True:
-                naredba.stupci.append(self.pročitaj(SQL.IME))
+                stupac = self.pročitaj(SQL.IME)
+                naredba.stupci.append(stupac)
                 if self.granaj(SQL.ZAREZ, SQL.FROM) == SQL.FROM: break
                 self.pročitaj(SQL.ZAREZ)
         self.pročitaj(SQL.FROM)
@@ -223,6 +224,9 @@ class LS(enum.Enum):
     PRAZNO, KRAJ, GREŠKA = range(3)
     PVAR, NEG, KON, DIS, KOND, BIKOND, OTV, ZATV = range(3, 11)
 
+class LexError(Exception):
+    pass
+
 def ls_lex(kôd):
     lex = Tokenizer(kôd)
     while True:
@@ -246,10 +250,10 @@ def ls_lex(kôd):
             else:
                 poruka = 'Nakon < očekivano ->, pročitano {}{}'
                 raise LexError(poruka.format(drugi, treći))
-        elif znak is None: return
-        else: yield Token(LS.GREŠKA, '')
+        elif znak is None: yield Token(LS.KRAJ, ''); return
+        else: yield Token(LS.GREŠKA, znak)
 
-print(*ls_lex('P5&(P3->P1)'), sep='\n')
+# print(*ls_lex('P5&(P3->P1)'), sep='\n')
 
 class LSParser(Parser):    
     def formula(self):
@@ -258,9 +262,20 @@ class LSParser(Parser):
         if početak == LS.PVAR:
             fo.varijabla = self.pročitaj(LS.PVAR)
         elif početak == LS.NEG:
-            self.pročitaj(LS.NEG)
-            fo.vrsta = 'negacija'
-            fo.potformula = self.formula()
+            fo.veznik = self.pročitaj(LS.NEG)
+            fo.negirana = self.formula()
         elif početak == LS.OTV:
             self.pročitaj(LS.OTV)
-            ...
+            fo.lijeva = self.formula()
+            fo.veznik = self.pročitaj(LS.KON, LS.DIS, LS.KOND, LS.BIKOND)
+            fo.desna = self.formula()
+            self.pročitaj(LS.ZATV)
+        return fo
+
+def ls_parse(niz_znakova):
+    parser = LSParser(ls_lex(niz_znakova))
+    rezultat = parser.formula()
+    parser.pročitaj(LS.KRAJ)
+    return rezultat
+
+print(ls_parse('!(P5&(P3->P1))'))
