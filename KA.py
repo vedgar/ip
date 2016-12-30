@@ -52,8 +52,8 @@ class KonačniAutomat(types.SimpleNamespace):
             duljina = random.randint(2, maxduljina)
             yield ''.join(random.choice(znakovi) for _ in range(duljina))
 
-    def provjeri(automat, specifikacija):
-        for test in automat.slučajni_testovi():
+    def provjeri(automat, specifikacija, koliko=None, maxduljina=None):
+        for test in automat.slučajni_testovi(koliko, maxduljina):
             lijevo = automat.prihvaća(test)
             desno = specifikacija(test)
             if lijevo != bool(desno):
@@ -76,68 +76,53 @@ class KonačniAutomat(types.SimpleNamespace):
         print(stanje, stanje in automat.završna)
 
 
-M1 = KonačniAutomat.iz_tablice(
-'''0  1
-q1 q1 q2
-q2 q3 q2 #
-q3 q2 q2   ''')  # page 34 figure 1.4  # page 36 figure 1.6
-M1.log('1 01 11 0101010101 100 0100 110000 0101000000 0 10 101000')
+def primjeri1():
+    M1 = KonačniAutomat.iz_tablice(
+    '''0  1
+    q1 q1 q2
+    q2 q3 q2 #
+    q3 q2 q2   ''')  # page 34 figure 1.4  # page 36 figure 1.6
+    M1.log('1 01 11 0101010101 100 0100 110000 0101000000 0 10 101000')
 
-M2 = KonačniAutomat.iz_tablice(
-'''0  1
-q1 q1 q2
-q2 q1 q2 # ''')  # page 37 example 1.7 figure 1.8
-M2.log('1101')
-M2.provjeri(lambda ulaz: ulaz.endswith('1'))
+    M2 = KonačniAutomat.iz_tablice(
+    '''0  1
+    q1 q1 q2
+    q2 q1 q2 # ''')  # page 37 example 1.7 figure 1.8
+    M2.log('1101')
+    M2.provjeri(lambda ulaz: ulaz.endswith('1'))
 
-M3 = KonačniAutomat.iz_tablice(
-'''0  1
-q1 q1 q2 #
-q2 q1 q2   ''')  # page 38 example 1.9 figure 1.10
-M3.provjeri(lambda ulaz: ulaz.endswith('0') or not ulaz)
+    M3 = KonačniAutomat.iz_tablice(
+    '''0  1
+    q1 q1 q2 #
+    q2 q1 q2   ''')  # page 38 example 1.9 figure 1.10
+    M3.provjeri(lambda ulaz: ulaz.endswith('0') or not ulaz)
 
-M4 = KonačniAutomat.iz_tablice('''
-   a  b
-s  q1 r1
-q1 q1 q2 #
-q2 q1 q2
-r1 r2 r1 #
-r2 r2 r1
-''')  # page 38 example 1.11 figure 1.12
-M4.log('a b aa bb bab ab ba bbba')
-M4.provjeri(lambda ulaz: ulaz and ulaz[0] == ulaz[~0])
+    M4 = KonačniAutomat.iz_tablice('''
+       a  b
+    s  q1 r1
+    q1 q1 q2 #
+    q2 q1 q2
+    r1 r2 r1 #
+    r2 r2 r1
+    ''')  # page 38 example 1.11 figure 1.12
+    M4.log('a b aa bb bab ab ba bbba')
+    M4.provjeri(lambda ulaz: ulaz and ulaz[0] == ulaz[~0])
 
-M5 = KonačniAutomat.iz_tablice('''
-   R  0  1  2
-q0 q0 q0 q1 q2 #
-q1 q0 q1 q2 q0
-q2 q0 q2 q0 q1
-''')  # page 39 example 1.13 figure 1.14
-M5.log('10R22R012')
+    M5 = KonačniAutomat.iz_tablice('''
+       R  0  1  2
+    q0 q0 q0 q1 q2 #
+    q1 q0 q1 q2 q0
+    q2 q0 q2 q0 q1
+    ''')  # page 39 example 1.13 figure 1.14
+    M5.log('10R22R012')
 
-@M5.provjeri
-def M5_spec(ulaz):
-    zbroj = 0
-    for znak in ulaz:
-        if znak == 'R': zbroj = 0
-        else: zbroj += int(znak)
-    return not zbroj % 3
-
-E1 = KonačniAutomat.iz_tablice('''
-      0     1
-qeven qeven qodd
-qodd  qodd  qeven #
-''')  # page 43 figure 1.20
-E1.provjeri(lambda ulaz: ulaz.count('1') % 2)
-
-E2 = KonačniAutomat.iz_tablice('''
-     0    1
-q    q0   q
-q0   q00  q
-q00  q00  q001
-q001 q001 q001 #
-''')  # page 44 example 1.21 figure 1.22
-E2.provjeri(lambda ulaz: '001' in ulaz)
+    @M5.provjeri
+    def M5_spec(ulaz):
+        zbroj = 0
+        for znak in ulaz:
+            if znak == 'R': zbroj = 0
+            else: zbroj += int(znak)
+        return not zbroj % 3
 
 
 def Kartezijeva_konstrukcija_unija(M1, M2):
@@ -157,10 +142,42 @@ def Kartezijeva_konstrukcija_presjek(M1, M2):
     return M
 
 
-E1u2 = Kartezijeva_konstrukcija_unija(E1, E2)
-E1u2.provjeri(lambda ulaz: ulaz.count('1') % 2 or '001' in ulaz)
-E1u2.ispiši()
+def primjeri2():
+    E1 = KonačniAutomat.iz_tablice('''
+          0     1
+    qeven qeven qodd
+    qodd  qodd  qeven #
+    ''')  # page 43 figure 1.20
+    E1.provjeri(lambda ulaz: ulaz.count('1') % 2)
 
-E1n2 = Kartezijeva_konstrukcija_presjek(E1, E2)
-E1n2.provjeri(lambda ulaz: ulaz.count('1') % 2 and '001' in ulaz)
-E1n2.debug('101')
+    E2 = KonačniAutomat.iz_tablice('''
+         0    1
+    q    q0   q
+    q0   q00  q
+    q00  q00  q001
+    q001 q001 q001 #
+    ''')  # page 44 example 1.21 figure 1.22
+    E2.provjeri(lambda ulaz: '001' in ulaz)
+
+    E1u2 = Kartezijeva_konstrukcija_unija(E1, E2)
+    E1u2.provjeri(lambda ulaz: ulaz.count('1') % 2 or '001' in ulaz)
+    E1u2.ispiši()
+
+    E1n2 = Kartezijeva_konstrukcija_presjek(E1, E2)
+    E1n2.provjeri(lambda ulaz: ulaz.count('1') % 2 and '001' in ulaz)
+    E1n2.debug('101')
+
+
+def prirodni(M):
+    Q, Σ, δ, q0, F = petorka(M)
+    rječnik = {q:i for i, q in enumerate(Q, 1)}
+    QN = set(rječnik.values())
+    δN = {(rječnik[polazno], znak): rječnik[dolazno]
+        for (polazno, znak), dolazno in δ.items()}
+    q0N = rječnik[q0]
+    FN = {rječnik[završno] for završno in F}
+    return KonačniAutomat.definicija(QN, Σ, δN, q0N, FN)
+
+if __name__ == '__main__':
+    primjeri1()
+    primjeri2()
