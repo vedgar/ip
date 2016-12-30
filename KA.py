@@ -1,4 +1,4 @@
-import random, itertools, operator, types, pprint
+﻿import random, itertools, operator, types, pprint
 
 
 Kartezijev_produkt = lambda *skupovi: set(itertools.product(*skupovi))
