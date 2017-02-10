@@ -4,6 +4,8 @@ Repozitorij za kod koji ćemo pisati.
 
 ## Kolokvij
 
+https://docs.google.com/document/d/1BPhfKM4EWemdv8xsirQBiGM9p08_eaV9iYwv3QASkqw/pub
+
 link za predaju rješenja: http://ted.math.hr (bilo bi dobro da ga testirate i prije kolokvija, svakako prijavite mailom ako ne radi).
 
 Prethodno si lokalno skinite čitav repozitorij, te radite na lokalnoj kopiji. U 15 sati dodat ću još dvije datoteke u repozitorij, Z1.py i Z2.py, koje ćete također trebati skinuti i u njima pisati rješenja. Ostale datoteke se neće mijenjati.
