@@ -157,7 +157,7 @@ def označi1(stanje, l):
     with contextlib.suppress(TypeError):
         return stanje + l
     with contextlib.suppress(TypeError):
-        return (*stanje, l)
+        return tuple(stanje) + (l,)
     return stanje, l
 
 def označi(nka, l):
