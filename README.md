@@ -2,6 +2,12 @@
 
 Repozitorij za kod koji ćemo pisati.
 
+## Kolokvij
+
+link za predaju rješenja: ted.math.hr
+
+Prethodno si lokalno skinite čitav repozitorij, te radite na lokalnoj kopiji. U 15 sati dodat ću još dvije datoteke u repozitorij, Z1.py i Z2.py, koje ćete također trebati skinuti i u njima pisati rješenja. Ostale datoteke se neće mijenjati.
+
 ## cheat sheet
 KA.py
 =====
