@@ -21,6 +21,8 @@ def k_simetrična_razlika(M1: KonačniAutomat,
     M4 = k_razlika(M2, M1)
     return k_unija(M3, M4)
 
+# Tako dobiveni konačni automat ima (n1n2)^2 stanja.
+
 def optimizirana_k_simetrična_razlika(M1: KonačniAutomat,
                                       M2: KonačniAutomat) -> KonačniAutomat:
     M3 = k_unija(M1, M2)
