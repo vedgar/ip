@@ -1,46 +1,40 @@
-import types, itertools, abc
+from util import *
 from NKA import (ε, NedeterminističkiKonačniAutomat, nedeterministička_unija,
     nedeterministička_konkatenacija, nedeterministička_zvijezda,
     optimizirana_partitivna_konstrukcija)
-from KA import prirodni
+from util import *
 
 
-class RegularanIzraz(types.SimpleNamespace, metaclass=abc.ABCMeta):
-    def __iter__(self):
-        dosad = set()
-        for riječ in self.jezik():
-            if not riječ in dosad:
-                yield riječ
-                dosad.add(riječ)
+class Prazan(RegularanIzraz):
+    def __str__(self):
+        return '∅'
 
-    def __mul__(self, other): return Konkatenacija(self, other)
-    def __or__(self, other): return Unija(self, other)
-    def __pos__(self): return KleenePlus(self)
-    def __invert__(self): return KleeneUpitnik(self)
-    def __neg__(self): return KleeneZvijezda(self)
-    @property
-    def p(self): return KleenePlus(self)
-    @property
-    def z(self): return KleeneZvijezda(self)
-    @property
-    def u(self): return KleeneUpitnik(self)
-    def __pow__(self, n):
-        assert n >= 0
-        return self * self**(n-1) if n else epsilon
+    def enumerator(self):
+        yield from set()
 
-    def KA(self, abeceda=None):
-        return prirodni(optimizirana_partitivna_konstrukcija(self.NKA(abeceda)))
+    def beskonačan(self):
+        return False
+
+
+class Epsilon(RegularanIzraz):
+    def __str__(self):
+        return 'ε'
+
+    def enumerator(self):
+        yield ε
+
+    def beskonačan(self):
+        return False
 
 
 class Elementaran(RegularanIzraz):
-    def __init__(self, el):
-        assert el in {None, ε} or isinstance(el, str) and len(el) == 1
-        self.element = el
+    @classmethod
+    def iz_znaka(klasa, znak):
+        return klasa(znak=znak)
 
     def __str__(self):
-        z = self.element
-        if z is None: return '∅'
-        elif z == ε: return 'ε'
+        z = self.znak
+        if isinstance(z, str) and not z.isalnum():
         elif z.isalnum(): return z
         else: return '\\' + z
 
