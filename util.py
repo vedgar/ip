@@ -2,9 +2,11 @@ import random, itertools, operator, types, pprint, contextlib, collections
 import textwrap, string, pdb, copy, abc
 
 def djeljiv(m, n):
+    """Je li m djeljiv s n?"""
     return not m % n
 
 def ispiši(automat):
+    """Relativno uredan ispis (nedeterminističkog) konačnog automata."""
     pprint.pprint(automat.komponente)
 
 def Kartezijev_produkt(*skupovi):
@@ -16,6 +18,8 @@ def funkcija(f, domena, kodomena):
     return f.keys() == domena and set(f.values()) <= kodomena
 
 class fset(set):
+    """Ponaša se kao frozenset, ispisuje se kao set."""
+    
     def __repr__(self):
         return repr(set(self)) if self else '∅'
 
@@ -95,25 +99,30 @@ class fset(set):
 
 
 def partitivni_skup(skup):
+    """Skup svih podskupova zadanog skupa."""
     return {fset(itertools.compress(skup, χ))
             for χ in itertools.product({False, True}, repeat=len(skup))}
 
 
 def relacija(R, *skupovi):
+    """Je li R relacija među zadanim skupovima?"""
     return R <= Kartezijev_produkt(*skupovi)
 
-def kolabiraj(vrijednost):
+def sažmi(vrijednost):
+    """Sažimanje 1-torki u njihove elemente. Ostale n-torke ne dira."""
     with contextlib.suppress(TypeError, ValueError):
         komponenta, = vrijednost
         return komponenta
     return vrijednost
 
 def naniži(vrijednost):
-    return vrijednost if isinstance(vrijednost, tuple) else vrijednost,
+    """Pretvaranje vrijednosti koja nije n-torka u 1-torku."""
+    return vrijednost if isinstance(vrijednost, tuple) else (vrijednost,)
 
 def funkcija_iz_relacije(relacija, *domene):
+    """Pretvara R⊆A×B×C×D×E (uz domene A, B) u f:A×B→℘(C×D×E)."""
     m = len(domene)
-    funkcija = {kolabiraj(x): set() for x in Kartezijev_produkt(*domene)}
+    funkcija = {sažmi(x): set() for x in Kartezijev_produkt(*domene)}
     for n_torka in relacija:
         assert len(n_torka) > m
         for x_i, domena_i in zip(n_torka, domene):
@@ -121,16 +130,19 @@ def funkcija_iz_relacije(relacija, *domene):
         x, y = n_torka[:m], n_torka[m:]
         if len(x) == 1: x, = x
         if len(y) == 1: y, = y
-        funkcija[kolabiraj(x)].add(kolabiraj(y))
+        funkcija[sažmi(x)].add(sažmi(y))
     return funkcija
 
 def relacija_iz_funkcije(funkcija):
+    """Pretvara f:A×B→℘(C×D×E) u R⊆A×B×C×D×E."""
     return {naniži(x) + naniži(y) for x, yi in funkcija.items() for y in yi}
 
 def unija_familije(familija):
+    """Unija familije skupova."""
     return fset(x for skup in familija for x in skup)
 
 def disjunktna_unija(*skupovi):
+    """Unija skupova, osiguravajući da su u parovima disjunktni."""
     for skup1, skup2 in itertools.combinations(skupovi, 2):
         assert skup1.isdisjoint(skup2)
     return set().union(*skupovi)
@@ -142,6 +154,8 @@ class Kontraprimjer(Exception):
 
 
 class PrazanString(str):
+    """Klasa koja određuje ponašanje objekta ε."""
+    
     def __add__(self, other):
         return other
 
@@ -160,6 +174,8 @@ class PrazanString(str):
 
 
 def parsiraj_tablicu_KA(tablica):
+    """Parsiranje tabličnog zapisa konačnog automata (Sipser page 36).
+    Prvo stanje je početno, završna su označena znakom # na kraju reda."""
     prva, *ostale = tablica.strip().splitlines()
     znakovi = prva.split()
     assert all(len(znak) == 1 for znak in znakovi)
@@ -180,6 +196,11 @@ def parsiraj_tablicu_KA(tablica):
     return stanja, abeceda, prijelaz, početno, završna
 
 def parsiraj_tablicu_NKA(tablica):
+    """Parsiranje tabličnog zapisa nedeterminističkog KA (Sipser page 54).
+    Prvo stanje je početno, završna su označena znakom # na kraju reda.
+    ε-prijelazi su nakon svih znak-prijelaza (stupac čije zaglavlje nema znaka).
+    Izostanak prijelaza označava se znakom / na odgovarajućem mjestu.
+    Višestruki prijelazi za isto stanje i znak razdvojeni su znakom /."""
     prva, *ostale = tablica.strip().splitlines()
     znakovi = prva.split()
     assert all(len(znak) == 1 for znak in znakovi)
@@ -205,6 +226,7 @@ def parsiraj_tablicu_NKA(tablica):
 
 
 def slučajni_testovi(automat, koliko=None, maxduljina=None):
+    """Generator slučajno odabranih riječi nad abecedom automata."""
     znakovi = list(automat.abeceda)
     yield ε
     for znak in znakovi:
@@ -216,6 +238,12 @@ def slučajni_testovi(automat, koliko=None, maxduljina=None):
         yield tuple(random.choice(znakovi) for _ in range(duljina))
 
 def provjeri(automat, specifikacija, koliko=None, maxduljina=None):
+    """Osigurava da se automat drži specifikacije, slučajnim testiranjem."""
+    import RI
+    if isinstance(automat, RI.RegularanIzraz):
+        automat = automat.NKA()
+        if koliko is None:
+            koliko = 99
     for test in slučajni_testovi(automat, koliko, maxduljina):
         lijevo = automat.prihvaća(test)
         if isinstance(test, tuple) and all(
@@ -226,9 +254,11 @@ def provjeri(automat, specifikacija, koliko=None, maxduljina=None):
             raise Kontraprimjer(test, desno)
 
 def označi1(stanje, *ls):
+    """Dodaje oznaci stanja dodatne oznake u ls."""
     return naniži(stanje) + ls
 
 def novo(prefiks, iskorišteni):
+    """Novi element koji počinje prefiksom i ne pripada skupu iskorišteni."""
     if prefiks in iskorišteni:
         for broj in itertools.count():
             kandidat = prefiks + str(broj)
@@ -238,6 +268,7 @@ def novo(prefiks, iskorišteni):
 
 
 def DOT_NKA(nka):
+    """Dijagram danog NKA u DOT formatu. ε se piše kao e.""" 
     Q, Σ, Δ, q0, F = nka.komponente
     r = {q:i for i, q in enumerate(Q, 1)}
     obrazac = [
@@ -257,39 +288,4 @@ def DOT_NKA(nka):
         obrazac.append('{} -> {} [ label="{}" ]'
             .format(r[p], r[q], ','.join(map(str, znakovi))))
     obrazac.append('}')
-    return '\n'.join(obrazac)
-
-
-class RegularanIzraz(types.SimpleNamespace, metaclass=abc.ABCMeta):
-    def __iter__(self):
-        dosad = set()
-        for riječ in self.enumerator():
-            if not riječ in dosad:
-                yield riječ
-                dosad.add(riječ)
-
-    def __mul__(self, other):
-        return Konkatenacija(self, other)
-
-    def __or__(self, other):
-        return Unija(self, other)
-
-    @property
-    def p(self):
-        return KleenePlus(self)
-
-    @property
-    def z(self):
-        return KleeneZvijezda(self)
-
-    @property
-    def u(self):
-        return KleeneUpitnik(self)
-
-    def __pow__(self, n):
-        assert n >= 0
-        return self * self**(n-1) if n else epsilon
-
-    def KA(self, abeceda=None):
-        automat = self.NKA(abeceda)
-        return automat.optimizirana_partitivna_konstrukcija().prirodni()
+    return '\n'.join(obrazac).replace('ε', 'e')

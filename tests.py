@@ -1,6 +1,10 @@
 from KA import *
+from RI import *
+
 
 tests = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+tests |= {21, 22, 23, 24, 25, 26, 27, 28, 29}
+
 
 if 1 in tests:  # page 34 figure 1.4  # page 36 figure 1.6
     M1 = KonačniAutomat.iz_tablice('''
@@ -189,3 +193,70 @@ if 14 in tests:
     N1u2 = N1.unija(N2)
     N1o2 = N1.konkatenacija(N2)
     N1o2.crtaj()
+
+if 21 in tests:
+    binarni = nula | jedan * (nula|jedan).z
+    print(binarni.početak())
+    binarni.NKA().crtaj()
+
+if 22 in tests:
+    primjer1 = (nula | jedan) * nula.z  # page 63
+    print(primjer1.početak())
+    provjeri(primjer1, lambda ulaz: ulaz != ε and '1' not in ulaz[1:])
+
+if 23 in tests:  # page 64 example 1.51
+    sve = (nula|jedan).z
+    print(sve.početak())
+    provjeri(sve, lambda ulaz: True)
+    provjeri(nula*sve | sve*jedan,
+             lambda ulaz: ulaz.startswith('0') or ulaz.endswith('1'))
+    
+if 24 in tests:  # page 65 example 1.53
+    sigma = nula | jedan
+    r1 = nula.z * jedan * nula.z
+    provjeri(r1, lambda ulaz: ulaz.count('1') == 1)
+    r2 = sigma.z * jedan * sigma.z
+    provjeri(r2, lambda ulaz: '1' in ulaz)
+    r3 = sigma.z * nula * nula * jedan * sigma.z
+    provjeri(r3, lambda ulaz: '001' in ulaz)
+    r4 = jedan.z * (nula*jedan.p).z
+    provjeri(r4, lambda ulaz: '00' not in ulaz and not ulaz.endswith('0'))
+    r5 = (sigma**2).z
+    provjeri(r5, lambda ulaz: djeljiv(len(ulaz), 2))
+    r6 = (sigma**3).z
+    provjeri(r6, lambda ulaz: djeljiv(len(ulaz), 3))
+    r7 = nula * jedan | jedan * nula
+    print(r7.konačan(), r7.početak())
+    r8 = nula*sigma.z*nula | jedan*sigma.z*jedan | sigma
+    provjeri(r8, lambda ulaz: ulaz and ulaz[0] == ulaz[~0])
+    r9 = nula.u * jedan.z
+    print(r9.početak())
+    r10 = nula.u * jedan.u
+    print(r10.konačan(), r10.početak())
+    r11 = jedan.z * prazan
+    print(r11.prazan())
+    r12 = prazan.z
+    print(r12.prazan(), r12.trivijalan())
+
+if 25 in tests:  # page 68 example 1.56
+    e1 = (a*b|a).z
+    e1.NKA().crtaj()
+
+if 26 in tests:  # page 69 example 1.58 
+    e2 = (a|b).z * a * b * a
+    e2.NKA().crtaj()
+    provjeri(e2, lambda ulaz: ulaz.endswith('aba'))
+
+if 27 in tests:  # page 76 figure 1.69
+    p = (a**2|b).z
+    t = (b*a | a) * p
+    r = (a*p*a).u * b * (t|b**2).z * t.u | a * p
+    print(r)
+
+if 28 in tests:  # page 88 excercise 1.28
+    ra = a * (a*b*b).z | b
+    rb = a.p | (a*b).p
+    rc = (a | b.p) * a.p * b.p
+    ra.NKA().crtaj()
+    rb.NKA().crtaj()
+    rc.NKA().crtaj()
