@@ -72,6 +72,7 @@ class RegularanIzraz(types.SimpleNamespace, abc.ABC):
         return self.NKA(Σ).optimizirana_partitivna_konstrukcija().prirodni()
 
     def početak(self, n=10):
+        """Lista "prvih" n riječi u regularnom jeziku."""
         return list(itertools.islice(self, n))
 
 
