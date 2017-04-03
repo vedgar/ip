@@ -1,12 +1,14 @@
 import random, itertools, operator, types, pprint, contextlib, collections
-import textwrap, string, pdb, copy, abc
+import textwrap, string, pdb, copy, abc, functools
+
+memoiziraj = functools.lru_cache(maxsize=None)
 
 def djeljiv(m, n):
     """Je li m djeljiv s n?"""
     return not m % n
 
 def ispiši(automat):
-    """Relativno uredan ispis (nedeterminističkog) konačnog automata."""
+    """Relativno uredan ispis (konačnog ili potisnog) automata."""
     pprint.pprint(automat.komponente)
 
 def Kartezijev_produkt(*skupovi):
@@ -147,10 +149,22 @@ def disjunktna_unija(*skupovi):
         assert skup1.isdisjoint(skup2)
     return set().union(*skupovi)
 
+def ε_proširenje(Σ):
+    """Σ∪{ε}"""
+    return disjunktna_unija(Σ, {ε})
+
+def primijeni(pravilo, riječ, mjesto):
+    """Primjenjuje gramatičko pravilo na zadanom mjestu (indeksu) u riječi."""
+    varijabla, *zamjena = pravilo
+    assert riječ[mjesto] == varijabla
+    rezultat = list(riječ[:mjesto]) + zamjena + list(riječ[mjesto+1:])
+    return ''.join(rezultat) if isinstance(riječ, str) else rezultat
+
+
 class Kontraprimjer(Exception):
-    """Automat se ne slaže sa zadanom specifikacijom."""
+    """Jezik se ne slaže sa zadanom specifikacijom."""
     def __init__(self, test, spec):
-        self.args = "Automat {}prihvaća {!r}".format('ne '*bool(spec), test),
+        self.args = "Jezik {}sadrži {!r}".format('ne '*bool(spec), test),
 
 
 class PrazanString(str):
@@ -224,28 +238,96 @@ def parsiraj_tablicu_NKA(tablica):
         stanja.add(stanje)
     return stanja, abeceda, prijelaz, početno, završna
 
+def parsiraj_tablicu_PA(tablica):
+    """Parsiranje tabličnog zapisa (relacije prijelaza) potisnog automata.
+    Svaki redak ima polazno stanje, čitani znak, pop znak, dolazno, push znak.
+    Prvo polazno stanje je početno, završna su označena znakom # na kraju reda.
+    ε se označava znakom /. Završno stanje iz kojeg ne izlazi strelica je #."""
+    
+    stanja, abeceda, abeceda_stoga, prijelaz = set(), set(), set(), set()
+    početno, završna = None, set()
 
-def slučajni_testovi(automat, koliko=None, maxduljina=None):
-    """Generator slučajno odabranih riječi nad abecedom automata."""
-    znakovi = list(automat.abeceda)
+    def dodaj(znak, skup):
+        if znak in {'/', 'ε'}:
+            return ε
+        skup.add(znak)
+        return znak
+        
+    for linija in tablica.strip().splitlines():
+        trenutno_završno = False
+        ćelije = linija.split()
+        if len(ćelije) == 6:
+            assert ćelije.pop() == '#'
+            trenutno_završno = True
+        polazno, znak, stog_pop, dolazno, stog_push = ćelije
+        if početno is None:
+            početno = polazno
+        stanja |= {polazno, dolazno}
+        assert len(znak) == 1
+        znak = dodaj(znak, abeceda)
+        stog_pop = dodaj(stog_pop, abeceda_stoga)
+        stog_push = dodaj(stog_push, abeceda_stoga)
+        if trenutno_završno:
+            završna.add(polazno)
+        prijelaz.add((polazno, znak, stog_pop, dolazno, stog_push))
+
+    if '#' in stanja:
+        završna.add('#')
+    return stanja, abeceda, abeceda_stoga, prijelaz, početno, završna
+
+def parsiraj_strelice_BKG(strelice):
+    """Čitanje gramatike zapisane u standardnom obliku pomoću strelica.
+    Svaki red je oblika varijabla -> ds1 | ds2 | ... (moguće desne strane).
+    ε se može i ne mora pisati. Prvi red s lijeve strane ima početnu varijablu.
+    Znakovi u svakoj desnoj strani moraju biti razdvojeni razmacima."""
+    varijable, simboli, pravila, početna = set(), set(), set(), None
+    for linija in strelice.strip().splitlines():
+        linija = linija.replace('->', ' -> ', 1)
+        varijabla, strelica, ostalo = linija.split(None, 2)
+        varijable.add(varijabla)
+        if početna is None:
+            početna = varijabla
+        for zamjena in ostalo.split('|'):
+            zamjene = tuple(zamjena.split())
+            if zamjene == ('ε',): zamjene = ()
+            pravila.add((varijabla,) + zamjene)
+            simboli.update(zamjene)
+    return varijable, simboli - varijable, pravila, početna
+
+def strelice(gramatika):
+    """Ispis gramatike u standardnom obliku pomoću strelicâ.
+    Pogledati funkciju util.parsiraj_strelice_BKG za detalje."""
+    grupe = {V: set() for V in gramatika.varijable}
+    for varijabla, *zamjene in gramatika.pravila:
+        grupe[varijabla].add(' '.join(map(str, zamjene)) or 'ε')
+    print(gramatika.početna, '->', ' | '.join(grupe.pop(gramatika.početna)))
+    for varijabla, grupa in grupe.items():
+        print(varijabla, '->', ' | '.join(grupa) or '∅')
+    print()
+
+
+def slučajni_testovi(abeceda, koliko, maxduljina):
+    """Generator slučajno odabranih riječi nad abecedom."""
+    znakovi = list(abeceda)
     yield ε
     for znak in znakovi:
         yield znak,
-    if maxduljina is None: maxduljina = max(len(automat.stanja), 5)
-    if koliko is None: koliko = min(max(len(znakovi) ** maxduljina, 99), 9999)
     for _ in range(koliko):
         duljina = random.randint(2, maxduljina)
         yield tuple(random.choice(znakovi) for _ in range(duljina))
 
-def provjeri(automat, specifikacija, koliko=None, maxduljina=None):
-    """Osigurava da se automat drži specifikacije, slučajnim testiranjem."""
-    import RI
-    if isinstance(automat, RI.RegularanIzraz):
-        automat = automat.NKA()
-        if koliko is None:
-            koliko = 99
-    for test in slučajni_testovi(automat, koliko, maxduljina):
-        lijevo = automat.prihvaća(test)
+def provjeri(objekt, specifikacija, koliko=999, maxduljina=9):
+    """Osigurava da se objekt drži specifikacije, slučajnim testiranjem."""
+    import RI, BKG
+    if isinstance(objekt, RI.RegularanIzraz):
+        jezik = objekt.KA().prihvaća
+    elif isinstance(objekt, BKG.BeskontekstnaGramatika):
+        jezik = objekt.CYK
+    else:
+        jezik = objekt.prihvaća
+        
+    for test in slučajni_testovi(objekt.abeceda, koliko, maxduljina):
+        lijevo = jezik(test)
         if isinstance(test, tuple) and all(
             isinstance(znak, str) and len(znak) == 1 for znak in test):
                 test = ''.join(test)
@@ -267,9 +349,9 @@ def novo(prefiks, iskorišteni):
     return prefiks
 
 
-def DOT_NKA(nka):
-    """Dijagram danog NKA u DOT formatu. ε se piše kao e.""" 
-    Q, Σ, Δ, q0, F = nka.komponente
+def DOT_PA(automat):
+    """Dijagram danog PA u DOT formatu. ε se piše kao e.""" 
+    Q, Σ, Γ, Δ, q0, F = automat.komponente
     r = {q:i for i, q in enumerate(Q, 1)}
     obrazac = [
         'digraph {',
@@ -282,10 +364,16 @@ def DOT_NKA(nka):
             .format(2 if oznaka in F else 1, oznaka, broj))
     obrazac.append('0 -> ' + str(r[q0]))
     brid = collections.defaultdict(set)
-    for p, α, q in Δ:
-        brid[p, q].add(α)
-    for (p, q), znakovi in brid.items():
-        obrazac.append('{} -> {} [ label="{}" ]'
-            .format(r[p], r[q], ','.join(map(str, znakovi))))
+    for p, α, t, q, s in Δ:
+        brid[p, q, t, s].add(α)
+    for (p, q, t, s), znakovi in brid.items():
+        linija = ','.join(map(str, znakovi))
+        if not s == t == ε:
+            if linija == 'ε':
+                linija = ''
+            else:
+                linija += ','
+            linija += '{}:{}'.format(t if t != ε else '', s if s != ε else '')
+        obrazac.append('{} -> {} [ label="{}" ]'.format(r[p], r[q], linija))
     obrazac.append('}')
     return '\n'.join(obrazac).replace('ε', 'e')

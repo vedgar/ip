@@ -104,10 +104,6 @@ def ε_ljuska(δ, S):
             return S_novi
         S = S_novi
 
-def ε_proširenje(Σ):
-    """Σ∪{ε}"""
-    return disjunktna_unija(Σ, {ε})
-
 
 class NedeterminističkiKonačniAutomat(types.SimpleNamespace):
     """Nedeterministički automat koji prepoznaje regularni jezik."""
@@ -162,7 +158,9 @@ class NedeterminističkiKonačniAutomat(types.SimpleNamespace):
         """Ispisuje na ekran dijagram automata u DOT formatu.
         Dobiveni string može se kopirati u sandbox.kidstrythisathome.com/erdos
         ili u www.webgraphviz.com."""
-        print(DOT_NKA(automat))
+        from PA import PotisniAutomat
+        print(DOT_PA(PotisniAutomat.
+            iz_nedeterminističkog_konačnog_automata(automat)))
 
     def izračunavanje(nka, ulaz):
         """Generator niza skupova mogućih stanja kroz koja nedeterministički

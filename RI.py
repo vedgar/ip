@@ -75,6 +75,13 @@ class RegularanIzraz(types.SimpleNamespace, abc.ABC):
         """Lista "prvih" n riječi u regularnom jeziku."""
         return list(itertools.islice(self, n))
 
+    @property
+    def abeceda(self):
+        """Skup korištenih znakova, pod uvjetom da je neprazan."""
+        znakovi = self.korišteni_znakovi()
+        assert znakovi
+        return znakovi
+
 
 class Inicijalan(RegularanIzraz, abc.ABC):
     """Inicijalni jezik: ∅, ε, ili elementarni jezik."""
