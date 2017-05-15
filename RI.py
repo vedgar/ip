@@ -140,7 +140,7 @@ class Elementaran(Inicijalan):
     def __init__(self, znak):
         assert isinstance(znak, str)
         assert len(znak) == 1
-        assert znak.isalnum()
+        # assert znak.isalnum()
         self.znak = znak
 
     def __str__(self):

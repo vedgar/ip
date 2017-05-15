@@ -1,4 +1,4 @@
-from plutil import *
+from pj import *
 
 
 class Ar(enum.Enum):
@@ -15,10 +15,10 @@ def ar_lex(izraz):
         else: yield lex.token(operator(Ar, znak) or lex.greška())
 
 
-# Beskontekstna gramatika: (desno asocirani operatori)
+### Beskontekstna gramatika: (desno asocirani operatori)
 # izraz -> član PLUS izraz | član
-# član -> potencija PUTA član | potencija
-# potencija -> baza NA potencija | baza
+# član -> faktor PUTA član | faktor
+# faktor -> baza NA faktor | baza
 # baza -> BROJ | OTVORENA izraz ZATVORENA
 
 class Zbroj(AST('pribrojnici')): pass
@@ -28,35 +28,29 @@ class Potencija(AST('baza eksponent')): pass
 class ArParser(Parser):
     def izraz(self):
         član = self.član()
-        dalje = self.granaj(E.KRAJ, Ar.PLUS, Ar.ZATVORENA)
-        if dalje ** Ar.PLUS:
-            self.pročitaj(Ar.PLUS)
-            return Zbroj([član, self.izraz()])
+        if self.čitaj() ** Ar.PLUS: return Zbroj([član, self.izraz()])
+        self.vrati()
         return član
 
     def član(self):
-        potencija = self.potencija()
-        dalje = self.granaj(E.KRAJ, Ar.PUTA, Ar.PLUS, Ar.ZATVORENA)
-        if dalje ** Ar.PUTA:
-            self.pročitaj(Ar.PUTA)
-            return Umnožak([potencija, self.član()])
-        return potencija
+        faktor = self.faktor()
+        if self.čitaj() ** Ar.PUTA: return Umnožak([faktor, self.član()])
+        self.vrati()
+        return faktor
 
-    def potencija(self):
+    def faktor(self):
         baza = self.baza()
-        dalje = self.granaj(E.KRAJ, Ar.NA, Ar.PUTA, Ar.PLUS, Ar.ZATVORENA)
-        if dalje ** Ar.NA:
-            self.pročitaj(Ar.NA)
-            return Potencija(baza, self.potencija())
-        else: return baza
+        if self.čitaj() ** Ar.NA: return Potencija(baza, self.faktor())
+        self.vrati()
+        return baza
 
     def baza(self):
-        if self.granaj(Ar.BROJ, Ar.OTVORENA) ** Ar.OTVORENA:
-            self.pročitaj(Ar.OTVORENA)
+        prvi = self.čitaj()
+        if prvi ** Ar.OTVORENA:
             u_zagradi = self.izraz()
             self.pročitaj(Ar.ZATVORENA)
-            return u_zagradi            
-        return self.pročitaj(Ar.BROJ)
+            return u_zagradi
+        elif prvi ** Ar.BROJ: return prvi
 
 def ar_parse(znakovi):
     parser = ArParser(ar_lex(znakovi))
@@ -66,42 +60,41 @@ def ar_parse(znakovi):
 
 
 def ar_interpret(izraz):
-    if isinstance(izraz, Token): return int(izraz.sadržaj)
-    elif isinstance(izraz, Zbroj):
-        return sum(map(ar_interpret, izraz.pribrojnici))
-    elif isinstance(izraz, Umnožak):
+    if izraz ** Ar.BROJ: return int(izraz.sadržaj)
+    elif izraz ** Zbroj: return sum(map(ar_interpret, izraz.pribrojnici))
+    elif izraz ** Umnožak:
         f1, f2 = map(ar_interpret, izraz.faktori)
         return f1 * f2
-    elif isinstance(izraz, Potencija):
+    elif izraz ** Potencija:
         return ar_interpret(izraz.baza) ** ar_interpret(izraz.eksponent)
 
 
-def ar_optimize(izraz):
+def ar_optim(izraz):
     nula, jedan = Token(Ar.BROJ, '0'), Token(Ar.BROJ, '1')
     if izraz ** Ar.BROJ: return izraz
     elif izraz ** Zbroj:
-        o1, o2 = map(ar_optimize, izraz.pribrojnici)
+        o1, o2 = map(ar_optim, izraz.pribrojnici)
         if o1 == nula: return o2
         elif o2 == nula: return o1
         else: return Zbroj([o1, o2])
     elif izraz ** Umnožak:
-        o1, o2 = map(ar_optimize, izraz.faktori)
+        o1, o2 = map(ar_optim, izraz.faktori)
         if o1 == jedan: return o2
         elif o2 == jedan: return o1
-        elif nula in (o1, o2): return nula
+        elif nula in {o1, o2}: return nula
         else: return Umnožak([o1, o2])
     elif izraz ** Potencija:
-        o_baza = ar_optimize(izraz.baza)
-        o_eksponent = ar_optimize(izraz.eksponent)
+        o_baza = ar_optim(izraz.baza)
+        o_eksponent = ar_optim(izraz.eksponent)
         if o_eksponent == nula: return jedan
         elif o_baza == nula: return nula  # 0^0 je gore, jer prepoznamo sve nule
-        elif jedan in (o_baza, o_eksponent): return o_baza
-        else: return Potencija(baza=o_baza, eksponent=o_eksponent)
+        elif jedan in {o_baza, o_eksponent}: return o_baza
+        else: return Potencija(o_baza, o_eksponent)
 
 
 def testiraj(izraz):
     stablo = ar_parse(izraz)
-    opt = ar_optimize(stablo)
+    opt = ar_optim(stablo)
     print(stablo, opt, sep='\n')
     mi = ar_interpret(opt)
     Python = eval(izraz.replace('^', '**'))

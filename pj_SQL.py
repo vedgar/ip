@@ -1,4 +1,4 @@
-from plutil import *
+from pj import *
 import pprint
 
 
@@ -20,20 +20,18 @@ class SQL(enum.Enum):
 def sql_lex(kôd):
     lex = Tokenizer(kôd)
     for znak in iter(lex.čitaj, ''):
-        if znak.isspace():
-            lex.zvijezda(str.isspace)
-            lex.token(E.PRAZNO)
+        if znak.isspace(): lex.token(E.PRAZNO)
         elif znak.isdigit():
             lex.zvijezda(str.isdigit)
             yield lex.token(SQL.BROJ)
         elif znak == '-':
-            lex.očekuj('-')
+            lex.pročitaj('-')
             lex.zvijezda('\n'.__ne__)
-            lex.očekuj('\n')
+            lex.pročitaj('\n')
             lex.token(SQL.KOMENTAR)
         elif znak.isalpha():
-            lex.zvijezda(str.isalnum)  # str.isidentifier (uključivo _)
-            yield lex.token(ključna_riječ(SQL, lex.sadržaj.upper()) or SQL.IME)
+            lex.zvijezda(str.isalnum)
+            yield lex.token(ključna_riječ(SQL, lex.sadržaj, False) or SQL.IME)
         else: yield lex.token(operator(SQL, znak) or lex.greška())
 
 
@@ -54,42 +52,42 @@ def sql_lex(kôd):
 
 class SQLParser(Parser):
     def select(self):
-        self.pročitaj(SQL.SELECT)
-        sve = self.granaj(SQL.ZVJEZDICA, SQL.IME) ** SQL.ZVJEZDICA
-        if sve: self.pročitaj(SQL.ZVJEZDICA)
-        else:
-            stupci = []
-            while True:
-                stupci.append(self.pročitaj(SQL.IME))
-                if self.granaj(SQL.ZAREZ, SQL.FROM) ** SQL.FROM: break
+        stupac = self.čitaj()
+        if stupac ** SQL.ZVJEZDICA:
+            sve = True
+            stupci = None
+            self.pročitaj(SQL.FROM)
+        elif stupac ** SQL.IME:
+            sve = False
+            stupci = [stupac]
+            while self.do(SQL.FROM):
                 self.pročitaj(SQL.ZAREZ)
-        self.pročitaj(SQL.FROM)
-        return Select(self.pročitaj(SQL.IME), sve, None if sve else stupci)
+                stupci.append(self.pročitaj(SQL.IME))
+        return Select(self.pročitaj(SQL.IME), sve, stupci)
 
     def spec_stupac(self):
         ime = self.pročitaj(SQL.IME)
         tip = self.pročitaj(SQL.IME)
-        veličina = None
-        sljedeći = self.granaj(SQL.ZAREZ, SQL.OTVORENA, SQL.ZATVORENA)
-        if sljedeći ** SQL.OTVORENA:
-            self.pročitaj(SQL.OTVORENA)
+        if self.čitaj() ** SQL.OTVORENA:
             veličina = self.pročitaj(SQL.BROJ)
             self.pročitaj(SQL.ZATVORENA)
+        else:
+            veličina = None
+            self.vrati()
         return Stupac(ime, tip, veličina)
 
     def create(self):
-        self.pročitaj(SQL.CREATE)
         self.pročitaj(SQL.TABLE)
         tablica = self.pročitaj(SQL.IME)
-        stupci = []
         self.pročitaj(SQL.OTVORENA)
-        while True:
+        stupci = [self.spec_stupac()]
+        while self.do(SQL.ZATVORENA):
+            self.pročitaj(SQL.ZAREZ)
             stupci.append(self.spec_stupac())
-            if self.pročitaj(SQL.ZATVORENA, SQL.ZAREZ) ** SQL.ZATVORENA:
-                return Create(tablica, stupci)
+        return Create(tablica, stupci)
 
     def naredba(self):
-        početak = self.granaj(SQL.SELECT, SQL.CREATE)
+        početak = self.čitaj()
         if početak ** SQL.SELECT: rezultat = self.select()
         elif početak ** SQL.CREATE: rezultat = self.create()
         self.pročitaj(SQL.TOČKAZAREZ)
@@ -97,15 +95,8 @@ class SQLParser(Parser):
 
     def skripta(self):
         naredbe = [self.naredba()]
-        while not self.granaj(SQL.SELECT, SQL.CREATE, E.KRAJ) ** E.KRAJ:
-            naredbe.append(self.naredba())
+        while self.do(E.KRAJ): naredbe.append(self.naredba())
         return Skripta(naredbe)
-
-def sql_parse(kôd):
-    parser = SQLParser(sql_lex(kôd))
-    rezultat = parser.skripta()
-    parser.pročitaj(E.KRAJ)
-    return rezultat
 
 
 class Skripta(AST('naredbe')):
@@ -129,7 +120,7 @@ class Select(AST('tablica sve stupci')):
         tn = self.tablica.sadržaj
         if tn not in imena:
             lokacija = 'Redak {}, stupac {}: '.format(*self.tablica.početak)
-            raise NameError(lokacija + 'Nema tablice {}.'.format(tn))
+            raise SemantičkaGreška(lokacija + 'Nema tablice {}.'.format(tn))
         tb = imena[tn]
         if self.sve:
             for log in tb.values(): log.pristup += 1
@@ -154,7 +145,7 @@ class StupacLog(types.SimpleNamespace):
 
 
 if __name__ == '__main__':
-    n1 = sql_parse('''
+    skripta = SQLParser(sql_lex('''
             CREATE TABLE Persons
             (
                 PersonID int,
@@ -168,8 +159,8 @@ if __name__ == '__main__':
             CREATE TABLE Trivial (ID void(0));  -- još jedna tablica
             SELECT * FROM Trivial;
             SELECT Name, Married FROM Persons;
-    ''')
-    pprint.pprint(n1.razriješi())
+    ''')).skripta()
+    pprint.pprint(skripta.razriješi())
 
 # ideje za dalji razvoj:
     # StupacLog.pristup umjesto broja može biti lista brojeva linija skripte

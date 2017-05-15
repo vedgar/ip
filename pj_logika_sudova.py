@@ -1,4 +1,4 @@
-from plutil import *
+from pj import *
 
 
 class LS(enum.Enum):
@@ -21,10 +21,11 @@ def ls_lex(kôd):
             if prvo != '0': lex.zvijezda(str.isdigit)
             yield lex.token(LS.PVAR)
         elif znak == '-':
-            lex.očekuj('>')
+            lex.pročitaj('>')
             yield lex.token(LS.KOND)
         elif znak == '<':
-            lex.očekuj('->')
+            lex.pročitaj('-')
+            lex.pročitaj('>')
             yield lex.token(LS.BIKOND)
         else: yield lex.token(operator(LS, znak) or lex.greška())
 
@@ -34,11 +35,11 @@ def ls_lex(kôd):
 # binvez -> KONJ | DISJ | KOND | BIKOND
 
 class Negacija(AST('ispod')): """Negacija formule ispod."""
-class Binarna(AST('veznik lijevo desno')): "Formula s glavnim binarnim veznikom"
+class Binarna(AST('veznik lijevo desno')):"Formula s glavnim binarnim veznikom."
 
 class LSParser(Parser):
     def formula(self):
-        početak = self.pročitaj(LS.NEG, LS.PVAR, LS.OTV)
+        početak = self.čitaj()
         if početak ** LS.PVAR: return početak
         elif početak ** LS.NEG: return Negacija(self.formula())
         elif početak ** LS.OTV:
@@ -63,25 +64,25 @@ def ls_interpret(fo, **interpretacija):
         elif fo.veznik ** LS.KONJ: return I(fo.lijevo) and I(fo.desno)
         elif fo.veznik ** LS.KOND: return not I(fo.lijevo) or I(fo.desno)
         elif fo.veznik ** LS.BIKOND: return I(fo.lijevo) == I(fo.desno)
-        else: assert False
+        else: assert not 'slučaj'
     return I(fo)
 
-def ls_optimize(fo):
+def ls_optim(fo):
     """Jednostavna optimizacija, pojednostavljuje !!F u F svuda u formuli."""
     if fo ** LS.PVAR: return fo
     elif fo ** Binarna:
-        return Binarna(fo.veznik, ls_optimize(fo.lijevo), ls_optimize(fo.desno))
+        return Binarna(fo.veznik, ls_optim(fo.lijevo), ls_optim(fo.desno))
     elif fo ** Negacija:
-        oi = ls_optimize(fo.ispod)
+        oi = ls_optim(fo.ispod)
         if oi ** Negacija: return oi.ispod
         return Negacija(oi)
-    else: assert False
+    else: assert not 'slučaj'
 
 if __name__ == '__main__':
     ulaz = '!(P5&!!(P3->P1))'
     print(*ls_lex(ulaz), sep='\n')
     fo = ls_parse(ulaz)
     print(fo)
-    fo = ls_optimize(fo)
+    fo = ls_optim(fo)
     print(fo)
     print(ls_interpret(fo, P1=False, P3=True, P5=False))
