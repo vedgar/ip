@@ -1,18 +1,18 @@
 from pj import *
 
 
-class Ar(enum.Enum):
+class AN(enum.Enum):
     BROJ = 1
     PLUS, PUTA, NA, OTVORENA, ZATVORENA = '+*^()'
 
 
-def ar_lex(izraz):
+def an_lex(izraz):
     lex = Tokenizer(izraz)
     for znak in iter(lex.čitaj, ''):
         if znak.isdigit():
             if znak != '0': lex.zvijezda(str.isdigit)
-            yield lex.token(Ar.BROJ)
-        else: yield lex.token(operator(Ar, znak) or lex.greška())
+            yield lex.token(AN.BROJ)
+        else: yield lex.token(operator(AN, znak) or lex.greška())
 
 
 ### Beskontekstna gramatika: (desno asocirani operatori)
@@ -25,67 +25,59 @@ class Zbroj(AST('pribrojnici')): pass
 class Umnožak(AST('faktori')): pass
 class Potencija(AST('baza eksponent')): pass
 
-class ArParser(Parser):
+class ANParser(Parser):
     def izraz(self):
         član = self.član()
-        if self.čitaj() ** Ar.PLUS: return Zbroj([član, self.izraz()])
-        self.vrati()
-        return član
+        if self >> AN.PLUS: return Zbroj([član, self.izraz()])
+        else: return član
 
     def član(self):
         faktor = self.faktor()
-        if self.čitaj() ** Ar.PUTA: return Umnožak([faktor, self.član()])
-        self.vrati()
-        return faktor
+        if self >> AN.PUTA: return Umnožak([faktor, self.član()])
+        else: return faktor
 
     def faktor(self):
         baza = self.baza()
-        if self.čitaj() ** Ar.NA: return Potencija(baza, self.faktor())
-        self.vrati()
-        return baza
+        if self >> AN.NA: return Potencija(baza, self.faktor())
+        else: return baza
 
     def baza(self):
-        prvi = self.čitaj()
-        if prvi ** Ar.OTVORENA:
+        if self >> AN.BROJ: return self.zadnji
+        else:
+            self.pročitaj(AN.OTVORENA)
             u_zagradi = self.izraz()
-            self.pročitaj(Ar.ZATVORENA)
+            self.pročitaj(AN.ZATVORENA)
             return u_zagradi
-        elif prvi ** Ar.BROJ: return prvi
 
-def ar_parse(znakovi):
-    parser = ArParser(ar_lex(znakovi))
-    rezultat = parser.izraz()
-    parser.pročitaj(E.KRAJ)
-    return rezultat
+    start = izraz
 
-
-def ar_interpret(izraz):
-    if izraz ** Ar.BROJ: return int(izraz.sadržaj)
-    elif izraz ** Zbroj: return sum(map(ar_interpret, izraz.pribrojnici))
+def an_interpret(izraz):
+    if izraz ** AN.BROJ: return int(izraz.sadržaj)
+    elif izraz ** Zbroj: return sum(map(an_interpret, izraz.pribrojnici))
     elif izraz ** Umnožak:
-        f1, f2 = map(ar_interpret, izraz.faktori)
-        return f1 * f2
+        f1, f2 = izraz.faktori
+        return an_interpret(f1) * an_interpret(f2)
     elif izraz ** Potencija:
-        return ar_interpret(izraz.baza) ** ar_interpret(izraz.eksponent)
+        return an_interpret(izraz.baza) ** an_interpret(izraz.eksponent)
 
 
-def ar_optim(izraz):
-    nula, jedan = Token(Ar.BROJ, '0'), Token(Ar.BROJ, '1')
-    if izraz ** Ar.BROJ: return izraz
+def an_optim(izraz):
+    nula, jedan = Token(AN.BROJ, '0'), Token(AN.BROJ, '1')
+    if izraz ** AN.BROJ: return izraz
     elif izraz ** Zbroj:
-        o1, o2 = map(ar_optim, izraz.pribrojnici)
+        o1, o2 = map(an_optim, izraz.pribrojnici)
         if o1 == nula: return o2
         elif o2 == nula: return o1
         else: return Zbroj([o1, o2])
     elif izraz ** Umnožak:
-        o1, o2 = map(ar_optim, izraz.faktori)
+        o1, o2 = map(an_optim, izraz.faktori)
         if o1 == jedan: return o2
         elif o2 == jedan: return o1
         elif nula in {o1, o2}: return nula
         else: return Umnožak([o1, o2])
     elif izraz ** Potencija:
-        o_baza = ar_optim(izraz.baza)
-        o_eksponent = ar_optim(izraz.eksponent)
+        o_baza = an_optim(izraz.baza)
+        o_eksponent = an_optim(izraz.eksponent)
         if o_eksponent == nula: return jedan
         elif o_baza == nula: return nula  # 0^0 je gore, jer prepoznamo sve nule
         elif jedan in {o_baza, o_eksponent}: return o_baza
@@ -93,10 +85,10 @@ def ar_optim(izraz):
 
 
 def testiraj(izraz):
-    stablo = ar_parse(izraz)
-    opt = ar_optim(stablo)
+    stablo = ANParser.parsiraj(an_lex(izraz))
+    opt = an_optim(stablo)
     print(stablo, opt, sep='\n')
-    mi = ar_interpret(opt)
+    mi = an_interpret(opt)
     Python = eval(izraz.replace('^', '**'))
     if mi == Python: print(izraz, '==', mi, 'OK')
     else: print(izraz, 'mi:', mi, 'Python:', Python)

@@ -1,7 +1,7 @@
 from pj import *
 
 
-class Ar(enum.Enum):
+class AZ(enum.Enum):
     BROJ = 1
     PLUS = '+'
     MINUS = '-'
@@ -11,13 +11,13 @@ class Ar(enum.Enum):
     X = 'x'
 
 
-def ar_lex(izraz):
+def az_lex(izraz):
     lex = Tokenizer(izraz)
     for znak in iter(lex.čitaj, ''):
         if znak.isdigit():
             lex.zvijezda(str.isdigit)
-            yield lex.token(Ar.BROJ)
-        else: yield lex.token(operator(Ar, znak) or lex.greška())
+            yield lex.token(AZ.BROJ)
+        else: yield lex.token(operator(AZ, znak) or lex.greška())
 
 
 ### Beskontekstna gramatika:
@@ -34,48 +34,37 @@ class Suprotan(AST('od')): """Suprotan polinom zadanom."""
 class Xna(AST('eksponent')): """Monom x^eksponent."""
 
 
-class ArParser(Parser):
+class AZParser(Parser):
     def izraz(self):
         trenutni = self.član()
         while True:
-            dalje = self.čitaj()
-            if dalje ** Ar.PLUS: trenutni = Zbroj(trenutni, self.član())
-            elif dalje ** Ar.MINUS: trenutni = Razlika(trenutni, self.član())
-            else:
-                self.vrati()
-                return trenutni
+            if self >> AZ.PLUS: trenutni = Zbroj(trenutni, self.član())
+            elif self >> AZ.MINUS: trenutni = Razlika(trenutni, self.član())
+            else: return trenutni
 
     def član(self):
-        if self.čitaj() ** Ar.MINUS: return Suprotan(self.član())
-        self.vrati()
+        if self >> AZ.MINUS: return Suprotan(self.član())
         trenutni = self.faktor()
         while True:
-            dalje = self.čitaj()
-            if dalje ** Ar.PUTA:
-                trenutni = Umnožak(trenutni, self.faktor())
-            elif dalje ** {Ar.X, Ar.OTVORENA}:  # ovdje Ar.BROJ je ružno: (x+2)3
+            if self >> AZ.PUTA: trenutni = Umnožak(trenutni, self.faktor())
+            elif self >> {AZ.X, AZ.OTVORENA}:  # ovdje AZ.BROJ je ružno: (x+2)3
                 self.vrati()
                 trenutni = Umnožak(trenutni, self.faktor())
-            else:
-                self.vrati()
-                return trenutni
+            else: return trenutni
 
     def faktor(self):
-        početak = self.čitaj()
-        if početak ** Ar.BROJ: return početak
-        elif početak ** Ar.X:
-            if self.pogledaj() ** Ar.BROJ: return Xna(self.pročitaj(Ar.BROJ))
-            else: return početak
-        elif početak ** Ar.OTVORENA:
+        if self >> AZ.BROJ: return self.zadnji
+        elif self >> AZ.X:
+            x = self.zadnji
+            if self >> AZ.BROJ: return Xna(self.zadnji)
+            else: return x
+        else:
+            self.pročitaj(AZ.OTVORENA)
             u_zagradi = self.izraz()
-            self.pročitaj(Ar.ZATVORENA)
+            self.pročitaj(AZ.ZATVORENA)
             return u_zagradi
 
-def ar_parse(znakovi):
-    parser = ArParser(ar_lex(znakovi))
-    rezultat = parser.izraz()
-    parser.pročitaj(E.KRAJ)
-    return rezultat
+    start = izraz
 
 
 class Polinom(collections.Counter):
@@ -117,8 +106,8 @@ class Polinom(collections.Counter):
         return ''.join(p.monomi()).lstrip('+') or '0'
 
 def prevedi(p):
-    if p ** Ar.BROJ: return Polinom.konstanta(int(p.sadržaj))
-    elif p ** Ar.X: return Polinom.x()
+    if p ** AZ.BROJ: return Polinom.konstanta(int(p.sadržaj))
+    elif p ** AZ.X: return Polinom.x()
     elif p ** Binarni:
         l, d = prevedi(p.lijevo), prevedi(p.desno)
         if p ** Zbroj: return l + d
@@ -128,7 +117,8 @@ def prevedi(p):
     elif p ** Xna: return Polinom.x(int(p.eksponent.sadržaj))
 
 
-def izračunaj(zadatak): print(zadatak, '=', prevedi(ar_parse(zadatak)))
+def izračunaj(zadatak):
+    print(zadatak, '=', prevedi(AZParser.parsiraj(az_lex(zadatak))))
 
 if __name__ == '__main__':
     izračunaj('(5+2*8-3)(3-1)-(-4+2*19)')

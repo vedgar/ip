@@ -36,7 +36,7 @@ def sql_lex(kôd):
 
 
 ### Beskontekstna gramatika:
-# skripta -> naredba | naredba skripta
+# start -> naredba | naredba start
 # naredba -> ( select | create ) TOČKAZAREZ
 # select -> SELECT ( ZVJEZDICA | stupci ) FROM IME
 # stupci -> IME ZAREZ stupci | IME
@@ -52,15 +52,14 @@ def sql_lex(kôd):
 
 class SQLParser(Parser):
     def select(self):
-        stupac = self.čitaj()
-        if stupac ** SQL.ZVJEZDICA:
+        if self >> SQL.ZVJEZDICA:
             sve = True
-            stupci = None
+            stupci = nenavedeno
             self.pročitaj(SQL.FROM)
-        elif stupac ** SQL.IME:
+        elif self >> SQL.IME:
             sve = False
-            stupci = [stupac]
-            while self.do(SQL.FROM):
+            stupci = [self.zadnji]
+            while not self >> SQL.FROM:
                 self.pročitaj(SQL.ZAREZ)
                 stupci.append(self.pročitaj(SQL.IME))
         return Select(self.pročitaj(SQL.IME), sve, stupci)
@@ -68,12 +67,10 @@ class SQLParser(Parser):
     def spec_stupac(self):
         ime = self.pročitaj(SQL.IME)
         tip = self.pročitaj(SQL.IME)
-        if self.čitaj() ** SQL.OTVORENA:
+        if self >> SQL.OTVORENA:
             veličina = self.pročitaj(SQL.BROJ)
             self.pročitaj(SQL.ZATVORENA)
-        else:
-            veličina = None
-            self.vrati()
+        else: veličina = nenavedeno
         return Stupac(ime, tip, veličina)
 
     def create(self):
@@ -81,21 +78,20 @@ class SQLParser(Parser):
         tablica = self.pročitaj(SQL.IME)
         self.pročitaj(SQL.OTVORENA)
         stupci = [self.spec_stupac()]
-        while self.do(SQL.ZATVORENA):
+        while not self >> SQL.ZATVORENA:
             self.pročitaj(SQL.ZAREZ)
             stupci.append(self.spec_stupac())
         return Create(tablica, stupci)
 
     def naredba(self):
-        početak = self.čitaj()
-        if početak ** SQL.SELECT: rezultat = self.select()
-        elif početak ** SQL.CREATE: rezultat = self.create()
+        if self >> SQL.SELECT: rezultat = self.select()
+        elif self >> SQL.CREATE: rezultat = self.create()
         self.pročitaj(SQL.TOČKAZAREZ)
         return rezultat
 
-    def skripta(self):
+    def start(self):
         naredbe = [self.naredba()]
-        while self.do(E.KRAJ): naredbe.append(self.naredba())
+        while not self >> E.KRAJ: naredbe.append(self.naredba())
         return Skripta(naredbe)
 
 
@@ -140,12 +136,12 @@ class StupacLog(types.SimpleNamespace):
     def __init__(self, specifikacija):
         self.tip = specifikacija.tip.sadržaj
         vel = specifikacija.veličina
-        if vel is not None: self.veličina = int(vel.sadržaj)
+        if vel: self.veličina = int(vel.sadržaj)
         self.pristup = 0
 
 
 if __name__ == '__main__':
-    skripta = SQLParser(sql_lex('''
+    skripta = SQLParser.parsiraj(sql_lex('''
             CREATE TABLE Persons
             (
                 PersonID int,
@@ -159,7 +155,7 @@ if __name__ == '__main__':
             CREATE TABLE Trivial (ID void(0));  -- još jedna tablica
             SELECT * FROM Trivial;
             SELECT Name, Married FROM Persons;
-    ''')).skripta()
+    '''))
     pprint.pprint(skripta.razriješi())
 
 # ideje za dalji razvoj:

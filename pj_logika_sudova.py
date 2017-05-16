@@ -39,21 +39,17 @@ class Binarna(AST('veznik lijevo desno')):"Formula s glavnim binarnim veznikom."
 
 class LSParser(Parser):
     def formula(self):
-        početak = self.čitaj()
-        if početak ** LS.PVAR: return početak
-        elif početak ** LS.NEG: return Negacija(self.formula())
-        elif početak ** LS.OTV:
+        if self >> LS.PVAR: return self.zadnji
+        elif self >> LS.NEG: return Negacija(self.formula())
+        else:
+            self.pročitaj(LS.OTV)
             lijevo = self.formula()
             veznik = self.pročitaj(LS.KONJ, LS.DISJ, LS.KOND, LS.BIKOND)
             desno = self.formula()
             self.pročitaj(LS.ZATV)
             return Binarna(veznik, lijevo, desno)
 
-def ls_parse(niz_znakova):
-    parser = LSParser(ls_lex(niz_znakova))
-    rezultat = parser.formula()
-    parser.pročitaj(E.KRAJ)
-    return rezultat
+    start = formula
 
 
 def ls_interpret(fo, **interpretacija):
@@ -80,8 +76,9 @@ def ls_optim(fo):
 
 if __name__ == '__main__':
     ulaz = '!(P5&!!(P3->P1))'
-    print(*ls_lex(ulaz), sep='\n')
-    fo = ls_parse(ulaz)
+    tokeni = list(ls_lex(ulaz))
+    print(*tokeni, sep='\n')
+    fo = LSParser.parsiraj(tokeni)
     print(fo)
     fo = ls_optim(fo)
     print(fo)
