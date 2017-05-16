@@ -1,0 +1,83 @@
+# Tipovi tokena #
+#################
+
+class TT(enum.Enum):
+	PRVITIP = 'sadržaj'
+	DRUGITIP = 'drugi sadržaj'
+	OPERATOR1 = '+'
+	OPERATOR2 = '&'
+	KLJUČNARIJEČ = 'ključnariječ'
+	CASEINSENSITIVEKW = 'CASEINSENSITIVEKW'
+	KW = ALIAS = 'KW'
+
+(E.GREŠKA, E.PRAZNO, E.KRAJ već postoje u pj.py)
+
+# Leksička analiza #
+####################
+
+lex = Tokenizer(string)
+
+Low level API:
+	znak = lex.čitaj()
+	lex.vrati()
+	pročitano = lex.sadržaj
+	(yield) lex.token(tip_tokena)
+	raise LeksičkaGreška(...)
+	lex.i, lex.j
+High level API:
+	lex.zvijezda(str.is...)
+	for znak in iter(lex.čitaj, ''):
+	lex.pročitaj(znak)
+	lex.greška()
+	operator(TT, znak) or lex.greška()  !zadnje!
+	ključna_riječ(TT, lex.sadržaj, True ili False) or TT...
+
+def moj_lex(string):
+	lex = Tokenizer(string)
+	for znak in iter(lex.čitaj, ''):
+		if znak.is...: ...
+		elif znak ...: yield lex.token(TT...)
+		...
+
+# Parsiranje #
+##############
+
+Za izraze:
+	* popišemo sve operatore
+	* rasporedimo ih u hijerarhiju razina po prioritetima
+	* svakoj razini pridijelimo asociranost
+Napomene:
+	* asociranost nema veze s asocijativnošću!
+	* prioritet nema veze s redoslijedom izvođenja!
+
+* napišemo beskontekstnu gramatiku! (ne preskakati ovaj korak!:)
+
+class MojParser(Parser):
+	* svakoj varijabli (otprilike) odgovara jedna metoda
+	def v1(self):
+		if self >> PRVITIP: ...
+		elif self >> {DRUGITIP, TREĆITIP}: ...
+		else:
+			self.pročitaj(MORABITIOVAJTIP)
+			return NekoApstraktnoStablo(tokeni...)
+			self.zadnji: zadnji pročitani token
+			...
+	def v2(self):
+		...
+
+	start = v1 (ili koja već)
+
+* popišemo apstraktna sintaksna stabla koja smo koristili
+class NekoApstraktnoStablo(AST('atribut')): pass
+class DrugoApstraktnoStablo(AST('atribut1 atribut2')): pass
+...
+
+* te klase mogu imati metode koje rade dalju semantičku analizu!
+* ili je možemo raditi u globalnoj funkciji pomoću ** operatora
+
+stablo = MojParser.parsiraj(moj_lex(string))
+
+# Semantička analiza #
+######################
+
+...
