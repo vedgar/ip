@@ -1,0 +1,1 @@
+repeat 8 [repeat 8 [fd 67 lt 45] lt 45]

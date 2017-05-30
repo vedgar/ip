@@ -1,0 +1,8 @@
+fd 100  lt 180 fd 100 lt 180  lt 270   fd 50
+pu   fd 15
+pd   fd 50   lt 90   fd 100   lt 90   fd 50   lt 90   fd 100
+pu   lt 90   fd 65
+pd   lt 90   fd 100   lt 270   fd 50   lt 180 fd 50 lt 180   lt 90   lt 180 fd 100 lt 180
+lt 270   fd 50   lt 90   fd 50   lt 90   fd 20
+pu   lt 180 fd 20 lt 180   lt 270   lt 180 fd 50 lt 180   lt 270   fd 15
+pd   fd 50   lt 90   fd 100   lt 90   fd 50   lt 90   fd 100

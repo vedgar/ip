@@ -1,0 +1,11 @@
+repeat 12 [
+    pu forward 55 pd
+    left 30
+    repeat 18 [
+        left 20
+        repeat 4 [
+            forward 15
+            left 90
+        ]
+    ]
+]

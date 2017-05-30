@@ -1,0 +1,5 @@
+    REPEAT 3 [
+        REPEAT 18 [ FD 100 LT 100 ]
+        LT 120 PU FD 150 PD
+    ]
+

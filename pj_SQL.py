@@ -129,8 +129,7 @@ class Select(AST('tablica sve stupci')):
                     raise NameError(lokacija + poruka)
                 tb[sn].pristup += 1
         
-class Stupac(AST('ime tip veličina')):
-    """Specifikacija stupca u tablici."""
+class Stupac(AST('ime tip veličina')): """Specifikacija stupca u tablici."""
 
 class StupacLog(types.SimpleNamespace):
     def __init__(self, specifikacija):

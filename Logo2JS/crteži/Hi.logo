@@ -1,0 +1,42 @@
+PenDown
+Forward 100
+Left 180
+PenUp
+Forward 50
+Left 90
+PenDown
+Forward 25
+PenUp
+Left 90
+Forward 50
+Left 180
+PenDown
+Forward 100
+PenDown
+Left 180
+PenUp
+Forward 50
+Left 270
+Forward 15
+Left 90
+Forward 50
+Left 270
+PenDown
+Forward 50
+PenUp
+Left 180
+Forward 25
+Left 90
+PenDown
+Forward 100
+PenUp
+Left 90
+Forward 25
+Left 180
+PenDown
+Forward 50
+PenUp
+Forward 40
+Left 270
+Forward 100
+Left 180

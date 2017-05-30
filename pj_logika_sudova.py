@@ -77,7 +77,7 @@ def ls_optim(fo):
 if __name__ == '__main__':
     ulaz = '!(P5&!!(P3->P1))'
     tokeni = list(ls_lex(ulaz))
-    print(*tokeni, sep='\n')
+    print(*tokeni)
     fo = LSParser.parsiraj(tokeni)
     print(fo)
     fo = ls_optim(fo)

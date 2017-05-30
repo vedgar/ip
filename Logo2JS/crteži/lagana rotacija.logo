@@ -1,0 +1,7 @@
+repeat 50 [
+    repeat 4 [
+        fd 150
+        lt 90
+    ]
+    lt 89
+]
