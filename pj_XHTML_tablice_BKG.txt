@@ -1,0 +1,15 @@
+start -> unutar(HTML, tablice)
+tablice -> '' | tablica tablice
+tablica -> unutar(TABLE, retci)
+retci -> zaglavlja podatci | podatci
+zaglavlja -> unutar(TR, th_ovi)
+th_ovi -> th | th th_ovi
+podatci -> '' | redak podatci
+redak -> unutar(TR, ćelije)
+ćelije -> ćelija | ćelija ćelije
+th -> unutar(TH, TEXT)
+ćelija -> unutar(TD, sadržaj)
+sadržaj -> TEXT | tablica
+
+gdje je unutar(tag, sadržaj) pokrata za
+OTV tag ZATV sadržaj OTV KOSA tag ZATV
