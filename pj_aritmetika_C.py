@@ -67,48 +67,37 @@ class ACParser(Parser):
         okolina = []
         while True:
             izraz = self.izraz()
-            kontekst = self.čitaj()
-            if kontekst ** AC.STRELICA:
+            if self >> AC.STRELICA:
                 okolina.append((self.pročitaj(AC.IME), izraz))
-            elif kontekst ** E.KRAJ: return Program(okolina, izraz)
+            elif self >> E.KRAJ: return Program(okolina, izraz)
 
     def izraz(self):
         trenutni = self.član()
         while True:
-            op = self.čitaj()
-            if op ** {AC.PLUS, AC.MINUS}:
-                trenutni = Binarna(op, trenutni, self.član())
-            else:
-                self.vrati()
-                return trenutni
+            if self >> {AC.PLUS, AC.MINUS}:
+                trenutni = Binarna(self.zadnji, trenutni, self.član())
+            else: return trenutni
 
     def član(self):
         trenutni = self.faktor()
         while True:
-            op = self.čitaj()
-            if op ** {AC.PUTA, AC.KROZ}:
-                trenutni = Binarna(op, trenutni, self.faktor())
-            else:
-                self.vrati()
-                return trenutni
+            if self >> {AC.PUTA, AC.KROZ}:
+                trenutni = Binarna(self.zadnji, trenutni, self.faktor())
+            else: return trenutni
 
     def faktor(self):
-        if self.pogledaj() ** AC.MINUS1:
-            return Unarna(self.čitaj(), self.faktor())
+        if self >> AC.MINUS1:
+            return Unarna(self.zadnji, self.faktor())
         baza = self.baza()
-        op = self.čitaj()
-        if op ** AC.NA: return Binarna(op, baza, self.faktor())
-        else:
-            self.vrati()
-            return baza
+        if self >> AC.NA: return Binarna(self.zadnji, baza, self.faktor())
+        else: return baza
 
     def baza(self):
-        prvi = self.čitaj()
-        if prvi ** AC.OTV:
+        if self >> AC.OTV:
             u_zagradi = self.izraz()
             self.pročitaj(AC.ZATV)
             return u_zagradi
-        elif prvi ** {AC.BROJ, AC.IME, AC.I}: return prvi
+        elif self >> {AC.BROJ, AC.IME, AC.I}: return self.zadnji
 
 
 def ac_interpret(stablo, okolina=None):
@@ -136,3 +125,6 @@ def ac_interpret(stablo, okolina=None):
         for ime, izraz in stablo.okolina:
             okolina[ime.sadržaj] = ac_interpret(izraz, okolina)
         return ac_interpret(stablo.izraz, okolina)
+
+def izračunaj(string):
+    return ac_interpret(ACParser.parsiraj(ac_lex(string)))
