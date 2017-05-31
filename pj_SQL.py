@@ -50,6 +50,7 @@ def sql_lex(kôd):
 # Select: tablica, sve, stupci - SELECT naredba
 # Stupac: ime, tip, veličina - specifikacija stupca u tablici (za Create)
 
+
 class SQLParser(Parser):
     def select(self):
         if self >> SQL.ZVJEZDICA:
@@ -62,6 +63,7 @@ class SQLParser(Parser):
             while not self >> SQL.FROM:
                 self.pročitaj(SQL.ZAREZ)
                 stupci.append(self.pročitaj(SQL.IME))
+        else: self.greška()
         return Select(self.pročitaj(SQL.IME), sve, stupci)
 
     def spec_stupac(self):
@@ -99,8 +101,7 @@ class Skripta(AST('naredbe')):
     """Niz SQL naredbi, svaka završava znakom ';'."""
     def razriješi(self):
         imena = {}
-        for naredba in self.naredbe:
-            naredba.razriješi(imena)
+        for naredba in self.naredbe: naredba.razriješi(imena)
         return imena
 
 class Create(AST('tablica specifikacije')):
@@ -114,9 +115,7 @@ class Select(AST('tablica sve stupci')):
     """SELECT naredba."""
     def razriješi(self, imena):
         tn = self.tablica.sadržaj
-        if tn not in imena:
-            lokacija = 'Redak {}, stupac {}: '.format(*self.tablica.početak)
-            raise SemantičkaGreška(lokacija + 'Nema tablice {}.'.format(tn))
+        if tn not in imena: self.tablica.nedeklaracija('nema tablice')
         tb = imena[tn]
         if self.sve:
             for log in tb.values(): log.pristup += 1
@@ -124,9 +123,7 @@ class Select(AST('tablica sve stupci')):
             for st in self.stupci:
                 sn = st.sadržaj
                 if sn not in tb:
-                    lokacija = 'Redak {}, stupac {}: '.format(*st.početak)
-                    poruka = 'Nema stupca {} u tablici {}.'.format(sn, tn)
-                    raise NameError(lokacija + poruka)
+                    st.nedeklaracija('u tablici {} nema stupca'.format(tn))
                 tb[sn].pristup += 1
         
 class Stupac(AST('ime tip veličina')): """Specifikacija stupca u tablici."""
@@ -154,6 +151,7 @@ if __name__ == '__main__':
             CREATE TABLE Trivial (ID void(0));  -- još jedna tablica
             SELECT * FROM Trivial;
             SELECT Name, Married FROM Persons;
+            SELECT Name from Persons;
     '''))
     pprint.pprint(skripta.razriješi())
 

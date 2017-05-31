@@ -5,20 +5,16 @@ var y = canvas.height / 2;
 var h = 0;
 var to = ctx.lineTo;
 ctx.moveTo(x, y);
-for (var r1 = 0; r1 < 12; r1 ++)
+for (var r1 = 0; r1 < 3; r1 ++)
 {
-to = ctx.moveTo;
-to.apply(ctx, [x-=Math.sin(h)*55, y-=Math.cos(h)*55]);
-to = ctx.lineTo;
-h += 0.5235987755982988;
 for (var r2 = 0; r2 < 18; r2 ++)
 {
-h += 0.3490658503988659;
-for (var r3 = 0; r3 < 4; r3 ++)
-{
-to.apply(ctx, [x-=Math.sin(h)*15, y-=Math.cos(h)*15]);
-h += 1.5707963267948966;
+to.apply(ctx, [x-=Math.sin(h)*100, y-=Math.cos(h)*100]);
+h += 1.7453292519943295;
 }
-}
+h += 2.0943951023931953;
+to = ctx.moveTo;
+to.apply(ctx, [x-=Math.sin(h)*150, y-=Math.cos(h)*150]);
+to = ctx.lineTo;
 }
 ctx.stroke();

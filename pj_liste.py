@@ -10,9 +10,10 @@ class LJ(enum.Enum):
     IZBACI = 'IZBACI'
     DOHVATI = 'DOHVATI'
     KOLIKO = 'KOLIKO'
-    L_ID = 'L1'
+    ID = 'L1'
     BROJ = 234
     MINUSBROJ = -234
+
 
 def lj_lex(string):
     lex = Tokenizer(string)
@@ -20,7 +21,7 @@ def lj_lex(string):
         if znak.isspace(): lex.token(E.PRAZNO)
         elif znak == 'L':
             id = lex.čitaj()
-            if id.isdigit() and id != '0': yield lex.token(LJ.L_ID)
+            if id.isdigit() and id != '0': yield lex.token(LJ.ID)
             else: lex.greška('očekivana znamenka veća od nule')
         elif znak.isalpha():
             lex.zvijezda(str.isalpha)
@@ -39,12 +40,12 @@ def lj_lex(string):
 ### Beskontekstna gramatika
 # start -> naredba start | ε
 # naredba -> deklaracija | provjera | ubaci | izbaci | dohvati | duljina
-# deklaracija -> LISTA L_ID
-# provjera -> PRAZNA L_ID
-# ubaci -> UBACI L_ID ( BROJ | MINUSBROJ ) BROJ
-# izbaci -> IZBACI L_ID BROJ
-# dohvati -> DOHVATI L_ID BROJ
-# duljina -> KOLIKO L_ID
+# deklaracija -> LISTA ID
+# provjera -> PRAZNA ID
+# ubaci -> UBACI ID ( BROJ | MINUSBROJ ) BROJ
+# izbaci -> IZBACI ID BROJ
+# dohvati -> DOHVATI ID BROJ
+# duljina -> KOLIKO ID
 
 ### Apstraktna sintaksna stabla
 # Program: naredbe
@@ -62,21 +63,20 @@ class LJParser(Parser):
         return Program(naredbe)
 
     def naredba(self):
-        if self >> LJ.LISTA: return Deklaracija(self.pročitaj(LJ.L_ID))
-        elif self >> LJ.PRAZNA: return Provjera(self.pročitaj(LJ.L_ID))
-        elif self >> LJ.UBACI: return Ubaci(self.pročitaj(LJ.L_ID),
+        if self >> LJ.LISTA: return Deklaracija(self.pročitaj(LJ.ID))
+        elif self >> LJ.PRAZNA: return Provjera(self.pročitaj(LJ.ID))
+        elif self >> LJ.UBACI: return Ubaci(self.pročitaj(LJ.ID),
             self.pročitaj(LJ.BROJ, LJ.MINUSBROJ), self.pročitaj(LJ.BROJ))
         elif self >> LJ.IZBACI:
-            return Izbaci(self.pročitaj(LJ.L_ID), self.pročitaj(LJ.BROJ))
+            return Izbaci(self.pročitaj(LJ.ID), self.pročitaj(LJ.BROJ))
         elif self >> LJ.DOHVATI:
-            return Dohvati(self.pročitaj(LJ.L_ID), self.pročitaj(LJ.BROJ))
-        elif self >> LJ.KOLIKO: return Duljina(self.pročitaj(LJ.L_ID))    
+            return Dohvati(self.pročitaj(LJ.ID), self.pročitaj(LJ.BROJ))
+        elif self >> LJ.KOLIKO: return Duljina(self.pročitaj(LJ.ID))
+        else: self.greška()
 
-    def broj(self):
-        if self >> LJ.MINUS: return Suprotan(self.pročitaj(LJ.BROJ))
-        else: return self.pročitaj(LJ.BROJ)
 
 class Program(AST('naredbe')):
+    """Program u jeziku listâ."""
     def izvrši(self):
         memorija = {}
         izlazi = []
@@ -84,29 +84,33 @@ class Program(AST('naredbe')):
         return izlazi
     
 class Deklaracija(AST('lista')):
+    """Deklaracija liste."""
     def izvrši(self, memorija):
-        if self.lista.sadržaj in memorija:
-            self.lista.problem('redeklaracija')
+        if self.lista.sadržaj in memorija: self.lista.redeklaracija()
         memorija[self.lista.sadržaj] = []
     
 class Provjera(AST('lista')):
+    """Je li lista prazna?"""
     def izvrši(self, memorija):
         l = pogledaj(memorija, self.lista)
         return not l
 
 class Duljina(AST('lista')):
+    """Broj elemenata u listi."""
     def izvrši(self, memorija):
         l = pogledaj(memorija, self.lista)
         return len(l)
 
 class Dohvati(AST('lista indeks')):
+    """Element zadanog indeksa (brojeći od 0). Prevelik indeks javlja grešku."""
     def izvrši(self, memorija):
         l = pogledaj(memorija, self.lista)
         i = int(self.indeks.sadržaj)
         if i < len(l): return l[i]
-        self.indeks.problem('Prevelik indeks')
+        else: self.indeks.problem('Prevelik indeks')
         
 class Izbaci(AST('lista indeks')):
+    """Izbacuje element zadanog indeksa iz liste ili javlja grešku izvođenja."""
     def izvrši(self, memorija):
         l = pogledaj(memorija, self.lista)
         i = int(self.indeks.sadržaj)
@@ -114,17 +118,17 @@ class Izbaci(AST('lista indeks')):
         else: self.indeks.problem('Prevelik indeks')
 
 class Ubaci(AST('lista vrijednost indeks')):
+    """Ubacuje vrijednost u listu na zadanom indeksu, ili javlja grešku."""
     def izvrši(self, memorija):
         l = pogledaj(memorija, self.lista)
         v = int(self.vrijednost.sadržaj)
-        if self.vrijednost ** LJ.MINUSBROJ: v = -v
         i = int(self.indeks.sadržaj)
         if i <= len(l): l.insert(i, v)
         else: self.indeks.problem('Prevelik indeks')
 
 def pogledaj(memorija, l_id):
     if l_id.sadržaj in memorija: return memorija[l_id.sadržaj]
-    l_id.problem('Nedeklarirana lista')
+    else: l_id.problem('Nedeklarirana lista')
 
 
 if __name__ == '__main__':

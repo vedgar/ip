@@ -41,13 +41,13 @@ class LSParser(Parser):
     def formula(self):
         if self >> LS.PVAR: return self.zadnji
         elif self >> LS.NEG: return Negacija(self.formula())
-        else:
-            self.pročitaj(LS.OTV)
+        elif self >> LS.OTV:
             lijevo = self.formula()
             veznik = self.pročitaj(LS.KONJ, LS.DISJ, LS.KOND, LS.BIKOND)
             desno = self.formula()
             self.pročitaj(LS.ZATV)
             return Binarna(veznik, lijevo, desno)
+        else: self.greška()
 
     start = formula
 

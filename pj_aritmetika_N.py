@@ -43,13 +43,14 @@ class ANParser(Parser):
 
     def baza(self):
         if self >> AN.BROJ: return self.zadnji
-        else:
-            self.pročitaj(AN.OTVORENA)
+        elif self >> AN.OTVORENA:
             u_zagradi = self.izraz()
             self.pročitaj(AN.ZATVORENA)
             return u_zagradi
+        else: self.greška()
 
     start = izraz
+
 
 def an_interpret(izraz):
     if izraz ** AN.BROJ: return int(izraz.sadržaj)

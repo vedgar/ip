@@ -6,6 +6,7 @@ class Ri(enum.Enum):
     OTV, ZATV, ILI, ZVIJEZDA, PLUS, UPITNIK = '()|*+?'
     PRAZAN, EPSILON, ZNAK, ESCAPE = '/0', '/1', 'a', '/'
 
+
 def specijalan(znak):
     assert len(znak) == 1
     return znak in '()|*+?/'
@@ -23,6 +24,13 @@ def ri_lex(ri):
             else: lex.greška('nepostojeći "escape" znak')
         elif specijalan(znak): yield lex.token(operator(Ri, znak))
         else: yield lex.token(Ri.ZNAK)
+
+
+### Beskontekstna gramatika
+# izraz -> disjunkt ILI izraz | disjunkt
+# disjunkt -> faktor disjunkt | faktor
+# faktor -> element | faktor ZVIJEZDA | faktor PLUS | faktor UPITNIK
+# element -> PRAZAN | EPSILON | ZNAK | OTV izraz ZATV
 
 class RIParser(Parser):
     def izraz(self):
@@ -49,14 +57,14 @@ class RIParser(Parser):
         if self >> Ri.PRAZAN: return RI.prazan
         elif self >> Ri.EPSILON: return RI.epsilon
         elif self >> Ri.ZNAK: return RI.Elementaran(self.zadnji.sadržaj)
-        else:
-            self.pročitaj(Ri.OTV)
+        elif self >> Ri.OTV:
             u_zagradi = self.izraz()
             self.pročitaj(Ri.ZATV)
             return u_zagradi
+        else: self.greška()
 
     start = izraz
 
 if __name__ == '__main__':
     print(*ri_lex('? )a/1|/('), sep=',')
-    print(RIParser.parsiraj(ri_lex('/1|a(/(c?)*')))
+    print(RIParser.parsiraj(ri_lex('/1|a(/(c?)*')).početak())

@@ -22,7 +22,7 @@ def az_lex(izraz):
 
 ### Beskontekstna gramatika:
 # izraz -> izraz PLUS član | izraz MINUS član | član
-# član -> član PUTA faktor | faktor | MINUS član | član faktor
+# član -> član PUTA faktor | faktor | MINUS član | član faktor *vidi dolje!
 # faktor -> BROJ | X | X BROJ | OTVORENA izraz ZATVORENA
 
 
@@ -47,7 +47,7 @@ class AZParser(Parser):
         trenutni = self.faktor()
         while True:
             if self >> AZ.PUTA: trenutni = Umnožak(trenutni, self.faktor())
-            elif self >> {AZ.X, AZ.OTVORENA}:  # ovdje AZ.BROJ je ružno: (x+2)3
+            elif self >> {AZ.X, AZ.OTVORENA}:  # *ovdje AZ.BROJ je ružno: (x+2)3
                 self.vrati()
                 trenutni = Umnožak(trenutni, self.faktor())
             else: return trenutni
@@ -58,23 +58,21 @@ class AZParser(Parser):
             x = self.zadnji
             if self >> AZ.BROJ: return Xna(self.zadnji)
             else: return x
-        else:
-            self.pročitaj(AZ.OTVORENA)
+        elif self >> AZ.OTVORENA:
             u_zagradi = self.izraz()
             self.pročitaj(AZ.ZATVORENA)
             return u_zagradi
+        else: self.greška()
 
     start = izraz
 
 
 class Polinom(collections.Counter):
     @classmethod
-    def konstanta(klasa, broj):
-        return klasa({0: broj})
+    def konstanta(klasa, broj): return klasa({0: broj})
 
     @classmethod
-    def x(klasa, eksponent=1):
-        return klasa({eksponent: 1})
+    def x(klasa, eksponent=1): return klasa({eksponent: 1})
 
     def __add__(p, q):
         r = Polinom(p)
@@ -84,8 +82,7 @@ class Polinom(collections.Counter):
     def __mul__(p, q):
         r = Polinom()
         for e1, k1 in p.items():
-            for e2, k2 in q.items():
-                r[e1 + e2] += k1 * k2
+            for e2, k2 in q.items(): r[e1 + e2] += k1 * k2
         return r
 
     def __neg__(p): return Polinom.konstanta(-1) * p
@@ -102,8 +99,7 @@ class Polinom(collections.Counter):
                 if e > 1: č += str(e)
             yield č
 
-    def __str__(p):
-        return ''.join(p.monomi()).lstrip('+') or '0'
+    def __str__(p): return ''.join(p.monomi()).lstrip('+') or '0'
 
 def prevedi(p):
     if p ** AZ.BROJ: return Polinom.konstanta(int(p.sadržaj))
@@ -126,3 +122,4 @@ if __name__ == '__main__':
     izračunaj('(((x-2)x+4)x-8)x+7')
     izračunaj('x2-2x+3')
     izračunaj('(x+1)' * 7)
+    izračunaj('(x-2+5x-(7x-5))-(x-2+5x-(7x-5))')

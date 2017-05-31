@@ -37,13 +37,13 @@ def js_lex(string):
 ### Beskontekstna gramatika
 # funkcija -> FUNCTION IME O_OTV argumenti O_ZATV V_OTV tijelo V_ZATV
 # argumenti -> VAR IME ZAREZ argumenti | VAR IME | ε
-# tijelo -> možda_komentari naredbe možda_komentari
-# možda_komentari -> ε | komentari
+# tijelo -> komentari naredbe | naredbe
 # komentari -> KOMENTAR komentari | KOMENTAR
-# naredbe -> naredba separator naredbe | naredba
+# naredbe -> naredba separator naredbe | naredba | ε
 # separator -> TOČKAZAREZ | komentari
 
 class Funkcija(AST('ime argumenti tijelo')): pass
+class Program(AST('funkcije')): pass
 
 class JSParser(Parser):
     def funkcija(self):
@@ -56,20 +56,25 @@ class JSParser(Parser):
             while not self >> JS.O_ZATV:
                 self.pročitaj(JS.ZAREZ)
                 argumenti.append(self.argument())
+        return Funkcija(ime, argumenti, self.tijelo())
+
+    def tijelo(self):
         self.pročitaj(JS.V_OTV)
         while self >> JS.KOMENTAR: pass
-        naredbe = [self.naredba()]
-        while True:
-            if self >> JS.KOMENTAR:
+        naredbe = []
+        while not self >> JS.V_ZATV:
+            naredbe.append(self.naredba())
+            if self >> JS.TOČKAZAREZ: pass
+            elif self >> JS.KOMENTAR:
                 while self >> JS.KOMENTAR: pass
-                if self >> JS.V_ZATV: return Funkcija(ime, argumenti, naredbe)
-                else: naredbe.append(self.naredba())
-            elif self >> JS.TOČKAZAREZ: naredbe.append(self.naredba())
-            else:
-                self.pročitaj(JS.V_ZATV)
-                return Funkcija(ime, argumenti, naredbe)
+            elif self >> JS.V_ZATV: break
+            else: self.greška()
+        return naredbe
 
-    start = funkcija
+    def start(self):
+        funkcije = [self.funkcija()]
+        while not self >> E.KRAJ: funkcije.append(self.funkcija())
+        return Program(funkcije)
 
     def argument(self):
         self.pročitaj(JS.VAR)
@@ -78,11 +83,23 @@ class JSParser(Parser):
     def naredba(self):
         return self.pročitaj(JS.NAREDBA)
 
+
 if __name__ == '__main__':
     print(JSParser.parsiraj(js_lex('''\
         function ime (var x, var y, var z) {
             //neke naredbe odvojenih s ; ili komentar
             naredba; naredba //kom
             naredba
+        }
+    ''')))
+    print(JSParser.parsiraj(js_lex('''\
+        function ime (var x, var y, var z) {
+            //neke naredbe odvojene s ; ili komentarima
+            naredba; naredba //kom
+            naredba
+        }
+        function ništa(){}
+        function trivijalna(var hmmm){naredba//
+        //
         }
     ''')))

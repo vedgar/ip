@@ -44,7 +44,7 @@ def ac_lex(string):
             yield lex.token(AC.BROJ)
             unarni = False
         elif znak.isalpha():
-            lex.zvijezda(lambda znak: znak.isalnum() or znak == '_')
+            lex.zvijezda(identifikator)
             yield lex.token(ključna_riječ(AC, lex.sadržaj) or AC.IME)
             unarni = False
         else:
@@ -86,8 +86,7 @@ class ACParser(Parser):
             else: return trenutni
 
     def faktor(self):
-        if self >> AC.MINUS1:
-            return Unarna(self.zadnji, self.faktor())
+        if self >> AC.MINUS1: return Unarna(self.zadnji, self.faktor())
         baza = self.baza()
         if self >> AC.NA: return Binarna(self.zadnji, baza, self.faktor())
         else: return baza
@@ -98,6 +97,7 @@ class ACParser(Parser):
             self.pročitaj(AC.ZATV)
             return u_zagradi
         elif self >> {AC.BROJ, AC.IME, AC.I}: return self.zadnji
+        else: self.greška()
 
 
 def ac_interpret(stablo, okolina=None):
@@ -126,5 +126,24 @@ def ac_interpret(stablo, okolina=None):
             okolina[ime.sadržaj] = ac_interpret(izraz, okolina)
         return ac_interpret(stablo.izraz, okolina)
 
-def izračunaj(string):
-    return ac_interpret(ACParser.parsiraj(ac_lex(string)))
+def izračunaj(string): return ac_interpret(ACParser.parsiraj(ac_lex(string)))
+
+if __name__ == '__main__':
+    from math import pi
+    print(izračunaj('2+2*3'))
+    print(izračunaj('(1+6*i)/(-4-3*i)^2'))
+    print(izračunaj('i^i'))
+    print(izračunaj('''\
+        i+1 -> t
+        t/2^2^-1 -> a
+        a^2^2^2^2^0 -> b
+        b
+    '''))
+    print(abs(izračunaj('''\
+        8 -> d
+        10^d -> n
+        (1+1/n)^n -> e
+        {} -> pi
+        e^(i*pi) + 1 -> skoro0
+        skoro0
+    '''.format(pi))))
