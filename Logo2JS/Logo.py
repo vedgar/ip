@@ -3,9 +3,9 @@ import itertools, math, pathlib, webbrowser, time
 
 
 class Logo(enum.Enum):
-    OTVORENA = '['
-    ZATVORENA = ']'
-    BROJ = 153
+    OTVORENA, ZATVORENA = '[]'
+    class BROJ(Token):
+        def vrijednost(self): return int(self.sadržaj)
     REPEAT = 'REPEAT'
     FORWARD = FD = 'FORWARD'
     LEFT = LT = 'LEFT'
@@ -66,9 +66,7 @@ def prevedi(naredbe):
     yield from [
         "var canvas = document.getElementById('output');",
         "var ctx = canvas.getContext('2d');",
-        'var x = canvas.width / 2;',
-        'var y = canvas.height / 2;',
-        'var h = 0;',
+        'var x = canvas.width / 2, y = canvas.height / 2, h = 0;',
         'var to = ctx.lineTo;',
         'ctx.moveTo(x, y);',
     ]
@@ -76,31 +74,26 @@ def prevedi(naredbe):
     yield 'ctx.stroke();'
 
 class Forward(AST('pikseli smjer')):
-    """FORWARD (ili FD) naredba."""
     def js(self, _):
         yield 'to.apply(ctx, [x-=Math.sin(h)*{0}, y-=Math.cos(h)*{0}]);'\
-              .format(int(self.pikseli.sadržaj) * self.smjer)
+              .format(self.pikseli.vrijednost() * self.smjer)
 
 class Left(AST('stupnjevi smjer')):
-    """LEFT (ili LT) naredba."""
     def js(self, _):
-        zaokret = math.radians(int(self.stupnjevi.sadržaj) * self.smjer)
+        zaokret = math.radians(self.stupnjevi.vrijednost() * self.smjer)
         yield 'h += {};'.format(zaokret)
 
 class Repeat(AST('koliko naredbe')):
-    """REPEAT naredba."""
     def js(self, repeat_br):
-        for_petlja = 'for (var r{i} = 0; r{i} < {n}; r{i} ++)'
-        yield for_petlja.format(i=next(repeat_br), n=int(self.koliko.sadržaj))
+        petlja = 'for (var r{i} = 0; r{i} < {n}; r{i} ++)'
+        yield petlja.format(i=next(repeat_br), n=self.koliko.vrijednost())
         yield '{'
         for naredba in self.naredbe: yield from naredba.js(repeat_br)
         yield '}'
 
 class Pen(AST('down')):
-    """PU ili PD naredba."""
     def js(self, _):
-        if self.down: yield 'to = ctx.lineTo;'
-        else: yield 'to = ctx.moveTo;'
+        yield 'to = ctx.{}To;'.format('line' if self.down else 'move')
 
 
 def prevedi_string(kôd):
@@ -115,12 +108,25 @@ def prevedi_datoteku(datoteka):
         for javascript in prevedi(naredbe(p)): print(javascript, file=izlaz)
     p.pročitaj(E.KRAJ)
 
+def logirano_prevedi_datoteku(datoteka):
+    f = logiran(open(datoteka), 'datoteka')
+    c = logiran(itertools.chain.from_iterable(f), 'linija')
+    l = logiran(logo_lex(c), 'tokenizer')
+    n = logiran(naredbe(Parser(l)), 'parser')
+    j = logiran(prevedi(n), 'kompajler')
+    print('\n'.join(j))
+
 def nacrtaj(ime):
-    prevedi_datoteku(pathlib.Path('crteži/{}.logo'.format(ime)))
+    prevedi_datoteku(dat[ime])
     webbrowser.open(pathlib.Path('loader.html'))
 
-if __name__ == '__main__':
-    for crtež in (pathlib.Path(__file__).parent / 'crteži').iterdir():
-        prevedi_datoteku(crtež)
-        webbrowser.open_new_tab(pathlib.Path('loader.html'))
-        time.sleep(2)
+dat = {f.stem: f for f in (pathlib.Path(__file__).parent/'crteži').iterdir()}
+crteži = set(dat)
+
+def nacrtaj_sve():
+    for crtež in crteži:
+        nacrtaj(crtež)
+        time.sleep(1.5)
+
+if __name__ == '__main__' and input('Nacrtaj sve? ').startswith('d'):
+    nacrtaj_sve()

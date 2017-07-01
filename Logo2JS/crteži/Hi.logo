@@ -1,42 +1,13 @@
-PenDown
-Forward 100
-Left 180
-PenUp
-Forward 50
-Left 90
-PenDown
-Forward 25
-PenUp
-Left 90
-Forward 50
-Left 180
-PenDown
-Forward 100
-PenDown
-Left 180
-PenUp
-Forward 50
-Left 270
-Forward 15
-Left 90
-Forward 50
-Left 270
-PenDown
-Forward 50
-PenUp
-Left 180
-Forward 25
-Left 90
-PenDown
-Forward 100
-PenUp
-Left 90
-Forward 25
-Left 180
-PenDown
-Forward 50
-PenUp
-Forward 40
-Left 270
-Forward 100
-Left 180
+PenDown Forward 100     PenUp Backward 50 Right 90
+PenDown Forward 50      PenUp Left 90 Backward 50
+PenDown Forward 100
+
+PenUp Right 90 Forward 35
+
+PenDown Forward 50
+    PenUp Backward 25
+        PenDown Right 90
+            Forward 100
+        PenDown Right 90
+    PenUp Backward 25
+PenDown Forward 50
