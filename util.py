@@ -319,7 +319,7 @@ def slučajni_testovi(abeceda, koliko, maxduljina):
 def provjeri(objekt, specifikacija, koliko=999, maxduljina=9):
     """Osigurava da se objekt drži specifikacije, slučajnim testiranjem."""
     import RI, BKG
-    if isinstance(objekt, RI.RegularanIzraz):
+    if isinstance(objekt, RI.RegularniIzraz):
         jezik = objekt.KA().prihvaća
     elif isinstance(objekt, BKG.BeskontekstnaGramatika):
         jezik = objekt.CYK

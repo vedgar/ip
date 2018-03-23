@@ -2,8 +2,8 @@ from util import *
 from KA import NedeterminističkiKonačniAutomat as NKA
 
 
-class RegularanIzraz(types.SimpleNamespace, abc.ABC):
-    """Svaki RegularanIzraz predstavlja neki regularni jezik,
+class RegularniIzraz(types.SimpleNamespace, abc.ABC):
+    """Svaki RegularniIzraz predstavlja neki regularni jezik,
     dobiven pomoću operacija unije, konkatenacije te Kleenejevih operatora
     iz inicijalnih jezika (∅, ε, te elementarnih jezika)."""
     
@@ -83,7 +83,7 @@ class RegularanIzraz(types.SimpleNamespace, abc.ABC):
         return znakovi
 
 
-class Inicijalan(RegularanIzraz, abc.ABC):
+class Inicijalan(RegularniIzraz, abc.ABC):
     """Inicijalni jezik: ∅, ε, ili elementarni jezik."""
 
     def konačan(self):
@@ -173,11 +173,11 @@ nula = Elementaran('0')
 jedan = Elementaran('1')
 
 
-class Binaran(RegularanIzraz, abc.ABC):
+class Binaran(RegularniIzraz, abc.ABC):
     """Zajednička natklasa za binarne operacije: uniju i konkatenaciju."""
     
     def __init__(self, r1, r2):
-        assert isinstance(r1, RegularanIzraz) and isinstance(r2, RegularanIzraz)
+        assert isinstance(r1, RegularniIzraz) and isinstance(r2, RegularniIzraz)
         self.lijevo, self.desno = r1, r2
 
     def korišteni_znakovi(self):
@@ -261,11 +261,11 @@ class Konkatenacija(Binaran):
                     yield lijevo + desno
 
 
-class Zvijezda(RegularanIzraz):
+class Zvijezda(RegularniIzraz):
     """L* := ε ∪ L ∪ LL ∪ LLL ∪ ...."""
 
     def __init__(self, ri):
-        assert isinstance(ri, RegularanIzraz)
+        assert isinstance(ri, RegularniIzraz)
         self.ispod = ri
 
     def __str__(self):
