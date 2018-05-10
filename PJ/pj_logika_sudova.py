@@ -2,14 +2,13 @@ from pj import *
 
 
 class LS(enum.Enum):
-    PVAR = 'P1'
-    NEG = '!'
-    KONJ = '&'
-    DISJ = '|'
-    KOND = '->'
-    BIKOND = '<->'
-    OTV = '('
-    ZATV = ')'
+    NEG, KONJ, DISJ, OTV, ZATV = '!&|()'
+    KOND, BIKOND = '->', '<->'
+    class PVAR(Token):
+        def vrijednost(self, **interpretacija):
+            try: return interpretacija[self.sadržaj]
+            except KeyError: self.nedeklaracija()
+        def optim(self): return self
 
 
 def ls_lex(kôd):
@@ -24,18 +23,18 @@ def ls_lex(kôd):
             lex.pročitaj('>')
             yield lex.token(LS.KOND)
         elif znak == '<':
-            lex.pročitaj('-')
-            lex.pročitaj('>')
+            lex.pročitaj('-'), lex.pročitaj('>')
             yield lex.token(LS.BIKOND)
         else: yield lex.token(operator(LS, znak) or lex.greška())
 
 
-# Beskontekstna gramatika:
+### Beskontekstna gramatika:
 # formula -> NEG formula | PVAR | OTV formula binvez formula ZATV
 # binvez -> KONJ | DISJ | KOND | BIKOND
 
-class Negacija(AST('ispod')): """Negacija formule ispod."""
-class Binarna(AST('veznik lijevo desno')):"Formula s glavnim binarnim veznikom."
+### Apstraktna sintaksna stabla:
+# Negacija: ispod
+# Binarna: veznik lijevo desno
 
 class LSParser(Parser):
     def formula(self):
@@ -52,27 +51,29 @@ class LSParser(Parser):
     start = formula
 
 
-def ls_interpret(fo, **interpretacija):
-    def I(fo):
-        if fo ** LS.PVAR: return interpretacija[fo.sadržaj]
-        elif fo ** Negacija: return not I(fo.ispod)
-        elif fo.veznik ** LS.DISJ: return I(fo.lijevo) or I(fo.desno)
-        elif fo.veznik ** LS.KONJ: return I(fo.lijevo) and I(fo.desno)
-        elif fo.veznik ** LS.KOND: return not I(fo.lijevo) or I(fo.desno)
-        elif fo.veznik ** LS.BIKOND: return I(fo.lijevo) == I(fo.desno)
-        else: assert not 'slučaj'
-    return I(fo)
+class Negacija(AST('ispod')):
+    def vrijednost(formula, **interpretacija):
+        return not formula.ispod.vrijednost(**interpretacija)
 
-def ls_optim(fo):
-    """Jednostavna optimizacija, pojednostavljuje !!F u F svuda u formuli."""
-    if fo ** LS.PVAR: return fo
-    elif fo ** Binarna:
-        return Binarna(fo.veznik, ls_optim(fo.lijevo), ls_optim(fo.desno))
-    elif fo ** Negacija:
-        oi = ls_optim(fo.ispod)
-        if oi ** Negacija: return oi.ispod
-        return Negacija(oi)
-    else: assert not 'slučaj'
+    def optim(formula):
+        i = formula.ispod.optim()
+        return i.ispod if i ** Negacija else Negacija(i)
+        
+class Binarna(AST('veznik lijevo desno')):
+    def vrijednost(formula, **interpretacija):
+        v = formula.veznik
+        l = formula.lijevo.vrijednost(**interpretacija)
+        d = formula.desno.vrijednost(**interpretacija)
+        if v ** LS.DISJ: return l or d
+        elif v ** LS.KONJ: return l and d
+        elif v ** LS.KOND: return l <= d
+        elif v ** LS.BIKOND: return l == d
+        else: assert not 'slučaj'
+
+    def optim(formula):
+        l, d = formula.lijevo.optim(), formula.desno.optim()
+        return Binarna(formula.veznik, l, d)
+
 
 if __name__ == '__main__':
     ulaz = '!(P5&!!(P3->P1))'
@@ -80,6 +81,6 @@ if __name__ == '__main__':
     print(*tokeni)
     fo = LSParser.parsiraj(tokeni)
     print(fo)
-    fo = ls_optim(fo)
+    fo = fo.optim()
     print(fo)
-    print(ls_interpret(fo, P1=False, P3=True, P5=False))
+    print(fo.vrijednost(P1=False, P3=True, P5=False))

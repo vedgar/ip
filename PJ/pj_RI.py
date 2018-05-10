@@ -4,7 +4,7 @@ import RI
 
 class Ri(enum.Enum):
     OTV, ZATV, ILI, ZVIJEZDA, PLUS, UPITNIK = '()|*+?'
-    PRAZAN, EPSILON, ZNAK, ESCAPE = '/0', '/1', 'a', '/'
+    PRAZAN, EPSILON, ZNAK = '/0', '/1', 'a'
 
 
 def specijalan(znak):
@@ -15,7 +15,7 @@ def ri_lex(ri):
     lex = Tokenizer(ri)
     for znak in iter(lex.čitaj, ''):
         if znak == '/':
-            lex.token(Ri.ESCAPE)
+            lex.token(E.VIŠAK)
             sljedeći = lex.čitaj()
             if sljedeći == '0': yield lex.token(Ri.PRAZAN)
             elif sljedeći == '1': yield lex.token(Ri.EPSILON)
@@ -40,8 +40,7 @@ class RIParser(Parser):
 
     def disjunkt(self):
         faktor = self.faktor()
-        if self >> {Ri.PRAZAN, Ri.EPSILON, Ri.ZNAK, Ri.OTV}:
-            self.vrati()
+        if self >= {Ri.PRAZAN, Ri.EPSILON, Ri.ZNAK, Ri.OTV}:
             return RI.Konkatenacija(faktor, self.disjunkt())
         else: return faktor
 

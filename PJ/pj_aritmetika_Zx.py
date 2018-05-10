@@ -2,13 +2,12 @@ from pj import *
 
 
 class AZ(enum.Enum):
-    BROJ = 1
-    PLUS = '+'
-    MINUS = '-'
-    PUTA = '*'
-    OTVORENA = '('
-    ZATVORENA = ')'
-    X = 'x'
+    PLUS, MINUS, PUTA, OTVORENA, ZATVORENA = '+-*()'
+    class BROJ(Token):
+        def vrijednost(self): return int(self.sadržaj)
+        def prevedi(self): return Polinom.konstanta(self.vrijednost())
+    class X(Token):
+        def prevedi(self): return Polinom.x()
 
 
 def az_lex(izraz):
@@ -17,21 +16,14 @@ def az_lex(izraz):
         if znak.isdigit():
             lex.zvijezda(str.isdigit)
             yield lex.token(AZ.BROJ)
+        elif znak == 'x': yield lex.token(AZ.X)
         else: yield lex.token(operator(AZ, znak) or lex.greška())
 
 
 ### Beskontekstna gramatika:
 # izraz -> izraz PLUS član | izraz MINUS član | član
-# član -> član PUTA faktor | faktor | MINUS član | član faktor *vidi dolje!
+# član -> član PUTA faktor | faktor | MINUS član | član faktor *>vidi dolje!
 # faktor -> BROJ | X | X BROJ | OTVORENA izraz ZATVORENA
-
-
-Binarni = AST('lijevo desno')
-class Zbroj(Binarni): """Zbroj dva polinoma."""
-class Razlika(Binarni): """Razlika dva polinoma."""
-class Umnožak(Binarni): """Umnožak dva polinoma."""
-class Suprotan(AST('od')): """Suprotan polinom zadanom."""
-class Xna(AST('eksponent')): """Monom x^eksponent."""
 
 
 class AZParser(Parser):
@@ -47,8 +39,7 @@ class AZParser(Parser):
         trenutni = self.faktor()
         while True:
             if self >> AZ.PUTA: trenutni = Umnožak(trenutni, self.faktor())
-            elif self >> {AZ.X, AZ.OTVORENA}:  # *ovdje AZ.BROJ je ružno: (x+2)3
-                self.vrati()
+            elif self >= {AZ.X, AZ.OTVORENA}:  # *ovdje AZ.BROJ je ružno: (x+2)3
                 trenutni = Umnožak(trenutni, self.faktor())
             else: return trenutni
 
@@ -65,6 +56,30 @@ class AZParser(Parser):
         else: self.greška()
 
     start = izraz
+
+
+class Zbroj(AST('lijevo desno')):
+    def prevedi(self):
+        l, d = self.lijevo.prevedi(), self.desno.prevedi()
+        return l + d
+
+class Razlika(AST('lijevo desno')):
+    def prevedi(self):
+        l, d = self.lijevo.prevedi(), self.desno.prevedi()
+        return l - d
+    
+class Umnožak(AST('lijevo desno')):
+    def prevedi(self):
+        l, d = self.lijevo.prevedi(), self.desno.prevedi()
+        return l * d
+
+class Suprotan(AST('od')):
+    def prevedi(self):
+        return -self.od.prevedi()
+    
+class Xna(AST('eksponent')):
+    def prevedi(self):
+        return Polinom.x(self.eksponent.vrijednost())
 
 
 class Polinom(collections.Counter):
@@ -101,20 +116,9 @@ class Polinom(collections.Counter):
 
     def __str__(p): return ''.join(p.monomi()).lstrip('+') or '0'
 
-def prevedi(p):
-    if p ** AZ.BROJ: return Polinom.konstanta(int(p.sadržaj))
-    elif p ** AZ.X: return Polinom.x()
-    elif p ** Binarni:
-        l, d = prevedi(p.lijevo), prevedi(p.desno)
-        if p ** Zbroj: return l + d
-        elif p ** Razlika: return l - d
-        elif p ** Umnožak: return l * d
-    elif p ** Suprotan: return -prevedi(p.od)
-    elif p ** Xna: return Polinom.x(int(p.eksponent.sadržaj))
-
 
 def izračunaj(zadatak):
-    print(zadatak, '=', prevedi(AZParser.parsiraj(az_lex(zadatak))))
+    print(zadatak, '=', AZParser.parsiraj(az_lex(zadatak)).prevedi())
 
 if __name__ == '__main__':
     izračunaj('(5+2*8-3)(3-1)-(-4+2*19)')

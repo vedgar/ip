@@ -20,8 +20,7 @@ def lj_lex(string):
     for znak in iter(lex.čitaj, ''):
         if znak.isspace(): lex.token(E.PRAZNO)
         elif znak == 'L':
-            id = lex.čitaj()
-            if id.isdigit() and id != '0': yield lex.token(LJ.ID)
+            if '1' <= lex.čitaj() <= '9': yield lex.token(LJ.ID)
             else: lex.greška('očekivana znamenka veća od nule')
         elif znak.isalpha():
             lex.zvijezda(str.isalpha)
@@ -30,10 +29,8 @@ def lj_lex(string):
             lex.zvijezda(str.isdigit)
             yield lex.token(LJ.BROJ)
         elif znak == '-':
-            if lex.čitaj().isdigit():
-                lex.zvijezda(str.isdigit)
-                yield lex.token(LJ.MINUSBROJ)
-            else: lex.greška("očekivana znamenka nakon '-'")
+            lex.plus(str.isdigit)
+            yield lex.token(LJ.MINUSBROJ)
         else: lex.greška()
 
 
@@ -79,9 +76,9 @@ class Program(AST('naredbe')):
     """Program u jeziku listâ."""
     def izvrši(self):
         memorija = {}
-        izlazi = []
-        for naredba in self.naredbe: izlazi.append(naredba.izvrši(memorija))
-        return izlazi
+        for naredba in self.naredbe:
+            izlaz = naredba.izvrši(memorija)
+            if izlaz is not None: yield izlaz
     
 class Deklaracija(AST('lista')):
     """Deklaracija liste."""
@@ -128,12 +125,15 @@ class Ubaci(AST('lista vrijednost indeks')):
 
 def pogledaj(memorija, l_id):
     if l_id.sadržaj in memorija: return memorija[l_id.sadržaj]
-    else: l_id.problem('Nedeklarirana lista')
+    else: l_id.nedeklaracija()
 
+
+def rezultati(lj_program):
+    print(*LJParser.parsiraj(lj_lex(lj_program)).izvrši())
 
 if __name__ == '__main__':
     print(*lj_lex('lista L1 prazna ubaci -2345 izbaci L9 dohvati 3 koliko tr'))
-    print(*LJParser.parsiraj(lj_lex('''\
+    rezultati('''\
 	lista L1  lista L3
 	ubaci L3 45 0  dohvati L3 0
 	koliko L1  koliko L3
@@ -141,4 +141,4 @@ if __name__ == '__main__':
 	lista L5  ubaci L5 6 0  ubaci L5 7 1  ubaci L5 8 1  ubaci L5 9 0
 	dohvati L5 0  dohvati L5 1  dohvati L5 2  dohvati L5 3  koliko L5
 	izbaci L5 1  dohvati L5 0 dohvati L5 1 dohvati L5 2  koliko L5
-    ''')).izvrši())
+    ''')

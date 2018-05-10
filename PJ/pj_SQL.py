@@ -47,14 +47,13 @@ def sql_lex(kôd):
 ### Apstraktna sintaksna stabla:
 # Skripta: naredbe - niz SQL naredbi, svaka završava znakom ';'
 # Create: tablica, specifikacije - CREATE TABLE naredba
-# Select: tablica, sve, stupci - SELECT naredba
+# Select: tablica, stupci - SELECT naredba: stupci == nenavedeno ako SELECT *
 # Stupac: ime, tip, veličina - specifikacija stupca u tablici (za Create)
 
 
 class SQLParser(Parser):
     def select(self):
         if self >> SQL.ZVJEZDICA:
-            sve = True
             stupci = nenavedeno
             self.pročitaj(SQL.FROM)
         elif self >> SQL.IME:
@@ -64,11 +63,10 @@ class SQLParser(Parser):
                 self.pročitaj(SQL.ZAREZ)
                 stupci.append(self.pročitaj(SQL.IME))
         else: self.greška()
-        return Select(self.pročitaj(SQL.IME), sve, stupci)
+        return Select(self.pročitaj(SQL.IME), stupci)
 
     def spec_stupac(self):
-        ime = self.pročitaj(SQL.IME)
-        tip = self.pročitaj(SQL.IME)
+        ime, tip = self.pročitaj(SQL.IME), self.pročitaj(SQL.IME)
         if self >> SQL.OTVORENA:
             veličina = self.pročitaj(SQL.BROJ)
             self.pročitaj(SQL.ZATVORENA)
@@ -111,22 +109,23 @@ class Create(AST('tablica specifikacije')):
         for stupac in self.specifikacije:
             tb[stupac.ime.sadržaj] = StupacLog(stupac)
         
-class Select(AST('tablica sve stupci')):
+class Select(AST('tablica stupci')):
     """SELECT naredba."""
     def razriješi(self, imena):
         tn = self.tablica.sadržaj
         if tn not in imena: self.tablica.nedeklaracija('nema tablice')
         tb = imena[tn]
-        if self.sve:
+        if self.stupci is nenavedeno:
             for log in tb.values(): log.pristup += 1
         else:
             for st in self.stupci:
                 sn = st.sadržaj
                 if sn not in tb:
-                    st.nedeklaracija('u tablici {} nema stupca'.format(tn))
+                    st.nedeklaracija('stupca nema u tablici {}'.format(tn))
                 tb[sn].pristup += 1
-        
+
 class Stupac(AST('ime tip veličina')): """Specifikacija stupca u tablici."""
+
 
 class StupacLog(types.SimpleNamespace):
     def __init__(self, specifikacija):

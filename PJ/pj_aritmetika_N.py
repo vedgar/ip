@@ -2,8 +2,10 @@ from pj import *
 
 
 class AN(enum.Enum):
-    BROJ = 1
     PLUS, PUTA, NA, OTVORENA, ZATVORENA = '+*^()'
+    class BROJ(Token):
+        def vrijednost(self): return int(self.sadržaj)
+        def optim(self): return self
 
 
 def an_lex(izraz):
@@ -21,9 +23,11 @@ def an_lex(izraz):
 # faktor -> baza NA faktor | baza
 # baza -> BROJ | OTVORENA izraz ZATVORENA
 
-class Zbroj(AST('pribrojnici')): pass
-class Umnožak(AST('faktori')): pass
-class Potencija(AST('baza eksponent')): pass
+### Apstraktna sintaksna stabla
+# Zbroj: pribrojnici
+# Umnožak: faktori
+# Potencija: baza eksponent
+
 
 class ANParser(Parser):
     def izraz(self):
@@ -52,44 +56,54 @@ class ANParser(Parser):
     start = izraz
 
 
-def an_interpret(izraz):
-    if izraz ** AN.BROJ: return int(izraz.sadržaj)
-    elif izraz ** Zbroj: return sum(map(an_interpret, izraz.pribrojnici))
-    elif izraz ** Umnožak:
-        f1, f2 = izraz.faktori
-        return an_interpret(f1) * an_interpret(f2)
-    elif izraz ** Potencija:
-        return an_interpret(izraz.baza) ** an_interpret(izraz.eksponent)
+nula = Token(AN.BROJ, '0')
+jedan = Token(AN.BROJ, '1')
 
 
-def an_optim(izraz):
-    nula, jedan = Token(AN.BROJ, '0'), Token(AN.BROJ, '1')
-    if izraz ** AN.BROJ: return izraz
-    elif izraz ** Zbroj:
-        o1, o2 = map(an_optim, izraz.pribrojnici)
-        if o1 == nula: return o2
-        elif o2 == nula: return o1
-        else: return Zbroj([o1, o2])
-    elif izraz ** Umnožak:
-        o1, o2 = map(an_optim, izraz.faktori)
-        if o1 == jedan: return o2
-        elif o2 == jedan: return o1
-        elif nula in {o1, o2}: return nula
-        else: return Umnožak([o1, o2])
-    elif izraz ** Potencija:
-        o_baza = an_optim(izraz.baza)
-        o_eksponent = an_optim(izraz.eksponent)
-        if o_eksponent == nula: return jedan
-        elif o_baza == nula: return nula  # 0^0 je gore, jer prepoznamo sve nule
-        elif jedan in {o_baza, o_eksponent}: return o_baza
-        else: return Potencija(o_baza, o_eksponent)
+class Zbroj(AST('pribrojnici')):
+    def vrijednost(izraz):
+        a, b = izraz.pribrojnici
+        return a.vrijednost() + b.vrijednost()
+
+    def optim(izraz):
+        a, b = izraz.pribrojnici
+        a, b = a.optim(), b.optim()
+        if a == nula: return b
+        elif b == nula: return a
+        else: return Zbroj([a, b])
+
+
+class Umnožak(AST('faktori')):
+    def vrijednost(izraz):
+        a, b = izraz.faktori
+        return a.vrijednost() * b.vrijednost()
+
+    def optim(izraz):
+        a, b = izraz.faktori
+        a, b = a.optim(), b.optim()
+        if a == jedan: return b
+        elif b == jedan: return a
+        elif nula in {a, b}: return nula
+        else: return Umnožak([a, b])
+
+
+class Potencija(AST('baza eksponent')):
+    def vrijednost(izraz):
+        return izraz.baza.vrijednost() ** izraz.eksponent.vrijednost()
+
+    def optim(izraz):
+        a = b, e = izraz.baza.optim(), izraz.eksponent.optim()
+        if e == nula: return jedan
+        elif b == nula: return nula  # 0^0 je gore, jer prepoznamo sve nule
+        elif jedan in a: return b
+        else: return Potencija(*a)
 
 
 def testiraj(izraz):
     stablo = ANParser.parsiraj(an_lex(izraz))
-    opt = an_optim(stablo)
+    opt = stablo.optim()
     print(stablo, opt, sep='\n')
-    mi = an_interpret(opt)
+    mi = opt.vrijednost()
     Python = eval(izraz.replace('^', '**'))
     if mi == Python: print(izraz, '==', mi, 'OK')
     else: print(izraz, 'mi:', mi, 'Python:', Python)
