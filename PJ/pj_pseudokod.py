@@ -153,7 +153,8 @@ class Umnožak(AST('faktori')):
 faktorijela = PseudokodParser.parsiraj(pseudokod_lexer('''
 f = 1,
 dok nije x = 0 (
-  ,
+  f = f*x,
+  x = x-1
 )
 '''))
 print(faktorijela.rezultat(x=7).f)

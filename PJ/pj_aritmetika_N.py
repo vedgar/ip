@@ -1,3 +1,18 @@
+"""Izračunavanje aritmetičkih izraza nad skupom prirodnih brojeva.
+
+Podržani operatori su + (zbrajanje), * (množenje) i ^ (potenciranje).
+Svi operatori su binarni i desno asocirani, radi jednostavnosti parsera.
+Zbrajanju i množenju je svejedno jer su to asocijativne operacije,
+a potenciranje se obično po dogovoru shvaća desno asocirano (2^3^2=2^9=512).
+Zagrade su dozvoljene, ali često nisu nužne. Prioritet je uobičajen (^, *, +).
+
+Implementiran je i jednostavni optimizator, koji detektira sve nule i
+jedinice u izrazima, te pojednostavljuje izraze koji ih sadrže
+(x+0=0+x=x*1=1*x=x^1=x, x^0=1, x*0=0*x=0^x=0
+  - ovo zadnje pravilo se uvijek primjenjuje nakon x^0=1, jer 0^0=1).
+"""
+
+
 from pj import *
 
 
@@ -22,6 +37,7 @@ def an_lex(izraz):
 # član -> faktor PUTA član | faktor
 # faktor -> baza NA faktor | baza
 # baza -> BROJ | OTVORENA izraz ZATVORENA
+
 
 ### Apstraktna sintaksna stabla
 # Zbroj: pribrojnici

@@ -1,3 +1,18 @@
+"""Istinitosna vrijednost, i jednostavna optimizacija, formula logike sudova.
+
+Standardna definicija iz [Vuković, Matematička logika]:
+* Propozicijska varijabla (P0, P1, P2, ..., P9, P10, P11, ....) je formula
+* Ako je F formula, tada je i !F formula (negacija)
+* Ako su F i G formule, tada su i (F&G), (F|G), (F->G) i (F<->G) formule
+Sve zagrade (oko binarnih veznika) su obavezne!
+
+Interpretacija se zadaje imenovanim argumentima:
+    formula.vrijednost(P2=True, P7=False, P1=True, ...)
+
+Optimizacija (formula.optim()) zamjenjuje potformule oblika !!F sa F.
+"""
+
+
 from pj import *
 
 
@@ -32,9 +47,11 @@ def ls_lex(kôd):
 # formula -> NEG formula | PVAR | OTV formula binvez formula ZATV
 # binvez -> KONJ | DISJ | KOND | BIKOND
 
-### Apstraktna sintaksna stabla:
+
+### Apstraktna sintaksna stabla (i njihovi atributi):
 # Negacija: ispod
 # Binarna: veznik lijevo desno
+
 
 class LSParser(Parser):
     def formula(self):
@@ -58,7 +75,8 @@ class Negacija(AST('ispod')):
     def optim(formula):
         i = formula.ispod.optim()
         return i.ispod if i ** Negacija else Negacija(i)
-        
+
+
 class Binarna(AST('veznik lijevo desno')):
     def vrijednost(formula, **interpretacija):
         v = formula.veznik
@@ -76,11 +94,44 @@ class Binarna(AST('veznik lijevo desno')):
 
 
 if __name__ == '__main__':
-    ulaz = '!(P5&!!(P3->P1))'
+    ulaz = '!(P5&!!(P3->P0))'
+
     tokeni = list(ls_lex(ulaz))
     print(*tokeni)
+    # NEG'!' OTV'(' PVAR'P5' KONJ'&' NEG'!' NEG'!'
+    # OTV'(' PVAR'P3' KOND'->' PVAR'P0' ZATV')' ZATV')'
+
     fo = LSParser.parsiraj(tokeni)
     print(fo)
+    # Negacija(
+    #   ispod=Binarna(
+    #     veznik=KONJ'&',
+    #     lijevo=PVAR'P5',
+    #     desno=Negacija(
+    #       ispod=Negacija(
+    #         ispod=Binarna(
+    #           veznik=KOND'->',
+    #           lijevo=PVAR'P3',
+    #           desno=PVAR'P0'
+    #         )
+    #       )
+    #     )
+    #   )
+    # )
+    
     fo = fo.optim()
     print(fo)
-    print(fo.vrijednost(P1=False, P3=True, P5=False))
+    # Negacija(
+    #   ispod=Binarna(
+    #     veznik=KONJ'&',
+    #     lijevo=PVAR'P5',
+    #     desno=Binarna(
+    #       veznik=KOND'->',
+    #       lijevo=PVAR'P3',
+    #       desno=PVAR'P0'
+    #     )
+    #   )
+    # )
+    
+    print(fo.vrijednost(P0=False, P3=True, P5=False))
+    # True
