@@ -49,6 +49,7 @@ def ls_lex(kôd):
 
 
 ### Apstraktna sintaksna stabla (i njihovi atributi):
+# PVAR (Token, odozgo): tip, sadržaj
 # Negacija: ispod
 # Binarna: veznik lijevo desno
 
@@ -56,7 +57,9 @@ def ls_lex(kôd):
 class LSParser(Parser):
     def formula(self):
         if self >> LS.PVAR: return self.zadnji
-        elif self >> LS.NEG: return Negacija(self.formula())
+        elif self >> LS.NEG: 
+            ispod = self.formula()
+            return Negacija(ispod)
         elif self >> LS.OTV:
             lijevo = self.formula()
             veznik = self.pročitaj(LS.KONJ, LS.DISJ, LS.KOND, LS.BIKOND)
@@ -72,9 +75,12 @@ class Negacija(AST('ispod')):
     def vrijednost(formula, **interpretacija):
         return not formula.ispod.vrijednost(**interpretacija)
 
-    def optim(formula):
-        i = formula.ispod.optim()
-        return i.ispod if i ** Negacija else Negacija(i)
+    def optim(self):
+        ispod_opt = self.ispod.optim()
+        if ispod_opt ** Negacija:
+            return ispod_opt.ispod 
+        else:
+            return Negacija(ispod_opt)
 
 
 class Binarna(AST('veznik lijevo desno')):
@@ -88,13 +94,15 @@ class Binarna(AST('veznik lijevo desno')):
         elif v ** LS.BIKOND: return l == d
         else: assert not 'slučaj'
 
-    def optim(formula):
-        l, d = formula.lijevo.optim(), formula.desno.optim()
-        return Binarna(formula.veznik, l, d)
+    def optim(self):
+        lijevo_opt = self.lijevo.optim()
+        desno_opt = self.desno.optim()
+        return Binarna(self.veznik, lijevo_opt, desno_opt)
 
 
 if __name__ == '__main__':
     ulaz = '!(P5&!!(P3->P0))'
+    print(ulaz)
 
     tokeni = list(ls_lex(ulaz))
     print(*tokeni)

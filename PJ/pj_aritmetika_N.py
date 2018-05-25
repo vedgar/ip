@@ -8,7 +8,7 @@ Zagrade su dozvoljene, ali često nisu nužne. Prioritet je uobičajen (^, *, +)
 
 Implementiran je i jednostavni optimizator, koji detektira sve nule i
 jedinice u izrazima, te pojednostavljuje izraze koji ih sadrže
-(x+0=0+x=x*1=1*x=x^1=x, x^0=1, x*0=0*x=0^x=0
+(x+0=0+x=x*1=1*x=x^1=x, x^0=1^x=1, x*0=0*x=0^x=0
   - ovo zadnje pravilo se uvijek primjenjuje nakon x^0=1, jer 0^0=1).
 """
 
@@ -47,9 +47,12 @@ def an_lex(izraz):
 
 class ANParser(Parser):
     def izraz(self):
-        član = self.član()
-        if self >> AN.PLUS: return Zbroj([član, self.izraz()])
-        else: return član
+        prvi = self.član()
+        if self >> AN.PLUS:
+            drugi = self.izraz()
+            return Zbroj([prvi, drugi])
+        else:
+            return prvi
 
     def član(self):
         faktor = self.faktor()
@@ -108,17 +111,17 @@ class Potencija(AST('baza eksponent')):
         return izraz.baza.vrijednost() ** izraz.eksponent.vrijednost()
 
     def optim(izraz):
-        a = b, e = izraz.baza.optim(), izraz.eksponent.optim()
+        b, e = izraz.baza.optim(), izraz.eksponent.optim()
         if e == nula: return jedan
         elif b == nula: return nula  # 0^0 je gore, jer prepoznamo sve nule
-        elif jedan in a: return b
-        else: return Potencija(*a)
+        elif jedan in {b, e}: return b
+        else: return Potencija(b, e)
 
 
 def testiraj(izraz):
     stablo = ANParser.parsiraj(an_lex(izraz))
     opt = stablo.optim()
-    print(stablo, opt, sep='\n')
+    print(izraz, stablo, opt, sep='\n')
     mi = opt.vrijednost()
     Python = eval(izraz.replace('^', '**'))
     if mi == Python: print(izraz, '==', mi, 'OK')
