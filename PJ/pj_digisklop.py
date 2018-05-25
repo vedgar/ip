@@ -21,7 +21,7 @@ def ds_lex(string):
 
 ### Beskontekstna gramatika
 # sklop -> sklop ILI disjunkt | disjunkt
-# disjunkt -> faktor disjunkt | faktor
+# disjunkt -> disjunkt faktor | faktor
 # faktor -> SLOVO | faktor NE | OOTV sklop OZATV | UOTV sklop UZATV
 
 
@@ -51,15 +51,14 @@ class DSParser(Parser):
     start = sklop
 
 
+class Not(AST('ulaz')):
+    def uNand(self): return [self.ulaz.uNand()]
+
 class And(AST('ulazi')):
     def uNand(self): return [[ulaz.uNand() for ulaz in self.ulazi]]
 
 class Or(AST('ulazi')):
     def uNand(self): return [[ulaz.uNand()] for ulaz in self.ulazi]
-    
-class Not(AST('ulaz')):
-    def uNand(self): return [self.ulaz.uNand()]
-
 
 
 def pod_negacijom(sklop):

@@ -37,7 +37,9 @@ class Zbroj(AST('pribrojnici')):
     def optim(self):
         opt_pribr = [x.optim() for x in self.pribrojnici]
         opt_pribr = [x for x in opt_pribr if x != nula]
-        return opt_pribr[0] if len(opt_pribr) == 1 else Zbroj(opt_pribr)
+        if not opt_pribr: return nula
+        elif len(opt_pribr) == 1: return opt_pribr[0]
+        else: return Zbroj(opt_pribr)
 
 
 class Umnožak(AST('faktori')):
@@ -50,7 +52,9 @@ class Umnožak(AST('faktori')):
         opt_fakt = [x.optim() for x in self.faktori]
         if nula in opt_fakt: return nula
         opt_fakt = [x for x in opt_fakt if x != jedan]
-        return opt_fakt[0] if len(opt_fakt) == 1 else Umnožak(opt_fakt)
+        if not opt_fakt: return jedan
+        elif len(opt_fakt) == 1: return opt_fakt[0]
+        else: return Umnožak(opt_fakt)
 
 
 class Potencija(AST('baza eksponent')):
@@ -74,7 +78,7 @@ class ANParser(Parser):
 
     def član(self):
         trenutni = [self.faktor()]
-        while self >> AN.PUTA or self >= {AN.OTVORENA, AN.BROJ}:
+        while self >> AN.PUTA or self >= AN.OTVORENA:
             trenutni.append(self.faktor())
         return trenutni[0] if len(trenutni) == 1 else Umnožak(trenutni)
 
@@ -100,7 +104,8 @@ def testiraj(izraz):
     print(stablo, opt, sep='\n')
     mi = opt.vrijednost()
     try: Python = eval(izraz.replace('^', '**'))
-    except SyntaxError: print('Python ne zna ovo izračunati!', izraz, '==', mi)
+    except (SyntaxError, TypeError):
+        print('Python ne zna ovo izračunati!', izraz, '==', mi)
     else:
         if mi == Python: print(izraz, '==', mi, 'OK')
         else: print(izraz, 'mi:', mi, 'Python:', Python, 'krivo')
@@ -109,3 +114,4 @@ if __name__ == '__main__':
     testiraj('(2+3)*4^1')
     testiraj('2^0^0^0^0')
     testiraj('2+(0+1*1*2)')
+    testiraj('2(3+5)')
