@@ -4,12 +4,15 @@ import RI
 
 class Ri(enum.Enum):
     OTV, ZATV, ILI, ZVIJEZDA, PLUS, UPITNIK = '()|*+?'
-    PRAZAN, EPSILON, ZNAK = '/0', '/1', 'a'
+    PRAZAN, EPSILON = '/0', '/1'
+    class ZNAK(Token):
+        pass
 
 
 def specijalan(znak):
     assert len(znak) == 1
     return znak in '()|*+?/'
+
 
 def ri_lex(ri):
     lex = Tokenizer(ri)
@@ -31,6 +34,16 @@ def ri_lex(ri):
 # disjunkt -> faktor disjunkt | faktor
 # faktor -> element | faktor ZVIJEZDA | faktor PLUS | faktor UPITNIK
 # element -> PRAZAN | EPSILON | ZNAK | OTV izraz ZATV
+
+### Umjesto ASTova koristimo klase iz modula RI
+# RI.prazan
+# RI.epsilon
+# RI.Elementaran(znak)
+# RI.Unija(r1, r2)
+# RI.Konkatenacija(r1, r2)
+# RI.Zvijezda(r)
+# RI.Plus(r) i RI.Upitnik(r) su implementirani pomoću gornjih
+
 
 class RIParser(Parser):
     def izraz(self):
@@ -65,5 +78,6 @@ class RIParser(Parser):
     start = izraz
 
 if __name__ == '__main__':
-    print(*ri_lex('? )a/1|/('), sep=',')
-    print(RIParser.parsiraj(ri_lex('/1|a(/(c?)*')).početak())
+    # print(*ri_lex('? )a/1|/('), sep=',')
+    # print(RIParser.parsiraj(ri_lex('/1|a(/(c?)*')).početak())
+    print(repr(RIParser.parsiraj(ri_lex('a*'))))

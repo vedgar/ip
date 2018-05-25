@@ -1,19 +1,20 @@
+"""Jednostavni SQL parser, samo za nizove CREATE i SELECT naredbi.
+
+Ovaj fragment SQLa je zapravo regularan -- nigdje nema ugnježđivanja!
+Semantički analizator u obliku name resolvera:
+    provjerava jesu li svi selektirani stupci prisutni, te broji pristupe.
+Na dnu je lista ideja za dalji razvoj."""
+
+
 from pj import *
 import pprint
 
 
 class SQL(enum.Enum):
-    IME = 'NekoIme'
-    ZVJEZDICA = '*'
-    ZAREZ = ','
-    SELECT = 'SELECT'
-    FROM = 'FROM'
-    CREATE = 'CREATE'
-    TABLE = 'TABLE'
-    OTVORENA = '('
-    ZATVORENA = ')'
-    BROJ = 123
-    TOČKAZAREZ = ';'
+    class IME(Token): pass
+    class BROJ(Token): pass
+    SELECT, FROM, CREATE, TABLE = 'SELECT', 'FROM', 'CREATE', 'TABLE'
+    OTVORENA, ZATVORENA, ZVJEZDICA, ZAREZ, TOČKAZAREZ = '()*,;'
     KOMENTAR = '--'
 
 
@@ -26,7 +27,7 @@ def sql_lex(kôd):
             yield lex.token(SQL.BROJ)
         elif znak == '-':
             lex.pročitaj('-')
-            lex.zvijezda('\n'.__ne__)
+            lex.zvijezda(lambda znak: znak != '\n')
             lex.pročitaj('\n')
             lex.token(SQL.KOMENTAR)
         elif znak.isalpha():
@@ -47,22 +48,19 @@ def sql_lex(kôd):
 ### Apstraktna sintaksna stabla:
 # Skripta: naredbe - niz SQL naredbi, svaka završava znakom ';'
 # Create: tablica, specifikacije - CREATE TABLE naredba
-# Select: tablica, stupci - SELECT naredba: stupci == nenavedeno ako SELECT *
+# Select: tablica, stupci - SELECT naredba; stupci == nenavedeno za SELECT *
 # Stupac: ime, tip, veličina - specifikacija stupca u tablici (za Create)
 
 
 class SQLParser(Parser):
     def select(self):
-        if self >> SQL.ZVJEZDICA:
-            stupci = nenavedeno
-            self.pročitaj(SQL.FROM)
+        if self >> SQL.ZVJEZDICA: stupci = nenavedeno
         elif self >> SQL.IME:
             sve = False
             stupci = [self.zadnji]
-            while not self >> SQL.FROM:
-                self.pročitaj(SQL.ZAREZ)
-                stupci.append(self.pročitaj(SQL.IME))
+            while self >> SQL.ZAREZ: stupci.append(self.pročitaj(SQL.IME))
         else: self.greška()
+        self.pročitaj(SQL.FROM)        
         return Select(self.pročitaj(SQL.IME), stupci)
 
     def spec_stupac(self):
@@ -78,14 +76,14 @@ class SQLParser(Parser):
         tablica = self.pročitaj(SQL.IME)
         self.pročitaj(SQL.OTVORENA)
         stupci = [self.spec_stupac()]
-        while not self >> SQL.ZATVORENA:
-            self.pročitaj(SQL.ZAREZ)
-            stupci.append(self.spec_stupac())
+        while self >> SQL.ZAREZ: stupci.append(self.spec_stupac())
+        self.pročitaj(SQL.ZATVORENA)
         return Create(tablica, stupci)
 
     def naredba(self):
         if self >> SQL.SELECT: rezultat = self.select()
         elif self >> SQL.CREATE: rezultat = self.create()
+        else: self.greška()
         self.pročitaj(SQL.TOČKAZAREZ)
         return rezultat
 
@@ -128,6 +126,7 @@ class Stupac(AST('ime tip veličina')): """Specifikacija stupca u tablici."""
 
 
 class StupacLog(types.SimpleNamespace):
+    """Zapis o tome koliko je puta pristupljeno određenom stupcu."""
     def __init__(self, specifikacija):
         self.tip = specifikacija.tip.sadržaj
         vel = specifikacija.veličina
@@ -136,28 +135,28 @@ class StupacLog(types.SimpleNamespace):
 
 
 if __name__ == '__main__':
-    skripta = SQLParser.parsiraj(sql_lex('''
+    skripta = SQLParser.parsiraj(sql_lex('''\
             CREATE TABLE Persons
             (
                 PersonID int,
-                Name varchar(255),
-                Birthday date,
+                Name varchar(255),  -- neki stupci imaju zadanu veličinu
+                Birthday date,      -- a neki nemaju...
                 Married bool,
-                City varchar(9)
+                City varchar(9)     -- zadnji nema zarez!
             );  -- Sada krenimo nešto selektirati
             SELECT Name, City FROM Persons;
             SELECT * FROM Persons;
             CREATE TABLE Trivial (ID void(0));  -- još jedna tablica
-            SELECT * FROM Trivial;
+            SELECT*FROM Trivial;  -- između simbola i riječi ne mora ići razmak
             SELECT Name, Married FROM Persons;
             SELECT Name from Persons;
     '''))
     pprint.pprint(skripta.razriješi())
 
 # ideje za dalji razvoj:
-    # StupacLog.pristup umjesto broja može biti lista brojeva linija skripte
-        # u kojima počinju SELECT naredbe koje pristupaju pojedinom stupcu
-    # za_indeks(skripta): lista tablica/stupaca natprosječno dohvaćivanih
+    # StupacLog.pristup umjesto samog broja može biti lista brojeva linija \
+    # skripte u kojima počinju SELECT naredbe koje pristupaju pojedinom stupcu
+    # za_indeks(skripta): lista natprosječno dohvaćivanih tablica/stupaca
     # optimizacija: brisanje iz CREATE stupaca kojima nismo uopće pristupili
     # implementirati INSERT INTO, da možemo doista nešto i raditi s podacima
     # povratni tip za SELECT (npr. (varchar(255), bool) za ovaj zadnji)
