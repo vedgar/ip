@@ -43,7 +43,7 @@ def sql_lex(kôd):
 # stupci -> IME ZAREZ stupci | IME
 # create -> CREATE TABLE IME OTVORENA spec_stupci ZATVORENA
 # spec_stupci -> spec_stupac ZAREZ spec_stupci | spec_stupac
-# spec_stupac -> IME IME | IME IME OTVORENA BROJ ZATVORENA
+# spec_stupac -> IME IME (OTVORENA BROJ ZATVORENA)?
 
 ### Apstraktna sintaksna stabla:
 # Skripta: naredbe - niz SQL naredbi, svaka završava znakom ';'
@@ -151,6 +151,25 @@ if __name__ == '__main__':
             SELECT Name, Married FROM Persons;
             SELECT Name from Persons;
     '''))
+    print(skripta)
+    # Skripta(naredbe=[
+    #   Create(tablica=IME'Persons', specifikacije=[
+    #     Stupac(ime=IME'PersonID', tip=IME'int', veličina=nenavedeno), 
+    #     Stupac(ime=IME'Name', tip=IME'varchar', veličina=BROJ'255'),
+    #     Stupac(ime=IME'Birthday', tip=IME'date', veličina=nenavedeno),
+    #     Stupac(ime=IME'Married', tip=IME'bool', veličina=nenavedeno),
+    #     Stupac(ime=IME'City', tip=IME'varchar', veličina=BROJ'9')
+    #   ]),
+    #   Select(tablica=IME'Persons', stupci=[IME'Name', IME'City']),
+    #   Select(tablica=IME'Persons', stupci=nenavedeno),
+    #   Create(tablica=IME'Trivial', specifikacije=
+    #     [Stupac(ime=IME'ID', tip=IME'void', veličina=BROJ'0')]),
+    #   Select(tablica=IME'Trivial', stupci=nenavedeno),
+    #   Select(tablica=IME'Persons', stupci=[IME'Name', IME'Married']),
+    #   Select(tablica=IME'Persons', stupci=[IME'Name'])
+    # ])
+
+    #raise SystemExit
     pprint.pprint(skripta.razriješi())
 
 # ideje za dalji razvoj:
