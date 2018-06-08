@@ -45,7 +45,10 @@ class ACParser(Parser):
         env = []
         while True:
             izraz = self.izraz()
-            if self >> AC.STRELICA: env.append((self.pročitaj(AC.IME), izraz))
+            if self >> AC.STRELICA: 
+                varijabla = self.pročitaj(AC.IME)
+                par = varijabla, izraz
+                env.append(par)
             elif self >> E.KRAJ: return Program(env, izraz)
             else: self.greška()
 
@@ -53,7 +56,11 @@ class ACParser(Parser):
         trenutni = self.član()
         while True:
             if self >> {AC.PLUS, AC.MINUS}:
-                trenutni = Binarna(self.zadnji, trenutni, self.član())
+                trenutni = Binarna(
+                    op = self.zadnji, 
+                    lijevo = trenutni, 
+                    desno = self.član()
+                )
             else: return trenutni
 
     def član(self):

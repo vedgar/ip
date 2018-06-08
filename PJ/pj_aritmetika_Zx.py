@@ -8,6 +8,7 @@ class AZ(enum.Enum):
         def prevedi(self): return Polinom.konstanta(self.vrijednost())
     class X(Token):
         def prevedi(self): return Polinom.x()
+        def vrijednost(self): raise NotImplementedError('Nepoznata vrijednost')
 
 
 def az_lex(izraz):
@@ -30,9 +31,14 @@ class AZParser(Parser):
     def izraz(self):
         trenutni = self.član()
         while True:
-            if self >> AZ.PLUS: trenutni = Zbroj(trenutni, self.član())
-            elif self >> AZ.MINUS: trenutni = Razlika(trenutni, self.član())
-            else: return trenutni
+            if self >> AZ.PLUS: 
+                član = self.član()
+                trenutni = Zbroj(trenutni, član)
+            elif self >> AZ.MINUS:
+                član = self.član()
+                trenutni = Razlika(trenutni, član)
+            else: break
+        return trenutni
 
     def član(self):
         if self >> AZ.MINUS: return Suprotan(self.član())

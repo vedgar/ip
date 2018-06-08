@@ -6,13 +6,24 @@ class PSK(enum.Enum):
     OTV, ZATV, ZAREZ = '(),'
     JEDNAKO, MANJE, PLUS, MINUS, ZVJEZDICA = '=<+-*'
     class AIME(Token):
-        def vrijednost(self, mem): return mem[self.sadržaj]
+        """Aritmetičko ime (ime za broj), počinje malim slovom."""
+        def vrijednost(self, mem):
+            return mem[self.sadržaj]
+
     class LIME(Token):
-        def istina(self, mem): return mem[self.sadržaj]
+        """Logičko ime (ime za logičku vrijednost), počinje velikim slovom."""
+        def istina(self, mem):
+            return mem[self.sadržaj]
+
     class BROJ(Token):
-        def vrijednost(self, mem): return int(self.sadržaj)
+        """Aritmetička konstanta (prirodni broj)."""
+        def vrijednost(self, mem):
+            return int(self.sadržaj)
+
     class LKONST(Token):
-        def istina(self, mem): return self.sadržaj == 'istina'
+        """Logička konstanta (istina ili laž)."""
+        def istina(self, mem):
+            return self.sadržaj == 'istina'
 
 def pseudokod_lexer(program):
     lex = Tokenizer(program)
@@ -36,67 +47,70 @@ def pseudokod_lexer(program):
 # naredbe -> naredba ZAREZ naredbe | naredba
 # pridruži -> AIME JEDNAKO aritm | LIME JEDNAKO log
 # log -> log ILI disjunkt | disjunkt
-# disjunkt -> aritm MANJE aritm | aritm JEDNAKO aritm | LIME | ISTINA | LAŽ
+# disjunkt -> aritm (MANJE | JEDNAKO) aritm | LIME | LKONST
 # aritm -> aritm PLUS član | aritm MINUS član
 # član -> član ZVJEZDICA faktor | faktor | MINUS faktor
 # faktor -> BROJ | AIME | OOTV aritm OZATV
 
 class PseudokodParser(Parser):
     def naredba(self):
-        if self.slijedi(PSK.AKO, PSK.DOK):
-            petlja = self.zadnji.je(PSK.DOK)
-            željeno = self.pročitaj(PSK.JE, PSK.NIJE).je(PSK.JE)
+        if self >> {PSK.AKO, PSK.DOK}:
+            petlja = self.zadnji ** PSK.DOK
+            željeno = self.pročitaj(PSK.JE, PSK.NIJE) ** PSK.JE
             uvjet, naredba = self.log(), self.naredba()
             if petlja: return Petlja(uvjet, bool(željeno), naredba)
-            if željeno and self.slijedi(PSK.INAČE): inače = self.naredba()
+            if željeno and self >> PSK.INAČE: inače = self.naredba()
             else: inače = Blok([])
             return Grananje(uvjet, bool(željeno), naredba, inače)
-        elif self.slijedi(PSK.OTV):
-            if self.slijedi(PSK.ZATV): return Blok([])
+        elif self >> PSK.OTV:
+            if self >> PSK.ZATV: return Blok([])
             u_zagradi = self.naredbe()
             self.pročitaj(PSK.ZATV)
             return u_zagradi
-        else:
-            ime = self.pročitaj(PSK.AIME, PSK.LIME)
-            _, logički = self.pročitaj(PSK.JEDNAKO), ime.je(PSK.LIME)
+        elif self >> {PSK.AIME, PSK.LIME}:
+            ime = self.zadnji
+            self.pročitaj(PSK.JEDNAKO)
+            logički = ime ** PSK.LIME
             vrijednost = self.log() if logički else self.aritm()
             return Pridruživanje(ime, vrijednost, bool(logički))
+        else:
+            self.greška()
 
     def naredbe(self):
         naredbe = [self.naredba()]
-        while self.slijedi(PSK.ZAREZ):
-            if self.vidi(PSK.ZATV): return Blok(naredbe)
+        while self >> PSK.ZAREZ:
+            if self >= PSK.ZATV: return Blok(naredbe)
             naredbe.append(self.naredba())
         return Blok(naredbe)
 
     def log(self):
         disjunkti = [self.disjunkt()]
-        while self.slijedi(PSK.ILI): disjunkti.append(self.disjunkt())
+        while self >> PSK.ILI: disjunkti.append(self.disjunkt())
         return disjunkti[0] if len(disjunkti) == 1 else Disjunkcija(disjunkti)
 
     def disjunkt(self):
-        if self.slijedi(PSK.LKONST, PSK.LIME): return self.zadnji
+        if self >> {PSK.LKONST, PSK.LIME}: return self.zadnji
         lijevo = self.aritm()
-        manje = self.pročitaj(PSK.JEDNAKO, PSK.MANJE).je(PSK.MANJE)
+        manje = self.pročitaj(PSK.JEDNAKO, PSK.MANJE) ** PSK.MANJE
         desno = self.aritm()
         return Usporedba(bool(manje), lijevo, desno)
     
     def aritm(self):
         članovi = [self.član()]
-        while self.slijedi(PSK.PLUS, PSK.MINUS):
+        while self >> {PSK.PLUS, PSK.MINUS}:
             operator = self.zadnji
             dalje = self.član()
-            članovi.append(dalje if operator.je(PSK.PLUS) else Suprotan(dalje))
+            članovi.append(dalje if operator ** PSK.PLUS else Suprotan(dalje))
         return članovi[0] if len(članovi) == 1 else Zbroj(članovi)
 
     def član(self):
-        if self.slijedi(PSK.MINUS): return Suprotan(self.faktor())
+        if self >> PSK.MINUS: return Suprotan(self.faktor())
         faktori = [self.faktor()]
-        while self.slijedi(PSK.ZVJEZDICA): faktori.append(self.faktor())
+        while self >> PSK.ZVJEZDICA: faktori.append(self.faktor())
         return faktori[0] if len(faktori) == 1 else Umnožak(faktori)
 
     def faktor(self):
-        if self.slijedi(PSK.BROJ, PSK.AIME): return self.zadnji
+        if self >> {PSK.BROJ, PSK.AIME}: return self.zadnji
         self.pročitaj(PSK.OTV)
         u_zagradi = self.aritm()
         self.pročitaj(PSK.ZATV)
@@ -150,13 +164,35 @@ class Umnožak(AST('faktori')):
         for faktor in self.faktori: p *= faktor.vrijednost(mem)
         return p
 
-faktorijela = PseudokodParser.parsiraj(pseudokod_lexer('''\
-    f = 1,
-    starix = x,
-    dok nije x = 0 (
-        f = f * x,
-        x = x - 1
-    ),
-    Jednaki = f=starix
+faktorijela = PseudokodParser.parsiraj(pseudokod_lexer('''
+f = 1,
+J = laž,
+dok nije x = 0 (
+  f = f*x,
+  x = x-1,
+  ako je x = f
+    J = istina,
+)
 '''))
-print(faktorijela.rezultat(x=1))
+print(faktorijela)
+# Blok(naredbe=[
+#   Pridruživanje(ime=AIME'f', pridruženo=BROJ'1', logički=False),
+#   Petlja(uvjet=Usporedba(manje=False, lijevo=AIME'x', desno=BROJ'0'),
+#     željeno=False, 
+#     naredba=Blok(naredbe=[
+#       Pridruživanje(ime=AIME'f', 
+#                     pridruženo=Umnožak(faktori=[AIME'f', AIME'x']), 
+#                     logički=False), 
+#       Pridruživanje(ime=AIME'x', 
+#                     pridruženo=Zbroj(pribrojnici=[AIME'x', Suprotan(od=BROJ'1')]), 
+#                     logički=False)]
+#     )
+#   )
+# ])
+
+
+# print(faktorijela.rezultat(x=7).f)
+print()
+mem = {'x': 7}
+faktorijela.izvrši(mem)
+print(mem)

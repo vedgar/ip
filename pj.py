@@ -1,6 +1,8 @@
 import enum, types, collections, contextlib
 
 
+# TODO: lex.prepoznaj: unifikacija ključna_riječ i operator
+
 def ključna_riječ(enumeracija, riječ, case=True):
     with contextlib.suppress(ValueError, KeyError):
         e = enumeracija(riječ) if case else enumeracija[riječ.upper()]

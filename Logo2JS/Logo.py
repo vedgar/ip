@@ -4,8 +4,6 @@ import itertools, math, pathlib, webbrowser, time
 
 class Logo(enum.Enum):
     OTVORENA, ZATVORENA = '[]'
-    class BROJ(Token):
-        def vrijednost(self): return int(self.sadržaj)
     REPEAT = 'REPEAT'
     FORWARD = FD = 'FORWARD'
     LEFT = LT = 'LEFT'
@@ -13,6 +11,9 @@ class Logo(enum.Enum):
     PD = PENDOWN = 'PD'
     BACKWARD = BACK = BK = BW = 'BACKWARD'
     RIGHT = RT = 'RIGHT'
+
+    class BROJ(Token):
+        def vrijednost(self): return int(self.sadržaj)
     
 
 def logo_lex(kod):
@@ -31,14 +32,14 @@ def logo_lex(kod):
 
 ### Beskontekstna gramatika
 # program -> naredba program | naredba
-# naredba -> FORWARD BROJ | LEFT BROJ | PU | PD | petlja
+# naredba -> FORWARD BROJ | LEFT BROJ | RIGHT BROJ | BACKWARD BROJ | PU | PD | petlja
 # petlja -> REPEAT BROJ OTVORENA program ZATVORENA
 
 ### Apstraktna sintaksna stabla
-# Program: naredbe:tuple - Logo program
+# Program: naredbe:list - Logo program
 # Forward: pikseli:Logo.BROJ, smjer:+-1 - FORWARD ili BACKWARD naredba
 # Left: stupnjevi:Logo.BROJ, smjer:+-1 - LEFT ili RIGHT naredba
-# Repeat: koliko:Logo.BROJ, naredbe:tuple - REPEAT naredba
+# Repeat: koliko:Logo.BROJ, naredbe:list - REPEAT naredba
 # Pen: down:bool - PU ili PD naredba
 
 def naredbe(parser):
@@ -103,13 +104,13 @@ def prevedi_string(kôd):
     return prevedeno
 
 def prevedi_datoteku(datoteka):
-    p = Parser(logo_lex(itertools.chain.from_iterable(open(datoteka))))
-    with open(pathlib.Path('a.js'), 'w') as izlaz:
+    p = Parser(logo_lex(itertools.chain.from_iterable(datoteka.open())))
+    with pathlib.Path('a.js').open('w') as izlaz:
         for javascript in prevedi(naredbe(p)): print(javascript, file=izlaz)
     p.pročitaj(E.KRAJ)
 
 def logirano_prevedi_datoteku(datoteka):
-    f = logiran(open(datoteka), 'datoteka')
+    f = logiran(datoteka.open(), 'datoteka')
     c = logiran(itertools.chain.from_iterable(f), 'linija')
     l = logiran(logo_lex(c), 'tokenizer')
     n = logiran(naredbe(Parser(l)), 'parser')
@@ -118,7 +119,7 @@ def logirano_prevedi_datoteku(datoteka):
 
 def nacrtaj(ime):
     prevedi_datoteku(dat[ime])
-    webbrowser.open(pathlib.Path('loader.html'))
+    webbrowser.open(str(pathlib.Path('loader.html')))
 
 dat = {f.stem: f for f in (pathlib.Path(__file__).parent/'crteži').iterdir()}
 crteži = set(dat)

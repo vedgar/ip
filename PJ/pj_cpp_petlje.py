@@ -10,8 +10,12 @@ class CPP(enum.Enum):
     PLUSP = '++'
     PLUSJ = '+='
     IZLAZ = '<<'
-    BROJ = 34545
-    IME = 'varijabla'
+    class BROJ(Token):
+        def vrijednost(self, mem):
+            return int(self.sadržaj)
+    class IME(Token):
+        def vrijednost(self, mem):
+            return mem[self.sadržaj]
 
 def cpp_lex(source):
     lex = Tokenizer(source)
@@ -21,7 +25,7 @@ def cpp_lex(source):
             sljedeći = lex.čitaj()
             if sljedeći == '+': yield lex.token(CPP.PLUSP)
             elif sljedeći == '=': yield lex.token(CPP.PLUSJ)
-            else: lex.greška('nema samostalnog +')
+            else: lex.greška('u ovom jeziku nema samostalnog +')
         elif znak == '<':
             if lex.čitaj() == '<': yield lex.token(CPP.IZLAZ)
             else:
@@ -32,8 +36,8 @@ def cpp_lex(source):
             yield lex.token(ključna_riječ(CPP, lex.sadržaj) or CPP.IME)
         elif znak.isdigit():
             lex.zvijezda(str.isdigit)
-            if lex.sadržaj == '0': yield lex.token(CPP.BROJ)
-            elif lex.sadržaj[0] != '0': yield lex.token(CPP.BROJ)
+            if lex.sadržaj == '0' or lex.sadržaj[0] != '0':
+                yield lex.token(CPP.BROJ)
             else: lex.greška('druge baze nisu podržane')
         else: yield lex.token(operator(CPP, znak) or lex.greška())
 
@@ -56,40 +60,34 @@ class Program(AST('naredbe')):
     
 class Petlja(AST('varijabla početak granica inkrement blok')):
     def izvrši(self, mem):
-        mem[self.varijabla.sadržaj] = int(self.početak.sadržaj)
-        while mem[self.varijabla.sadržaj] < int(self.granica.sadržaj):
+        kv = self.varijabla.sadržaj
+        mem[kv] = self.početak.vrijednost(mem)
+        while mem[kv] < self.granica.vrijednost(mem):
             for naredba in self.blok:
                 naredba.izvrši(mem)
             inkr = self.inkrement
             if inkr is nenavedeno: inkr = 1
-            else: inkr = int(inkr.sadržaj)
-            mem[self.varijabla.sadržaj] += inkr 
-    
+            else: inkr = inkr.vrijednost(mem)
+            mem[kv] += inkr 
+
 class Izlaz(AST('varijable novired')):
     def izvrši(self, mem):
         for varijabla in self.varijable:
-            if varijabla.sadržaj in mem:
-                print(mem[varijabla.sadržaj], end=' ')
-            else:
-                varijabla.nedeklaracija()
-        if self.novired:
-            print()
+            if varijabla.sadržaj in mem: print(mem[varijabla.sadržaj], end=' ')
+            else: varijabla.nedeklaracija()
+        if self.novired: print()
 
 
 class CPPParser(Parser):
     def start(self):
         naredbe = []
-        while not self >> E.KRAJ:
-            naredbe.append(self.naredba())
+        while not self >> E.KRAJ: naredbe.append(self.naredba())
         return Program(naredbe)
 
     def naredba(self):
-        if self >> CPP.FOR:
-            return self.petlja()
-        elif self >> CPP.COUT:
-            return self.izlaz()
-        else:
-            self.greška()
+        if self >> CPP.FOR: return self.petlja()
+        elif self >> CPP.COUT: return self.izlaz()
+        else: self.greška()
 
     def petlja(self):
         self.pročitaj(CPP.OOTV)
@@ -104,25 +102,20 @@ class CPPParser(Parser):
         self.pročitaj(CPP.TOČKAZ)
         i3 = self.pročitaj(CPP.IME)
         if i != i3: raise SemantičkaGreška('nisu podržane različite varijable')
-        if self >> CPP.PLUSP:
-            inkrement = nenavedeno
-        elif self >> CPP.PLUSJ:
-            inkrement = self.pročitaj(CPP.BROJ)
+        if self >> CPP.PLUSP: inkrement = nenavedeno
+        elif self >> CPP.PLUSJ: inkrement = self.pročitaj(CPP.BROJ)
         self.pročitaj(CPP.OZATV)
         if self >> CPP.VOTV:
             blok = []
-            while not self >> CPP.VZATV:
-                blok.append(self.naredba())
-        else:
-            blok = [self.naredba()]
+            while not self >> CPP.VZATV: blok.append(self.naredba())
+        else: blok = [self.naredba()]
         return Petlja(i, početak, granica, inkrement, blok)
         
     def izlaz(self):
         varijable = []
         novired = False
         while self >> CPP.IZLAZ:
-            if self >> CPP.IME:
-                varijable.append(self.zadnji)
+            if self >> CPP.IME: varijable.append(self.zadnji)
             elif self >> CPP.ENDL:
                 novired = True
                 break
@@ -131,7 +124,22 @@ class CPPParser(Parser):
 
 
 if __name__ == '__main__':
-    CPPParser.parsiraj(cpp_lex('''
+    cpp = CPPParser.parsiraj(cpp_lex('''
         for ( i = 8 ; i < 23 ; i += 2 )
             for(j=0; j<3; j++) cout<<i<<j<<endl;
-    ''')).izvrši()
+    '''))
+    print(cpp)
+    # Program(naredbe=[
+    #   Petlja(varijabla=IME'i',
+    #          početak=BROJ'8',
+    #          granica=BROJ'23',
+    #          inkrement=BROJ'2',
+    #          blok=[Petlja(varijabla=IME'j',
+    #                       početak=BROJ'0',
+    #                       granica=BROJ'3',
+    #                       inkrement=nenavedeno,
+    #                       blok=[Izlaz(varijable=[IME'i', IME'j'],
+    #                                   novired=True)]
+    #                )]
+    # )])
+    cpp.izvrši()
