@@ -2,10 +2,11 @@ from pj import *
 
 class AQ(enum.Enum):
     NAT, INT, RAT = 'nat', 'int', 'rat'
-    IME, BROJ = 'Neko_ime123', 342
     PLUS, MINUS, PUTA, KROZ, NA = '+-*/^'
     OTVORENA, ZATVORENA, JEDNAKO, NOVIRED = '()=\n'
     DIV, MOD = 'div', 'mod'
+    class IME(Token): ...
+    class BROJ(Token): ...
 
 
 def aq_lex(niz):
@@ -16,10 +17,10 @@ def aq_lex(niz):
             lex.zvijezda(str.isdigit)
             yield lex.token(AQ.BROJ)
         elif znak.isalpha():
-            lex.zvijezda(lambda znak: znak.isalnum() or znak == '_')
+            lex.zvijezda(identifikator)
             yield lex.token(ključna_riječ(AQ, lex.sadržaj) or AQ.IME)
         elif znak == '\n':
-            lex.zvijezda('\n'.__eq__)
+            lex.zvijezda(lambda znak: znak == '\n')
             yield lex.token(AQ.NOVIRED)
         else: yield lex.token(operator(AQ, znak) or lex.greška())
 
@@ -28,7 +29,7 @@ def aq_lex(niz):
 # start -> NOVIRED? niz_naredbi NOVIRED?
 # niz_naredbi -> naredba | naredba NOVIRED niz_naredbi
 # naredba -> izraz | (NAT | INT | RAT) IME JEDNAKO izraz
-# izraz -> član | izraz PLUS član | izraz MINUS član
+# izraz -> član | izraz (PLUS | MINUS) član
 # član -> faktor | član (PUTA | KROZ | DIV | MOD) faktor
 # faktor -> baza | baza NA faktor | MINUS faktor
 # baza -> BROJ | IME | OTVORENA izraz ZATVORENA
@@ -57,11 +58,12 @@ class AQParser(Parser):
         return Program(deklaracije, izrazi)
 
     def naredba(self):
-        tip = self >> {AQ.NAT, AQ.INT, AQ.RAT}
-        if tip:
+        if self >> {AQ.NAT, AQ.INT, AQ.RAT}:
+            tip = self.zadnji
             varijabla = self.pročitaj(AQ.IME)
             self.pročitaj(AQ.JEDNAKO)
-            return Deklaracija(varijabla, tip, self.izraz())
+            inicijalizacija = self.izraz()
+            return Deklaracija(varijabla, tip, inicijalizacija)
         else: return self.izraz()
 
     def izraz(self):
@@ -88,11 +90,11 @@ class AQParser(Parser):
 
     def baza(self):
         if self >> {AQ.BROJ, AQ.IME}: return self.zadnji
-        else:
-            self.pročitaj(AQ.OTVORENA)
+        elif self >> AQ.OTVORENA:
             u_zagradi = self.izraz()
             self.pročitaj(AQ.ZATVORENA)
             return u_zagradi
+        else: self.greška()
 
 
 class Program(AST('deklaracije izrazi')):

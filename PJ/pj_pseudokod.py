@@ -34,7 +34,7 @@ def pseudokod_lexer(program):
 # naredba -> (AKO | DOK) (JE | NIJE) log naredba |
 #            AKO JE log naredba INAČE naredba | pridruži | OTV naredbe? ZATV
 # naredbe -> naredba ZAREZ naredbe | naredba
-# pridruži -> (AIME JEDNAKO aritm | LIME JEDNAKO log
+# pridruži -> AIME JEDNAKO aritm | LIME JEDNAKO log
 # log -> log ILI disjunkt | disjunkt
 # disjunkt -> aritm MANJE aritm | aritm JEDNAKO aritm | LIME | ISTINA | LAŽ
 # aritm -> aritm PLUS član | aritm MINUS član
@@ -150,11 +150,13 @@ class Umnožak(AST('faktori')):
         for faktor in self.faktori: p *= faktor.vrijednost(mem)
         return p
 
-faktorijela = PseudokodParser.parsiraj(pseudokod_lexer('''
-f = 1,
-dok nije x = 0 (
-  f = f*x,
-  x = x-1
-)
+faktorijela = PseudokodParser.parsiraj(pseudokod_lexer('''\
+    f = 1,
+    starix = x,
+    dok nije x = 0 (
+        f = f * x,
+        x = x - 1
+    ),
+    Jednaki = f=starix
 '''))
-print(faktorijela.rezultat(x=7).f)
+print(faktorijela.rezultat(x=1))

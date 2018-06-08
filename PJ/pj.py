@@ -153,10 +153,11 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
             poruka += '\n' + info.format(*prvi.početak)
         raise SemantičkaGreška(poruka)
 
-    def nedeklaracija(self, info='nedeklarirano'):
+    def nedeklaracija(self, dodatak=''):
         """Prijavljuje semantičku grešku nedeklariranog simbola."""
         i, j = getattr(self, 'početak', '??')
-        poruka = 'Redak {}, stupac {}: {} {!r}'.format(i, j, info, self)
+        poruka = 'Redak {}, stupac {}: nedeklarirano {!r}'.format(i, j, self)
+        if dodatak: poruka += ' ' + dodatak.join('()')
         raise SemantičkaGreška(poruka)
 
     def problem(self, info):
