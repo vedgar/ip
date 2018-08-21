@@ -1,3 +1,7 @@
+#TODO: uniformizirati yieldanje tokena
+#TODO: pogledati može li se upotrebljivo ukrasti pprinter od astpretty
+
+
 import enum, types, collections, contextlib
 
 
