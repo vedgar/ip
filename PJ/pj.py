@@ -1,3 +1,7 @@
+#TODO: uniformizirati yieldanje tokena
+#TODO: pogledati može li se upotrebljivo ukrasti pprinter od astpretty
+
+
 import enum, types, collections, contextlib
 
 
@@ -106,6 +110,7 @@ class E(enum.Enum):  # Everywhere
 
 
 class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
+    # TODO: razmisliti treba li Token biti unhashable, ili hashiran samo kao TokenTuple
     """Klasa koja predstavlja tokene."""
     def __new__(cls, tip, sadržaj):
         if isinstance(tip.value, type): cls = tip.value
