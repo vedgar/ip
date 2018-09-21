@@ -1,5 +1,5 @@
 """Aritmetika na N, s jedinom razlikom što su + i * lijevo asocirani višemjesni.
-Implementiran je i optimizator, baš kao u originalnom aritmetikaN.py."""
+Implementiran je i optimizator, baš kao u originalnom aritmetika_N.py."""
 
 from pj import *
 
@@ -18,7 +18,7 @@ def an_lex(izraz):
         elif znak.isdigit():
             if znak != '0': lex.zvijezda(str.isdigit)
             yield lex.token(AN.BROJ)
-        else: yield lex.token(operator(AN, znak) or lex.greška())
+        else: yield lex.literal(AN)
 
 
 ### Beskontekstna gramatika: (+ i * proizvoljne mjesnosti)
@@ -26,6 +26,34 @@ def an_lex(izraz):
 # član -> član PUTA faktor | faktor | član faktor
 # faktor -> baza NA faktor | baza
 # baza -> BROJ | OTVORENA izraz ZATVORENA
+
+
+class ANParser(Parser):
+    def izraz(self):
+        trenutni = [self.član()]
+        while self >> AN.PLUS: trenutni.append(self.član())
+        return trenutni[0] if len(trenutni) == 1 else Zbroj(trenutni)
+
+    def član(self):
+        trenutni = [self.faktor()]
+        while self >> AN.PUTA or self >= AN.OTVORENA:
+            trenutni.append(self.faktor())
+        return trenutni[0] if len(trenutni) == 1 else Umnožak(trenutni)
+
+    def faktor(self):
+        baza = self.baza()
+        if self >> AN.NA: return Potencija(baza, self.faktor())
+        else: return baza
+
+    def baza(self):
+        if self >> AN.BROJ: return self.zadnji
+        elif self >> AN.OTVORENA:
+            u_zagradi = self.izraz()
+            self.pročitaj(AN.ZATVORENA)
+            return u_zagradi
+        else: raise self.greška()
+
+    start = izraz
 
 
 nula, jedan = Token(AN.BROJ, '0'), Token(AN.BROJ, '1')
@@ -68,34 +96,6 @@ class Potencija(AST('baza eksponent')):
         elif opt_baza == nula: return nula  # 0^0 je gore; prepoznamo sve nule
         elif jedan in {opt_baza, opt_eksponent}: return opt_baza
         else: return Potencija(opt_baza, opt_eksponent)
-
-
-class ANParser(Parser):
-    def izraz(self):
-        trenutni = [self.član()]
-        while self >> AN.PLUS: trenutni.append(self.član())
-        return trenutni[0] if len(trenutni) == 1 else Zbroj(trenutni)
-
-    def član(self):
-        trenutni = [self.faktor()]
-        while self >> AN.PUTA or self >= AN.OTVORENA:
-            trenutni.append(self.faktor())
-        return trenutni[0] if len(trenutni) == 1 else Umnožak(trenutni)
-
-    def faktor(self):
-        baza = self.baza()
-        if self >> AN.NA: return Potencija(baza, self.faktor())
-        else: return baza
-
-    def baza(self):
-        if self >> AN.BROJ: return self.zadnji
-        elif self >> AN.OTVORENA:
-            u_zagradi = self.izraz()
-            self.pročitaj(AN.ZATVORENA)
-            return u_zagradi
-        else: self.greška()
-
-    start = izraz
 
 
 def testiraj(izraz):

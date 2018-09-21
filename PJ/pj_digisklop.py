@@ -16,7 +16,7 @@ def ds_lex(string):
     for znak in iter(lex.čitaj, ''):
         if znak.isspace(): lex.token(E.PRAZNO)
         elif znak.isalpha(): yield lex.token(DS.SLOVO)
-        else: yield lex.token(operator(DS, znak) or lex.greška())
+        else: yield lex.literal(DS)
 
 
 ### Beskontekstna gramatika

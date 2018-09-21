@@ -1,3 +1,5 @@
+## Nedovršeno!
+
 from pj import *
 
 class AQ(enum.Enum):
@@ -18,11 +20,11 @@ def aq_lex(niz):
             yield lex.token(AQ.BROJ)
         elif znak.isalpha():
             lex.zvijezda(identifikator)
-            yield lex.token(ključna_riječ(AQ, lex.sadržaj) or AQ.IME)
+            yield lex.literal(AQ.IME)
         elif znak == '\n':
             lex.zvijezda(lambda znak: znak == '\n')
             yield lex.token(AQ.NOVIRED)
-        else: yield lex.token(operator(AQ, znak) or lex.greška())
+        else: yield lex.literal(AQ)
 
 
 ### Beskontekstna gramatika
@@ -113,8 +115,10 @@ class Deklaracija(AST('varijabla tip vrijednost')):
 def imena(izraz):
     if isinstance(izraz, AST0):
         for komponenta in izraz:
+            ...
     for komponenta in self:
-        if komponenta
+        if komponenta:
+            ...
 
 class Potencija(AST('baza eksponent')): pass
 class Razlomak(AST('brojnik nazivnik')): pass
@@ -124,3 +128,5 @@ class Zbroj(AST('pribrojnici')): pass
 class Količnik(AST('djeljenik djelitelj')): pass
 class Ostatak(AST('djeljenik djelitelj')): pass
 class Suprotan(AST('od')): pass
+
+print(*aq_lex('1+1nat 5 ret rat Rat'))

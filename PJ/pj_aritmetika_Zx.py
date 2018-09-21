@@ -7,8 +7,9 @@ class AZ(enum.Enum):
         def vrijednost(self): return int(self.sadržaj)
         def prevedi(self): return Polinom.konstanta(self.vrijednost())
     class X(Token):
-        def prevedi(self): return Polinom.x()
+        literal = 'x'
         def vrijednost(self): raise NotImplementedError('Nepoznata vrijednost')
+        def prevedi(self): return Polinom.x()
 
 
 def az_lex(izraz):
@@ -17,8 +18,7 @@ def az_lex(izraz):
         if znak.isdigit():
             lex.zvijezda(str.isdigit)
             yield lex.token(AZ.BROJ)
-        elif znak == 'x': yield lex.token(AZ.X)
-        else: yield lex.token(operator(AZ, znak) or lex.greška())
+        else: yield lex.literal(AZ)
 
 
 ### Beskontekstna gramatika:
@@ -59,7 +59,7 @@ class AZParser(Parser):
             u_zagradi = self.izraz()
             self.pročitaj(AZ.ZATVORENA)
             return u_zagradi
-        else: self.greška()
+        else: raise self.greška()
 
     start = izraz
 
@@ -132,4 +132,4 @@ if __name__ == '__main__':
     izračunaj('(((x-2)x+4)x-8)x+7')
     izračunaj('x2-2x+3')
     izračunaj('(x+1)' * 7)
-    izračunaj('(x-2+5x-(7x-5))-(x-2+5x-(7x-5))')
+    izračunaj('-'.join(['(x-2+5x-(7x-5))'] * 2))

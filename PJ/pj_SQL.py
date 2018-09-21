@@ -13,9 +13,9 @@ import pprint
 class SQL(enum.Enum):
     class IME(Token): pass
     class BROJ(Token): pass
+    class KOMENTAR(Token): pass
     SELECT, FROM, CREATE, TABLE = 'SELECT', 'FROM', 'CREATE', 'TABLE'
     OTVORENA, ZATVORENA, ZVJEZDICA, ZAREZ, TOČKAZAREZ = '()*,;'
-    KOMENTAR = '--'
 
 
 def sql_lex(kôd):
@@ -32,8 +32,8 @@ def sql_lex(kôd):
             lex.token(SQL.KOMENTAR)
         elif znak.isalpha():
             lex.zvijezda(str.isalnum)
-            yield lex.token(ključna_riječ(SQL, lex.sadržaj, False) or SQL.IME)
-        else: yield lex.token(operator(SQL, znak) or lex.greška())
+            yield lex.literal(SQL.IME, case=False)
+        else: yield lex.literal(SQL)
 
 
 ### Beskontekstna gramatika:
@@ -56,10 +56,9 @@ class SQLParser(Parser):
     def select(self):
         if self >> SQL.ZVJEZDICA: stupci = nenavedeno
         elif self >> SQL.IME:
-            sve = False
             stupci = [self.zadnji]
             while self >> SQL.ZAREZ: stupci.append(self.pročitaj(SQL.IME))
-        else: self.greška()
+        else: raise self.greška()
         self.pročitaj(SQL.FROM)        
         return Select(self.pročitaj(SQL.IME), stupci)
 
@@ -83,7 +82,7 @@ class SQLParser(Parser):
     def naredba(self):
         if self >> SQL.SELECT: rezultat = self.select()
         elif self >> SQL.CREATE: rezultat = self.create()
-        else: self.greška()
+        else: raise self.greška()
         self.pročitaj(SQL.TOČKAZAREZ)
         return rezultat
 
@@ -111,7 +110,7 @@ class Select(AST('tablica stupci')):
     """SELECT naredba."""
     def razriješi(self, imena):
         tn = self.tablica.sadržaj
-        if tn not in imena: self.tablica.nedeklaracija('nema tablice')
+        if tn not in imena: raise self.tablica.nedeklaracija('nema tablice')
         tb = imena[tn]
         if self.stupci is nenavedeno:
             for log in tb.values(): log.pristup += 1
@@ -119,7 +118,7 @@ class Select(AST('tablica stupci')):
             for st in self.stupci:
                 sn = st.sadržaj
                 if sn not in tb:
-                    st.nedeklaracija('stupca nema u tablici {}'.format(tn))
+                    raise st.nedeklaracija('stupca nema u {}'.format(tn))
                 tb[sn].pristup += 1
 
 class Stupac(AST('ime tip veličina')): """Specifikacija stupca u tablici."""

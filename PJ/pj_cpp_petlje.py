@@ -13,15 +13,14 @@ class CPP(enum.Enum):
     IZLAZ = '<<'
     JJEDNAKO = '=='
     class BREAK(Token):
-        def izvrši(self, mem):
-            raise BreakException
-
+        literal = 'break'
+        def izvrši(self, mem): raise BreakException
     class BROJ(Token):
-        def vrijednost(self, mem):
-            return int(self.sadržaj)
+        def vrijednost(self, mem): return int(self.sadržaj)
     class IME(Token):
         def vrijednost(self, mem):
-            return mem[self.sadržaj]
+            try: return mem[self.sadržaj]
+            except KeyError: raise self.nedeklaracija()
 
 def cpp_lex(source):
     lex = Tokenizer(source)
@@ -31,27 +30,22 @@ def cpp_lex(source):
             sljedeći = lex.čitaj()
             if sljedeći == '+': yield lex.token(CPP.PLUSP)
             elif sljedeći == '=': yield lex.token(CPP.PLUSJ)
-            else: lex.greška('u ovom jeziku nema samostalnog +')
+            else: raise lex.greška('u ovom jeziku nema samostalnog +')
         elif znak == '<':
             if lex.čitaj() == '<': yield lex.token(CPP.IZLAZ)
-            else:
-                lex.vrati()
-                yield lex.token(CPP.MANJE)
+            else: lex.vrati(); yield lex.token(CPP.MANJE)
         elif znak == '=':
             if lex.čitaj() == '=': yield lex.token(CPP.JJEDNAKO)
-            else:
-                lex.vrati()
-                yield lex.token(CPP.JEDNAKO)
+            else: lex.vrati(); yield lex.token(CPP.JEDNAKO)
         elif znak.islower():
             lex.zvijezda(str.islower)
-            if lex.sadržaj == 'break': yield lex.token(CPP.BREAK)
-            else: yield lex.token(ključna_riječ(CPP, lex.sadržaj) or CPP.IME)
+            yield lex.literal(CPP.IME)
         elif znak.isdigit():
             lex.zvijezda(str.isdigit)
             if lex.sadržaj == '0' or lex.sadržaj[0] != '0':
                 yield lex.token(CPP.BROJ)
             else: lex.greška('druge baze nisu podržane')
-        else: yield lex.token(operator(CPP, znak) or lex.greška())
+        else: yield lex.literal(CPP)
 
 
 # start -> naredba naredbe
@@ -75,11 +69,8 @@ class CPPParser(Parser):
         if self >> CPP.FOR: return self.petlja()
         elif self >> CPP.COUT: return self.izlaz()
         elif self >> CPP.IF: return self.grananje()
-        elif self >> CPP.BREAK:
-            br = self.zadnji
-            self.pročitaj(CPP.TOČKAZ)
-            return br
-        else: self.greška()
+        elif self >> CPP.BREAK: return self.break_()
+        else: raise self.greška()
 
     def petlja(self):
         self.pročitaj(CPP.OOTV)
@@ -87,16 +78,19 @@ class CPPParser(Parser):
         self.pročitaj(CPP.JEDNAKO)
         početak = self.pročitaj(CPP.BROJ)
         self.pročitaj(CPP.TOČKAZ)
+
         i2 = self.pročitaj(CPP.IME)
         if i != i2: raise SemantičkaGreška('nisu podržane različite varijable')
         self.pročitaj(CPP.MANJE)
         granica = self.pročitaj(CPP.BROJ)
         self.pročitaj(CPP.TOČKAZ)
+
         i3 = self.pročitaj(CPP.IME)
         if i != i3: raise SemantičkaGreška('nisu podržane različite varijable')
         if self >> CPP.PLUSP: inkrement = nenavedeno
         elif self >> CPP.PLUSJ: inkrement = self.pročitaj(CPP.BROJ)
         self.pročitaj(CPP.OZATV)
+
         if self >> CPP.VOTV:
             blok = []
             while not self >> CPP.VZATV: blok.append(self.naredba())
@@ -108,9 +102,7 @@ class CPPParser(Parser):
         novired = False
         while self >> CPP.IZLAZ:
             if self >> CPP.IME: varijable.append(self.zadnji)
-            elif self >> CPP.ENDL:
-                novired = True
-                break
+            elif self >> CPP.ENDL: novired = True; break
         self.pročitaj(CPP.TOČKAZ)
         return Izlaz(varijable, novired)
 
@@ -123,14 +115,18 @@ class CPPParser(Parser):
         naredba = self.naredba()
         return Grananje(lijevo, desno, naredba)
 
+    def break_(self):
+        br = self.zadnji
+        self.pročitaj(CPP.TOČKAZ)
+        return br
+
 
 class BreakException(Exception): pass
 
 class Program(AST('naredbe')):
     def izvrši(self):
         memorija = {}
-        for naredba in self.naredbe:
-            naredba.izvrši(memorija)
+        for naredba in self.naredbe: naredba.izvrši(memorija)
     
 class Petlja(AST('varijabla početak granica inkrement blok')):
     def izvrši(self, mem):
@@ -138,8 +134,7 @@ class Petlja(AST('varijabla početak granica inkrement blok')):
         mem[kv] = self.početak.vrijednost(mem)
         while mem[kv] < self.granica.vrijednost(mem):
             try:
-                for naredba in self.blok:
-                    naredba.izvrši(mem)
+                for naredba in self.blok: naredba.izvrši(mem)
             except BreakException: break
             inkr = self.inkrement
             if inkr is nenavedeno: inkr = 1
@@ -148,16 +143,13 @@ class Petlja(AST('varijabla početak granica inkrement blok')):
 
 class Izlaz(AST('varijable novired')):
     def izvrši(self, mem):
-        for varijabla in self.varijable:
-            if varijabla.sadržaj in mem: print(mem[varijabla.sadržaj], end=' ')
-            else: varijabla.nedeklaracija()
+        for var in self.varijable: print(var.vrijednost(mem), end=' ')
         if self.novired: print()
 
 class Grananje(AST('lijevo desno naredba')):
     def izvrši(self, mem):
-        l = self.lijevo.vrijednost(mem)
-        d = self.desno.vrijednost(mem)
-        if l == d: self.naredba.izvrši(mem)
+        if self.lijevo.vrijednost(mem) == self.desno.vrijednost(mem):
+            self.naredba.izvrši(mem)
 
 
 if __name__ == '__main__':
@@ -183,3 +175,7 @@ if __name__ == '__main__':
     #                )]
     # )])
     cpp.izvrši()
+
+
+# DZ: omogućiti i grananjima da imaju blokove - uvesti novi AST Blok
+#     omogućiti da parametri petlje budu varijable, ne samo brojevi

@@ -22,7 +22,7 @@ class LS(enum.Enum):
     class PVAR(Token):
         def vrijednost(self, **interpretacija):
             try: return interpretacija[self.sadržaj]
-            except KeyError: self.nedeklaracija()
+            except KeyError: raise self.nedeklaracija()
         def optim(self): return self
 
 
@@ -40,7 +40,7 @@ def ls_lex(kôd):
         elif znak == '<':
             lex.pročitaj('-'), lex.pročitaj('>')
             yield lex.token(LS.BIKOND)
-        else: yield lex.token(operator(LS, znak) or lex.greška())
+        else: yield lex.literal(LS)
 
 
 ### Beskontekstna gramatika:
@@ -66,7 +66,7 @@ class LSParser(Parser):
             desno = self.formula()
             self.pročitaj(LS.ZATV)
             return Binarna(veznik, lijevo, desno)
-        else: self.greška()
+        else: raise self.greška()
 
     start = formula
 
@@ -77,10 +77,8 @@ class Negacija(AST('ispod')):
 
     def optim(self):
         ispod_opt = self.ispod.optim()
-        if ispod_opt ** Negacija:
-            return ispod_opt.ispod 
-        else:
-            return Negacija(ispod_opt)
+        if ispod_opt ** Negacija: return ispod_opt.ispod 
+        else: return Negacija(ispod_opt)
 
 
 class Binarna(AST('veznik lijevo desno')):
@@ -92,7 +90,7 @@ class Binarna(AST('veznik lijevo desno')):
         elif v ** LS.KONJ: return l and d
         elif v ** LS.KOND: return l <= d
         elif v ** LS.BIKOND: return l == d
-        else: assert not 'slučaj'
+        else: assert False, 'nepokriveni slučaj'
 
     def optim(self):
         lijevo_opt = self.lijevo.optim()

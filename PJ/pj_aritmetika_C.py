@@ -8,11 +8,13 @@ class AC(enum.Enum):
     class BROJ(Token):
         def vrijednost(self, _): return complex(self.sadržaj)
     class I(Token):
+        literal = 'i'
         def vrijednost(self, _): return 1j
     class IME(Token):
         def vrijednost(self, okolina):
             try: return okolina[self.sadržaj]
-            except KeyError: self.nedeklaracija()
+            except KeyError: raise self.nedeklaracija()
+
 
 def ac_lex(string):
     lex = Tokenizer(string)
@@ -20,7 +22,8 @@ def ac_lex(string):
         if znak.isspace(): lex.token(E.PRAZNO)
         elif znak == '-':
             yield lex.token(AC.STRELICA if lex.slijedi('>') else AC.MINUS)
-        elif znak == '*': yield lex.token(AC.NA if lex.slijedi('*')else AC.PUTA)
+        elif znak == '*':
+            yield lex.token(AC.NA if lex.slijedi('*') else AC.PUTA)
         elif znak == '^': yield lex.token(AC.NA)
         elif znak.isdigit():
             lex.zvijezda(str.isdigit)
@@ -29,8 +32,8 @@ def ac_lex(string):
             yield lex.token(AC.BROJ)
         elif znak.isalpha():
             lex.zvijezda(identifikator)
-            yield lex.token(AC.I if lex.sadržaj == 'i' else AC.IME)
-        else: yield lex.token(operator(AC, znak) or lex.greška())
+            yield lex.literal(AC.IME)
+        else: yield lex.literal(AC)
 
 
 ### Beskontekstna gramatika
@@ -47,10 +50,9 @@ class ACParser(Parser):
             izraz = self.izraz()
             if self >> AC.STRELICA: 
                 varijabla = self.pročitaj(AC.IME)
-                par = varijabla, izraz
-                env.append(par)
+                env.append((varijabla, izraz))
             elif self >> E.KRAJ: return Program(env, izraz)
-            else: self.greška()
+            else: raise self.greška()
 
     def izraz(self):
         trenutni = self.član()
@@ -81,7 +83,7 @@ class ACParser(Parser):
         elif self >> AC.OTV:
             trenutni = self.izraz()
             self.pročitaj(AC.ZATV)
-        else: self.greška()
+        else: raise self.greška()
         while self >> AC.KONJ: trenutni = Unarna(self.zadnji, trenutni)
         return trenutni
 
@@ -101,7 +103,7 @@ class Binarna(AST('op lijevo desno')):
             elif o ** AC.PUTA: return x * y
             elif o ** AC.KROZ: return x / y
             elif o ** AC.NA: return x ** y
-            else: assert not 'slučaj'
+            else: assert False, 'nepokriveni slučaj binarnog operatora' + str(o)
         except ArithmeticError as ex: o.problem(*ex.args)
 
 class Unarna(AST('op ispod')):
@@ -132,4 +134,4 @@ if __name__ == '__main__':
         e^(i*pi) + 1 -> skoro0
         skoro0
     '''.format(pi))))
-    print(izračunaj('6.022045e23->NA 1.6605e-27->u NA*u-0.001'))
+    print(izračunaj('6.022045e23->NA 1.6605e-27->u 1/(NA*u)'))

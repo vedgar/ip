@@ -29,7 +29,7 @@ def an_lex(izraz):
         if znak.isdigit():
             if znak != '0': lex.zvijezda(str.isdigit)
             yield lex.token(AN.BROJ)
-        else: yield lex.token(operator(AN, znak) or lex.greška())
+        else: yield lex.literal(AN)
 
 
 ### Beskontekstna gramatika: (desno asocirani operatori)
@@ -70,7 +70,7 @@ class ANParser(Parser):
             u_zagradi = self.izraz()
             self.pročitaj(AN.ZATVORENA)
             return u_zagradi
-        else: self.greška()
+        else: raise self.greška()
 
     start = izraz
 
