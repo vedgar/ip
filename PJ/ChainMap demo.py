@@ -17,4 +17,4 @@ print(mem['x'], mem['y'])
 
 mem = mem.parents
 
-print(mem['x'])
+print(mem)

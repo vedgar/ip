@@ -2,25 +2,18 @@ from pj import *
 
 
 class CPP(enum.Enum):
-    FOR = 'for'
-    COUT = 'cout'
-    ENDL = 'endl'
-    IF = 'if'
+    FOR, COUT, ENDL, IF = 'for', 'cout', 'endl', 'if'
     OOTV, OZATV, VOTV, VZATV = '(){}'
     MANJE, JEDNAKO, TOČKAZ = '<=;'
-    PLUSP = '++'
-    PLUSJ = '+='
-    IZLAZ = '<<'
-    JJEDNAKO = '=='
+    PLUSP, PLUSJ, IZLAZ, JJEDNAKO = '++', '+=', '<<', '=='
     class BREAK(Token):
         literal = 'break'
         def izvrši(self, mem): raise BreakException
     class BROJ(Token):
         def vrijednost(self, mem): return int(self.sadržaj)
     class IME(Token):
-        def vrijednost(self, mem):
-            try: return mem[self.sadržaj]
-            except KeyError: raise self.nedeklaracija()
+        def vrijednost(self, mem): return pogledaj(mem, self)
+
 
 def cpp_lex(source):
     lex = Tokenizer(source)
@@ -42,8 +35,8 @@ def cpp_lex(source):
             yield lex.literal(CPP.IME)
         elif znak.isdigit():
             lex.zvijezda(str.isdigit)
-            if lex.sadržaj == '0' or lex.sadržaj[0] != '0':
-                yield lex.token(CPP.BROJ)
+            p = lex.sadržaj
+            if p == '0' or p[0] != '0': yield lex.token(CPP.BROJ)
             else: lex.greška('druge baze nisu podržane')
         else: yield lex.literal(CPP)
 
@@ -122,6 +115,7 @@ class CPPParser(Parser):
 
 
 class BreakException(Exception): pass
+
 
 class Program(AST('naredbe')):
     def izvrši(self):

@@ -1,18 +1,15 @@
+#TODO: pogledati može li se upotrebljivo ukrasti pprinter od astpretty
+
+
 import enum, types, collections, contextlib
 
 
-# TODO: lex.prepoznaj: unifikacija ključna_riječ i operator
-
-def ključna_riječ(enumeracija, riječ, case=True):
-    with contextlib.suppress(ValueError, KeyError):
-        e = enumeracija(riječ) if case else enumeracija[riječ.upper()]
-        if e.name.casefold() == e.value.casefold(): return e
-
-def operator(enumeracija, znak):
-    assert len(znak) == 1
-    with contextlib.suppress(ValueError): return enumeracija(znak)
-
 def identifikator(znak): return znak.isalnum() or znak == '_'
+
+
+def pogledaj(mem, token):
+    try: return mem[token.sadržaj]
+    except KeyError: raise token.nedeklaracija() from None
 
 
 # TODO: bolji API: Greška(poruka, pozicija ili token ili AST...)
@@ -75,28 +72,47 @@ class Tokenizer:
     def plus(self, uvjet):
         """Čita Kleene+ (jedan ili više) znakova koji zadovoljavaju uvjet."""
         prvi = self.čitaj()
-        if not uvjet(prvi): self.greška('očekivan ' + uvjet.__name__)
+        if not uvjet(prvi):
+            raise self.greška('očekivan ' + uvjet.__name__)
         self.zvijezda(uvjet)
     
     def pročitaj(self, znak):
         """Čita zadani znak, ili prijavljuje leksičku grešku."""
-        if znak != self.čitaj(): self.greška('očekivano {!r}'.format(znak))
+        if znak != self.čitaj():
+            raise self.greška('očekivano {!r}'.format(znak))
 
     def greška(self, info=''):
-        """Prijavljuje leksičku grešku."""
+        """Konstruira leksičku grešku koja se treba prijaviti s raise."""
         if self.buffer: self.čitaj()
         poruka = 'Redak {}, stupac {}: '.format(*self.pozicija)
         poruka += 'neočekivan znak {!r}'.format(self.pročitani.pop())
         if info: poruka += ' (' + info + ')'
-        raise LeksičkaGreška(poruka)
+        return LeksičkaGreška(poruka)
 
     def token(self, tip):
         """Odašilje token."""
         t = Token(tip, self.sadržaj)
         t.početak = self.početak
+        self.zanemari()
+        return t
+
+    def literal(self, odakle, case=True):
+        """Odašilje doslovni token ako ga nađe, ili vrstu zadanu argumentom."""
+        t = self.sadržaj if case else self.sadržaj.casefold()
+        def p(odakle):
+            if isinstance(odakle, enum.EnumMeta):
+                for e in odakle:
+                    if e.value == t or getattr(e.value, 'literal', None) == t:
+                        return e
+        nađen = p(odakle) or p(type(odakle))
+        if nađen: return self.token(nađen)
+        elif isinstance(type(odakle), enum.EnumMeta): return self.token(odakle)
+        else: raise self.greška()
+
+    def zanemari(self):
+        """Resetira pročitano."""
         self.pročitani.clear()
         self.početak = self.pozicija
-        return t
 
 
 class E(enum.Enum):  # Everywhere
@@ -108,6 +124,7 @@ class E(enum.Enum):  # Everywhere
 
 
 class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
+    # TODO: razmisliti treba li Token biti unhashable, ili hashiran samo kao TokenTuple
     """Klasa koja predstavlja tokene."""
     def __new__(cls, tip, sadržaj):
         if isinstance(tip.value, type): cls = tip.value
@@ -138,34 +155,36 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
             return self
 
     def neočekivan(self, info=''):
-        """Prijavljuje sintaksnu grešku: neočekivan tip tokena."""
+        """Konstruira sintaksnu grešku: neočekivan tip tokena."""
         poruka = 'Redak {}, stupac {}: neočekivan token {!r}'
         if info: poruka += ' (' + info + ')'
         očekivano = ' ili '.join(t.name for t in self.uspoređeni if t!=self.tip)
         if očekivano: poruka += '\nOčekivano: ' + očekivano
         i, j = getattr(self, 'početak', '??')
-        raise SintaksnaGreška(poruka.format(i, j, self))
+        return SintaksnaGreška(poruka.format(i, j, self))
 
-    def redeklaracija(self, prvi=None):
-        """Prijavljuje semantičku grešku redeklaracije."""
+    if False:
+      def redeklaracija(self, prvi=None):
+        """Konstruira semantičku grešku redeklaracije."""
         i, j = getattr(self, 'početak', '??')
         poruka = 'Redak {}, stupac {}: redeklaracija {!r}'.format(i, j, self)
         if prvi is not None:
             info = 'Prva deklaracija je bila ovdje: redak {}, stupac {}'
             poruka += '\n' + info.format(*prvi.početak)
-        raise SemantičkaGreška(poruka)
+        return SemantičkaGreška(poruka)
 
-    def nedeklaracija(self, info='nedeklarirano'):
-        """Prijavljuje semantičku grešku nedeklariranog simbola."""
+    def nedeklaracija(self, dodatak=''):
+        """Konstruira semantičku grešku nedeklariranog simbola."""
         i, j = getattr(self, 'početak', '??')
-        poruka = 'Redak {}, stupac {}: {} {!r}'.format(i, j, info, self)
-        raise SemantičkaGreška(poruka)
+        poruka = 'Redak {}, stupac {}: nedeklarirano {!r}'.format(i, j, self)
+        if dodatak: poruka += ' ' + dodatak.join('()')
+        return SemantičkaGreška(poruka)
 
     def problem(self, info):
-        """Prijavljuje grešku izvođenja."""
+        """Konstruira grešku izvođenja."""
         poruka = 'Redak {}, stupac {}: {!r}: {}'
         i, j = getattr(self, 'početak', '??')
-        raise GreškaIzvođenja(poruka.format(i, j, self, info))
+        return GreškaIzvođenja(poruka.format(i, j, self, info))
 
     @classmethod
     def kraj(cls):
@@ -186,7 +205,7 @@ class Parser:
         token = self.buffer
         if token is None:
             if self.zadnji is not None and not self.zadnji.razriješen:
-                self.greška()
+                raise self.greška()
             token = next(self.stream, self.kraj)
         self.buffer = None
         self.zadnji = token
@@ -204,7 +223,7 @@ class Parser:
         token = self.čitaj()
         if token ** set(tipovi): return token
         self.vrati()
-        self.greška()
+        raise self.greška()
 
     def slijedi(self, *tipovi):
         """Čita sljedeći token samo ako je odgovarajućeg tipa."""
@@ -218,13 +237,13 @@ class Parser:
 
     def __ge__(self, tip): return self.pogledaj() ** tip
 
-    def greška(self): self.zadnji.neočekivan()
+    def greška(self): return self.zadnji.neočekivan()
 
     @classmethod
     def parsiraj(klasa, tokeni):
         parser = klasa(tokeni)
         try: rezultat = parser.start()
-        except NoneInAST: parser.greška()  # BUG: ovo nije dovoljno precizno!
+        except NoneInAST: raise parser.greška()  # BUG: nije dovoljno precizno!
         else:
             parser.pročitaj(E.KRAJ)
             return rezultat

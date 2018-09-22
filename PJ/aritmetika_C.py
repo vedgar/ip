@@ -11,15 +11,13 @@ class AC(enum.Enum):
         literal = 'i'
         def vrijednost(self, _): return 1j
     class IME(Token):
-        def vrijednost(self, okolina):
-            try: return okolina[self.sadržaj]
-            except KeyError: raise self.nedeklaracija()
+        def vrijednost(self, okolina): return pogledaj(okolina, self)
 
 
 def ac_lex(string):
     lex = Tokenizer(string)
     for znak in iter(lex.čitaj, ''):
-        if znak.isspace(): lex.token(E.PRAZNO)
+        if znak.isspace(): lex.zanemari()
         elif znak == '-':
             yield lex.token(AC.STRELICA if lex.slijedi('>') else AC.MINUS)
         elif znak == '*':

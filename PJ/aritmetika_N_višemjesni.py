@@ -14,7 +14,7 @@ class AN(enum.Enum):
 def an_lex(izraz):
     lex = Tokenizer(izraz)
     for znak in iter(lex.čitaj, ''):
-        if znak.isspace(): lex.token(E.PRAZNO)
+        if znak.isspace(): lex.zanemari()
         elif znak.isdigit():
             if znak != '0': lex.zvijezda(str.isdigit)
             yield lex.token(AN.BROJ)

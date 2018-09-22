@@ -1,22 +1,15 @@
-#TODO: uniformizirati yieldanje tokena
 #TODO: pogledati može li se upotrebljivo ukrasti pprinter od astpretty
 
 
 import enum, types, collections, contextlib
 
 
-if False:
-    def ključna_riječ(enumeracija, riječ, case=True):
-        with contextlib.suppress(ValueError, KeyError):
-            e = enumeracija(riječ) if case else enumeracija[riječ.upper()]
-            if e.name.casefold() == e.value.casefold(): return e
-
-    def operator(enumeracija, znak):
-        assert len(znak) == 1
-        with contextlib.suppress(ValueError): return enumeracija(znak)
-
-
 def identifikator(znak): return znak.isalnum() or znak == '_'
+
+
+def pogledaj(mem, token):
+    try: return mem[token.sadržaj]
+    except KeyError: raise token.nedeklaracija() from None
 
 
 # TODO: bolji API: Greška(poruka, pozicija ili token ili AST...)
@@ -100,11 +93,11 @@ class Tokenizer:
         """Odašilje token."""
         t = Token(tip, self.sadržaj)
         t.početak = self.početak
-        self.pročitani.clear()
-        self.početak = self.pozicija
+        self.zanemari()
         return t
 
     def literal(self, odakle, case=True):
+        """Odašilje doslovni token ako ga nađe, ili vrstu zadanu argumentom."""
         t = self.sadržaj if case else self.sadržaj.casefold()
         def p(odakle):
             if isinstance(odakle, enum.EnumMeta):
@@ -115,6 +108,11 @@ class Tokenizer:
         if nađen: return self.token(nađen)
         elif isinstance(type(odakle), enum.EnumMeta): return self.token(odakle)
         else: raise self.greška()
+
+    def zanemari(self):
+        """Resetira pročitano."""
+        self.pročitani.clear()
+        self.početak = self.pozicija
 
 
 class E(enum.Enum):  # Everywhere

@@ -5,22 +5,23 @@ from pj import *
 class AQ(enum.Enum):
     NAT, INT, RAT = 'nat', 'int', 'rat'
     PLUS, MINUS, PUTA, KROZ, NA = '+-*/^'
-    OTVORENA, ZATVORENA, JEDNAKO, NOVIRED = '()=\n'
+    OTVORENA, ZATVORENA, JEDNAKO = '()='
     DIV, MOD = 'div', 'mod'
     class IME(Token): ...
     class BROJ(Token): ...
+    class NOVIRED(Token): ...
 
 
 def aq_lex(niz):
     lex = Tokenizer(niz)
     for znak in iter(lex.čitaj, ''):
-        if znak == ' ': lex.token(E.PRAZNO)
+        if znak.isspace(): lex.zanemari()
         elif znak.isdigit():
             lex.zvijezda(str.isdigit)
             yield lex.token(AQ.BROJ)
         elif znak.isalpha():
             lex.zvijezda(identifikator)
-            yield lex.literal(AQ.IME)
+            yield lex.literal(AQ.IME, case=False)
         elif znak == '\n':
             lex.zvijezda(lambda znak: znak == '\n')
             yield lex.token(AQ.NOVIRED)

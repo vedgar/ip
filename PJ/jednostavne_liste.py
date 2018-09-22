@@ -1,48 +1,47 @@
+# Primjer rada sa stringovima.
 # Napišimo interpreter za programski "jezik" koji reprezentira liste.
 # Liste se pišu kao [x1,x2,...,xk], svaki xi može biti broj ili string.
 # Brojevi su samo prirodni (veći od 0).
 # Stringovi se pišu kao "...", gdje unutar ... ne smije biti znak ".
 # Stringovi se mogu pisati i kao '...', gdje unutar ... nema znaka '.
-# Zapravo, stringovi smiju sadržavati i " i ', ali escape-ane znakom \.
+# Zapravo, "..."-stringovi smiju sadržavati i " i ', ali escape-ane znakom \.
 
 from pj import *
 
 class L(enum.Enum):
     UOTV, UZATV, ZAREZ = '[],'
     class BROJ(Token):
-        def vrijednost(self):
-            return int(self.sadržaj)
+        def vrijednost(self): return int(self.sadržaj)
     class STRING(Token):
-        def vrijednost(self):
-            return self.sadržaj.replace('\\', '')
+        def vrijednost(self): return self.sadržaj.replace('\\', '')
 
 def l_lex(lista):
     lex = Tokenizer(lista)
     for znak in iter(lex.čitaj, ''):
-        if znak.isspace(): lex.token(E.PRAZNO)
+        if znak.isspace(): lex.zanemari()
         elif znak.isdigit() and znak != '0':
             lex.zvijezda(str.isdigit)
             yield lex.token(L.BROJ)
         elif znak == '"':
-            lex.token(E.VIŠAK)
+            lex.zanemari()
             escape = False
             while True:
                 z = lex.čitaj()
-                if not z: lex.greška('Nezavršeni string!')
+                if not z: raise lex.greška('Nezavršeni string!')
                 elif z == '\\': lex.čitaj()
                 elif z == '"':
                     lex.vrati()
                     yield lex.token(L.STRING)
                     lex.pročitaj('"')
-                    lex.token(E.VIŠAK)
+                    lex.zanemari()
                     break
         elif znak == "'":
-            lex.token(E.VIŠAK)
+            lex.zanemari()
             lex.zvijezda(lambda znak: znak != "'")
             yield lex.token(L.STRING)
             lex.pročitaj("'")
-            lex.token(E.VIŠAK)
-        else: yield lex.token(operator(L, znak) or lex.greška())
+            lex.zanemari()
+        else: yield lex.literal(L)
 
 # lista -> UOTV elementi UZATV
 # elementi -> element | element ZAREZ elementi | ''
@@ -59,8 +58,7 @@ class LParser(Parser):
         rezultat = []
         if not self >= L.UZATV:
             rezultat.append(self.element())
-            while self >> L.ZAREZ:
-                rezultat.append(self.element())
+            while self >> L.ZAREZ: rezultat.append(self.element())
         return rezultat
 
     def element(self):
@@ -69,10 +67,12 @@ class LParser(Parser):
     start = lista
 
 
-def vrijednost(l):
-    return [el.vrijednost() for el in l]
+def vrijednost(l): return [el.vrijednost() for el in l]
 
 if __name__ == '__main__':
     print(vrijednost(LParser.parsiraj(l_lex(r'''
         [23, "ab\"c]", 'a[]', 523]
     '''))))
+
+## DZ: * Uvesti dodatne escape sekvence -- recimo \n za novi red
+##     * Omogućiti da pored stringova i brojeva, liste mogu sadržavati i liste.

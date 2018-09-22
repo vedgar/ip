@@ -5,27 +5,24 @@ import RI
 class Ri(enum.Enum):
     OTV, ZATV, ILI, ZVIJEZDA, PLUS, UPITNIK = '()|*+?'
     PRAZAN, EPSILON = '/0', '/1'
-    class ZNAK(Token):
-        pass
+    class ZNAK(Token): pass
 
 
-def specijalan(znak):
-    assert len(znak) == 1
-    return znak in '()|*+?/'
+def specijalan(znak): return znak in '()|*+?/'
 
 
 def ri_lex(ri):
     lex = Tokenizer(ri)
     for znak in iter(lex.čitaj, ''):
         if znak == '/':
-            lex.token(E.VIŠAK)
+            lex.zanemari()
             sljedeći = lex.čitaj()
             if sljedeći == '0': yield lex.token(Ri.PRAZAN)
             elif sljedeći == '1': yield lex.token(Ri.EPSILON)
             elif not sljedeći: lex.greška('"escape"an kraj stringa')
             elif specijalan(sljedeći): yield lex.token(Ri.ZNAK)
             else: lex.greška('nepostojeći "escape" znak')
-        elif specijalan(znak): yield lex.token(operator(Ri, znak))
+        elif specijalan(znak): yield lex.literal(Ri)
         else: yield lex.token(Ri.ZNAK)
 
 

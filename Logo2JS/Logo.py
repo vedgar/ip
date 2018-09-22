@@ -4,13 +4,9 @@ import itertools, math, pathlib, webbrowser, time
 
 class Logo(enum.Enum):
     OTVORENA, ZATVORENA = '[]'
-    REPEAT = 'REPEAT'
-    FORWARD = FD = 'FORWARD'
-    LEFT = LT = 'LEFT'
-    PU = PENUP = 'PU'
-    PD = PENDOWN = 'PD'
-    BACKWARD = BACK = BK = BW = 'BACKWARD'
-    RIGHT = RT = 'RIGHT'
+    REPEAT, FD, LT, RT = 'repeat', 'forward', 'left', 'right'
+    PU, PD = 'penup', 'pendown'
+    BW = BACK = BK = 'backward'
 
     class BROJ(Token):
         def vrijednost(self): return int(self.sadržaj)
@@ -19,15 +15,19 @@ class Logo(enum.Enum):
 def logo_lex(kod):
     lex = Tokenizer(kod)
     for znak in iter(lex.čitaj, ''):
-        if znak.isspace(): lex.token(E.PRAZNO)
+        if znak.isspace(): lex.zanemari()
         elif znak.isdigit():
             lex.zvijezda(str.isdigit)
             yield lex.token(Logo.BROJ)
         elif znak.isalpha():
             lex.zvijezda(str.isalpha)
-            kw = ključna_riječ(Logo, lex.sadržaj, False)
-            yield lex.token(kw or E.GREŠKA)
-        else: yield lex.token(operator(Logo, znak) or lex.greška())
+            for en in Logo:
+                if en.value == lex.sadržaj.lower() or \
+                   en.name == lex.sadržaj.upper() and en.value.isalpha():
+                        yield lex.token(en)
+                        break
+            else: raise lex.greška(lex.sadržaj)
+        else: yield lex.literal(Logo)
 
 
 ### Beskontekstna gramatika
@@ -44,14 +44,14 @@ def logo_lex(kod):
 
 def naredbe(parser):
     for kw in iter(parser.čitaj, None):
-        if kw ** {Logo.FORWARD,Logo.BACKWARD,Logo.LEFT,Logo.RIGHT,Logo.REPEAT}:
+        if kw ** {Logo.FD, Logo.BK, Logo.LT, Logo.RT ,Logo.REPEAT}:
             koliko = parser.pročitaj(Logo.BROJ)
         if kw ** Logo.PU: yield Pen(False)
         elif kw ** Logo.PD: yield Pen(True)
-        elif kw ** Logo.FORWARD: yield Forward(koliko, +1)
-        elif kw ** Logo.LEFT: yield Left(koliko, +1)
-        elif kw ** Logo.BACKWARD: yield Forward(koliko, -1)
-        elif kw ** Logo.RIGHT: yield Left(koliko, -1)
+        elif kw ** Logo.FD: yield Forward(koliko, +1)
+        elif kw ** Logo.LT: yield Left(koliko, +1)
+        elif kw ** Logo.BK: yield Forward(koliko, -1)
+        elif kw ** Logo.RT: yield Left(koliko, -1)
         elif kw ** Logo.REPEAT:
             parser.pročitaj(Logo.OTVORENA)
             u_petlji = list(naredbe(parser))

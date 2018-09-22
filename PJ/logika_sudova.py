@@ -21,8 +21,7 @@ class LS(enum.Enum):
     KOND, BIKOND = '->', '<->'
     class PVAR(Token):
         def vrijednost(self, **interpretacija):
-            try: return interpretacija[self.sadržaj]
-            except KeyError: raise self.nedeklaracija()
+            return pogledaj(interpretacija, self)
         def optim(self): return self
 
 

@@ -14,7 +14,7 @@ class DS(enum.Enum):
 def ds_lex(string):
     lex = Tokenizer(string)
     for znak in iter(lex.čitaj, ''):
-        if znak.isspace(): lex.token(E.PRAZNO)
+        if znak.isspace(): lex.zanemari()
         elif znak.isalpha(): yield lex.token(DS.SLOVO)
         else: yield lex.literal(DS)
 
@@ -44,7 +44,7 @@ class DSParser(Parser):
         elif self >> DS.UOTV:
             trenutni = Not(self.sklop())
             self.pročitaj(DS.UZATV)
-        else: self.greška()
+        else: raise self.greška()
         while self >> DS.NE: trenutni = Not(trenutni)
         return trenutni
 

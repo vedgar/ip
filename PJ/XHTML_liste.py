@@ -2,32 +2,28 @@ from pj import *
 
 
 class HTML(enum.Enum):
-    HTML, ZHTML = 'html', 'Zhtml'
-    HEAD, ZHEAD = 'head', 'Zhead'
-    BODY, ZBODY = 'body', 'Zbody'
-    OL, ZOL = 'ol', 'Zol'
-    UL, ZUL = 'ul', 'Zul'
-    LI, ZLI = 'li', 'Zli'
-    TEXT = 'neki tekst'
+    HTML, ZHTML = '<html>', '</html>'
+    HEAD, ZHEAD = '<head>', '</head>'
+    BODY, ZBODY = '<body>', '</body>'
+    OL, ZOL = '<ol>', '</ol>'
+    UL, ZUL = '<ul>', '</ul>'
+    LI, ZLI = '<li>', '</li>'
+    class TEXT(Token): pass
 
 
 def html_lex(string):
-    def preskoči_praznine():
+    def pp():
+        """Preskače praznine."""
         lex.zvijezda(str.isspace)
-        lex.token(E.PRAZNO)
+        lex.zanemari()
 
     lex = Tokenizer(string)
     for znak in iter(lex.čitaj, ''):
-        if znak.isspace(): preskoči_praznine()
+        if znak.isspace(): pp()
         elif znak == '<':
-            pref = ''
-            preskoči_praznine()
-            if lex.slijedi('/'):
-                pref = 'Z'
-                preskoči_praznine()
-            lex.zvijezda(str.isalpha)
-            yield lex.token(ključna_riječ(HTML, pref + lex.sadržaj) or E.GREŠKA)
-            preskoči_praznine(), lex.pročitaj('>'), preskoči_praznine()
+            lex.zvijezda(lambda znak: znak != '>')
+            lex.pročitaj('>')
+            yield lex.literal(HTML)
         else:
             lex.zvijezda(lambda z: z and not z.isspace() and z != '<')
             yield lex.token(HTML.TEXT)            
@@ -74,9 +70,8 @@ class XLParser(Parser):
             lista = Lista(False, self.stavke())
             self.pročitaj(HTML.ZUL)
             return lista
-        elif self >= HTML.TEXT:
-            return self.tekst()
-        else: self.greška()
+        elif self >= HTML.TEXT: return self.tekst()
+        else: raise self.greška()
 
     def stavke(self):
         self.pročitaj(HTML.LI)
@@ -101,10 +96,8 @@ class Lista(AST('uređena stavke')):
 
 class Tekst(AST('dijelovi')):
     def render(self, razina, prefiks):
-        if razina:
-            print('\t' * razina, end=prefiks)
-        for dio in self.dijelovi:
-            print(dio.sadržaj, end=' ')
+        if razina: print('\t' * razina, end=prefiks)
+        for dio in self.dijelovi: print(dio.sadržaj, end=' ')
         print()
 
 r = XLParser.parsiraj(html_lex('''\

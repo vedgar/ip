@@ -3,27 +3,19 @@
 from pj import *
 
 class JS(enum.Enum):
-    FUNCTION = 'function'
-    IME = 'ime_funkcije_ili_argumenta'
-    O_OTV = '('
-    O_ZATV = ')'
-    VAR = 'var'
-    ZAREZ = ','
-    V_OTV = '{'
-    V_ZATV = '}'
+    FUNCTION, VAR, NAREDBA = 'function', 'var', 'naredba'
+    O_OTV, O_ZATV, V_OTV, V_ZATV, KOSACRTA, ZAREZ, TOČKAZAREZ = '(){}/,;'
     KOMENTAR = '//'
-    KOSACRTA = '/'
-    TOČKAZAREZ = ';'
-    NAREDBA = 'naredba'
+    class IME(Token): pass
 
 
 def js_lex(string):
     lex = Tokenizer(string)
     for znak in iter(lex.čitaj, ''):
-        if znak.isspace(): lex.token(E.PRAZNO)
+        if znak.isspace(): lex.zanemari()
         elif znak.isalpha():
             lex.zvijezda(identifikator)
-            yield lex.token(ključna_riječ(JS, lex.sadržaj) or JS.IME)
+            yield lex.literal(JS.IME)
         elif znak == '/':
             if lex.čitaj() == '/':
                 lex.zvijezda(lambda znak: znak != '\n')
@@ -32,7 +24,8 @@ def js_lex(string):
             else:
                 lex.vrati()
                 yield lex.token(JS.KOSACRTA)
-        else: yield lex.token(operator(JS, znak) or lex.greška())
+        else: yield lex.literal(JS)
+
 
 ### Beskontekstna gramatika
 # funkcija -> FUNCTION IME O_OTV argumenti O_ZATV V_OTV tijelo V_ZATV
@@ -80,8 +73,7 @@ class JSParser(Parser):
         self.pročitaj(JS.VAR)
         return self.pročitaj(JS.IME)
 
-    def naredba(self):
-        return self.pročitaj(JS.NAREDBA)
+    def naredba(self): return self.pročitaj(JS.NAREDBA)
 
 
 if __name__ == '__main__':

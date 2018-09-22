@@ -1,19 +1,17 @@
 from pj import *
 
 class PSK(enum.Enum):
-    AKO, DOK, INAČE = 'ako', 'dok', 'inače'
+    AKO, DOK, INAČE, VRATI = 'ako', 'dok', 'inače', 'vrati'
     JE, NIJE, ILI = 'je', 'nije', 'ili'
-    VRATI = 'vrati'
-    OTV, ZATV, ZAREZ = '(),'
-    JEDNAKO, MANJE, PLUS, MINUS, ZVJEZDICA = '=<+-*'
+    OTV, ZATV, ZAREZ, JEDNAKO, MANJE, PLUS, MINUS, ZVJEZDICA = '(),=<+-*'
     
     class AIME(Token):
         """Aritmetičko ime (ime za broj), počinje malim slovom."""
-        def vrijednost(self, mem): return mem[self]
+        def vrijednost(self, mem): return pogledaj(mem, self)
 
     class LIME(Token):
         """Logičko ime (ime za logičku vrijednost), počinje velikim slovom."""
-        def vrijednost(self, mem): return mem[self]
+        def vrijednost(self, mem): return pogledaj(mem, self)
 
     class BROJ(Token):
         """Aritmetička konstanta (prirodni broj)."""
@@ -26,18 +24,18 @@ class PSK(enum.Enum):
 def pseudokod_lexer(program):
     lex = Tokenizer(program)
     for znak in iter(lex.čitaj, ''):
-        if znak.isspace(): lex.token(E.PRAZNO)
+        if znak.isspace(): lex.zanemari()
         elif znak.islower():
             lex.zvijezda(str.isalpha)
             if lex.sadržaj in {'istina', 'laž'}: yield lex.token(PSK.LKONST)
-            else: yield lex.token(ključna_riječ(PSK, lex.sadržaj) or PSK.AIME)
+            else: yield lex.literal(PSK.AIME)
         elif znak.isalpha():
             lex.zvijezda(str.isalpha)
             yield lex.token(PSK.LIME)
         elif znak.isdigit():
             lex.zvijezda(str.isdigit)
             yield lex.token(PSK.BROJ)
-        else: yield lex.token(operator(PSK, znak) or lex.greška())
+        else: yield lex.literal(PSK)
 
 
 ### BKG (ne sasvim BK:)
@@ -71,12 +69,11 @@ class PseudokodParser(Parser):
     def naredba(self):
         if self >> {PSK.AKO, PSK.DOK}:
             petlja = self.zadnji ** PSK.DOK
-            željeno = self.pročitaj(PSK.JE, PSK.NIJE) ** PSK.JE
+            istina = bool(self.pročitaj(PSK.JE, PSK.NIJE) ** PSK.JE)
             uvjet, naredba = self.log(), self.naredba()
-            if petlja: return Petlja(uvjet, bool(željeno), naredba)
-            if željeno and self >> PSK.INAČE: inače = self.naredba()
-            else: inače = Blok([])
-            return Grananje(uvjet, bool(željeno), naredba, inače)
+            if petlja: return Petlja(uvjet, istina, naredba)
+            inače = self.naredba() if istina and self >> PSK.INAČE else Blok([])
+            return Grananje(uvjet, istina, naredba, inače)
         elif self >> PSK.OTV:
             if self >> PSK.ZATV: return Blok([])
             u_zagradi = self.naredbe()
@@ -89,7 +86,7 @@ class PseudokodParser(Parser):
             return Pridruživanje(ime, vrijednost)
         elif self >> PSK.VRATI:
             return Vrati(self.log() if self.logička else self.aritm())
-        else: self.greška()
+        else: raise self.greška()
 
     def funkcija(self):
         ime = self.pročitaj(PSK.LIME, PSK.AIME)
@@ -101,10 +98,9 @@ class PseudokodParser(Parser):
             while self >> PSK.ZAREZ:
                 parametri.append(self.pročitaj(PSK.LIME, PSK.AIME))
             self.pročitaj(PSK.ZATV)
-        else: self.greška()
+        else: raise self.greška()
         self.pročitaj(PSK.JEDNAKO)
-        naredba = self.naredba()
-        return Funkcija(ime, parametri, naredba)
+        return Funkcija(ime, parametri, self.naredba())
 
     def naredbe(self):
         naredbe = [self.naredba()]
@@ -125,14 +121,13 @@ class PseudokodParser(Parser):
             if self >= PSK.OTV: return self.poziv(ime)
             else: return ime
         lijevo = self.aritm()
-        manje = self.pročitaj(PSK.JEDNAKO, PSK.MANJE) ** PSK.MANJE
+        manje = bool(self.pročitaj(PSK.JEDNAKO, PSK.MANJE) ** PSK.MANJE)
         desno = self.aritm()
-        return Usporedba(bool(manje), lijevo, desno)
+        return Usporedba(manje, lijevo, desno)
 
     def poziv(self, ime):
         if ime in self.funkcije: funkcija = self.funkcije[ime]
-        else: raise SemantičkaGreška(
-            'Nedeklarirana funkcija ' + ime.sadržaj)
+        else: raise ime.nedeklaracija()
         return Poziv(funkcija, self.argumenti(funkcija.parametri))
 
     def argumenti(self, parametri):
@@ -141,8 +136,7 @@ class PseudokodParser(Parser):
         for parametar in parametri:
             self.pročitaj(PSK.OTV if prvi else PSK.ZAREZ)
             prvi = False
-            if parametar ** PSK.LIME: arg.append(self.log())
-            else: arg.append(self.aritm())
+            arg.append(self.log() if parametar ** PSK.LIME else self.aritm())
         self.pročitaj(PSK.ZATV)
         return arg
     
@@ -185,7 +179,7 @@ def izvrši(funkcije, *argv):
 
 class Funkcija(AST('ime parametri naredba')):
     def pozovi(self, argumenti):
-        lokalni = dict(zip(self.parametri, argumenti))
+        lokalni = {p.sadržaj: arg for p, arg in zip(self.parametri, argumenti)}
         try: self.naredba.izvrši(lokalni)
         except Povratak as exc: return exc.povratna_vrijednost
 
@@ -194,22 +188,21 @@ class Poziv(AST('funkcija argumenti')):
         arg = [argument.vrijednost(mem) for argument in self.argumenti]
         return self.funkcija.pozovi(arg)
 
-class Grananje(AST('uvjet željeno naredba inače')):
+class Grananje(AST('uvjet istina naredba inače')):
     def izvrši(self, mem):
-        if self.uvjet.vrijednost(mem) == self.željeno: self.naredba.izvrši(mem)
+        if self.uvjet.vrijednost(mem) == self.istina: self.naredba.izvrši(mem)
         else: self.inače.izvrši(mem)
 
-class Petlja(AST('uvjet željeno naredba')):
+class Petlja(AST('uvjet istina naredba')):
     def izvrši(self, mem):
-        while self.uvjet.vrijednost(mem) == self.željeno:
-            self.naredba.izvrši(mem)
+        while self.uvjet.vrijednost(mem) == self.istina: self.naredba.izvrši(mem)
 
 class Blok(AST('naredbe')):
     def izvrši(self, mem):
         for naredba in self.naredbe: naredba.izvrši(mem)
 
 class Pridruživanje(AST('ime pridruženo')):
-    def izvrši(self, mem): mem[self.ime] = self.pridruženo.vrijednost(mem)
+    def izvrši(self, mem): mem[self.ime.sadržaj] = self.pridruženo.vrijednost(mem)
 
 class Vrati(AST('što')):
     def izvrši(self, mem): raise Povratak(self.što.vrijednost(mem))
@@ -225,7 +218,7 @@ class Usporedba(AST('manje lijevo desno')):
 
 class Zbroj(AST('pribrojnici')):
     def vrijednost(self, mem):
-        return sum(pribroj.vrijednost(mem) for pribroj in self.pribrojnici)
+        return sum(pribrojnik.vrijednost(mem) for pribrojnik in self.pribrojnici)
     
 class Suprotan(AST('od')):
     def vrijednost(self, mem): return -self.od.vrijednost(mem)

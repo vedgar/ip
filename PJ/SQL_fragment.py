@@ -14,14 +14,14 @@ class SQL(enum.Enum):
     class IME(Token): pass
     class BROJ(Token): pass
     class KOMENTAR(Token): pass
-    SELECT, FROM, CREATE, TABLE = 'SELECT', 'FROM', 'CREATE', 'TABLE'
+    SELECT, FROM, CREATE, TABLE = 'select', 'from', 'create', 'table'
     OTVORENA, ZATVORENA, ZVJEZDICA, ZAREZ, TOČKAZAREZ = '()*,;'
 
 
 def sql_lex(kôd):
     lex = Tokenizer(kôd)
     for znak in iter(lex.čitaj, ''):
-        if znak.isspace(): lex.token(E.PRAZNO)
+        if znak.isspace(): lex.zanemari()
         elif znak.isdigit():
             lex.zvijezda(str.isdigit)
             yield lex.token(SQL.BROJ)

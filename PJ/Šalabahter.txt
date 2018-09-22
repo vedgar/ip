@@ -1,16 +1,13 @@
-# Tipovi tokena #
+﻿# Tipovi tokena #
 #################
 
 class TT(enum.Enum):
-	PRVITIP = 'sadržaj'
-	DRUGITIP = 'drugi sadržaj'
-	OPERATOR1 = '+'
-	OPERATOR2 = '&'
+	OPERATOR1, OPERATOR2, OPERATOR3 = '+-*'
+	OPERATOR4, OPERATOR5 = '&&', '<=>'
 	KLJUČNARIJEČ = 'ključnariječ'
-	CASEINSENSITIVEKW = 'CASEINSENSITIVEKW'
-	KW = ALIAS = 'KW'
+	class TIPTOKENA(Token): ...listovi AST metoda...
 
-(E.GREŠKA, E.PRAZNO, E.KRAJ već postoje u pj.py)
+(E.GREŠKA, E.PRAZNO, E.KRAJ, E.VIŠAK već postoje)
 
 # Leksička analiza #
 ####################
@@ -21,23 +18,16 @@ Low level API:
 	znak = lex.čitaj()
 	lex.vrati()
 	pročitano = lex.sadržaj
-	(yield) lex.token(tip_tokena)
+	yield lex.token(tip_tokena)
 	raise LeksičkaGreška(...)
 	lex.i, lex.j
 High level API:
-	lex.zvijezda(str.is...)
+	lex.zvijezda(str.is...), lex.plus(...)
 	for znak in iter(lex.čitaj, ''):
 	lex.pročitaj(znak)
-	lex.greška()
-	operator(TT, znak) or lex.greška()  !zadnje!
-	ključna_riječ(TT, lex.sadržaj, True ili False) or TT...
-
-def moj_lex(string):
-	lex = Tokenizer(string)
-	for znak in iter(lex.čitaj, ''):
-		if znak.is...: ...
-		elif znak ...: yield lex.token(TT...)
-		...
+	if lex.slijedi(znak):
+	raise lex.greška()
+	yield lex.literal(TT ili TT.DEFAULT, case=True ili False)
 
 # Parsiranje #
 ##############
@@ -51,9 +41,9 @@ Napomene:
 	* prioritet nema veze s redoslijedom izvođenja!
 
 * napišemo beskontekstnu gramatiku! (ne preskakati ovaj korak!:)
+* svakoj varijabli (otprilike) odgovara jedna metoda parsera
 
 class MojParser(Parser):
-	* svakoj varijabli (otprilike) odgovara jedna metoda
 	def v1(self):
 		if self >> PRVITIP: ...
 		elif self >> {DRUGITIP, TREĆITIP}: ...
@@ -62,22 +52,47 @@ class MojParser(Parser):
 			return NekoApstraktnoStablo(tokeni...)
 			self.zadnji: zadnji pročitani token
 			...
-	def v2(self):
-		...
+		ili else: raise self.greška()
+	def v2(self): ...
 
 	start = v1 (ili koja već)
 
-* popišemo apstraktna sintaksna stabla koja smo koristili
-class NekoApstraktnoStablo(AST('atribut')): pass
-class DrugoApstraktnoStablo(AST('atribut1 atribut2')): pass
-...
-
-* te klase mogu imati metode koje rade dalju semantičku analizu!
-* ili je možemo raditi u globalnoj funkciji pomoću ** operatora
 
 stablo = MojParser.parsiraj(moj_lex(string))
 
 # Semantička analiza #
 ######################
 
-...
+* popišemo apstraktna sintaksna stabla koja smo koristili
+class NekoApstraktnoStablo(AST('atribut')): ...
+class DrugoApstraktnoStablo(AST('atribut1 atribut2')): ...
+
+* te klase imaju metode koje rade dalju semantičku analizu
+  (ili je možemo raditi u globalnoj funkciji pomoću operatora **)
+- metode su najčešće rekurzivne, i baza je zadana na tipovima tokena
+- često primaju parametar (mem), koji predstavlja stanje memorije:
+  preslikavanje (dict) stringova (imena varijabli) u vrijednosti
+  . pomoćna funkcija pogledaj(mem, token): kao mem[token.sadržaj],
+    ali javlja grešku nedeklariranih varijabli ako ih nema u mem
+- pretvaranje u nativne (Pythonove) tipove: tip(token.sadržaj...)
+
+* primjeri: def vrijednost(self, mem): ... # vraća neki nativni objekt
+            def izvrši(self, mem): ... # ne vraća ništa, mijenja mem
+            def optimiziraj(self): ... # vraća novo (ili isto) AST
+
+Izvođenje: preslikavanjem na Pythonove alate (slijed, grananje, petlje)
+class Grananje(AST('uvjet onda inače')):
+	def izvrši(self, mem):
+		if self.uvjet.vrijednost(mem): self.onda.izvrši(mem)
+		else: self.inače.izvrši(mem)
+* Nelokalna kontrola toka (break, continue, return, throw, goto): izuzeci
+. class Prekid(Exception): diže ga Break.izvrši, hvata ga Petlja.izvrši
+. class Povratak(Exception): diže ga Return.izvrši, hvata ga Poziv.izvrši
+
+* Kod funkcijskih poziva, iskonstruiramo novi lokalni mem (scope) koji
+  preslikava parametre deklaracije funkcije u argumente funkcijskog poziva
+  i u njemu izvršimo tijelo funkcije
+
+Typechecking:
+Preslikavanje tip: kao mem, samo ne preslikava imena varijabli u njihove
+vrijednosti nego u njihove statičke tipove
