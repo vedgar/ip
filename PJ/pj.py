@@ -72,8 +72,7 @@ class Tokenizer:
     def plus(self, uvjet):
         """Čita Kleene+ (jedan ili više) znakova koji zadovoljavaju uvjet."""
         prvi = self.čitaj()
-        if not uvjet(prvi):
-            raise self.greška('očekivan ' + uvjet.__name__)
+        if not uvjet(prvi): raise self.greška('očekivan ' + uvjet.__name__)
         self.zvijezda(uvjet)
     
     def pročitaj(self, znak):
@@ -124,7 +123,7 @@ class E(enum.Enum):  # Everywhere
 
 
 class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
-    # TODO: razmisliti treba li Token biti unhashable, ili hashiran samo kao TokenTuple
+    # TODO: razmisliti je li Token unhashable, ili hashiran samo kao TokenTuple
     """Klasa koja predstavlja tokene."""
     def __new__(cls, tip, sadržaj):
         if isinstance(tip.value, type): cls = tip.value

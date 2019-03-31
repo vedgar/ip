@@ -1,3 +1,4 @@
+import collections
 from util import *
 
 
@@ -256,3 +257,8 @@ class BeskontekstnaGramatika(types.SimpleNamespace):
                             return True
             return False
         return izvodi(G.početna, 0, len(riječ))
+
+    def ispiši_strelice(G):
+        sažeta = collections.defaultdict(set, {G.početna: set()})
+        for v, *desno in G.pravila: sažeta[v].add(' '.join(desno) or 'ε')
+        for v, desne in sažeta.items(): print(v, '->', ' | '.join(desne))
