@@ -300,8 +300,9 @@ def strelice(gramatika):
     grupe = {V: set() for V in gramatika.varijable}
     for varijabla, *zamjene in gramatika.pravila:
         grupe[varijabla].add(' '.join(map(str, zamjene)) or 'ε')
-    print(gramatika.početna, '->', ' | '.join(grupe.pop(gramatika.početna)))
-    for varijabla, grupa in grupe.items():
+    print(gramatika.početna, '->',
+          ' | '.join(grupe.pop(gramatika.početna)) or '∅')
+    for varijabla, grupa in sorted(grupe.items()):
         print(varijabla, '->', ' | '.join(grupa) or '∅')
     print()
 

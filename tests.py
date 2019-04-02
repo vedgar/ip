@@ -9,7 +9,6 @@ tests |= {21, 22, 23, 24, 25, 26, 27, 28, 29, 30}
 tests |= {31, 32, 33, 34, 35, 36, 37, 38, 39, 40}
 tests |= {41, 42, 43, 44, 45, 46, 47, 48, 49, 50}
 
-tests = {21}
 
 def test(i):
     if i in tests:
@@ -495,3 +494,14 @@ if test(49):  # page 106
     G10 = BeskontekstnaGramatika.iz_strelica('S -> 1 S 0 | ε')
     strelice(G01.unija(G10))
     strelice(G1.zvijezda())
+
+
+if test(50):
+    g = BeskontekstnaGramatika.iz_strelica('''
+        S->S S|A B
+        A->B a|ε
+        B->B b A a|c A|b
+    ''')
+    c = g.ChNF()
+    strelice(g)
+    strelice(c)

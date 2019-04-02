@@ -170,14 +170,9 @@ class BeskontekstnaGramatika(types.SimpleNamespace):
             
     def ChNF(gramatika):
         """Ekvivalentna (do na ε) gramatika u Chomskyjevoj normalnoj formi."""
-        if gramatika.Chomskyjeva():
-            return gramatika
+        if gramatika.Chomskyjeva(): return gramatika
         G = copy.deepcopy(gramatika)
-        G.faza_START()
-        G.faza_TERM()
-        G.faza_BIN()
-        G.faza_DEL()
-        G.faza_UNIT()
+        for f in 'START TERM BIN DEL UNIT'.split(): getattr(G, 'faza_' + f)()
         return G
 
     def označi(gramatika, l):
@@ -237,24 +232,19 @@ class BeskontekstnaGramatika(types.SimpleNamespace):
     def CYK(gramatika, riječ):
         """Cocke-Younger-Kasami algoritam za problem prihvaćanja za BKG."""
         G = gramatika.ChNF()
-        if not riječ:
-            return not G.pozitivna
-        
-        expand = {V: set() for V in G.varijable}
+        if not riječ: return not G.pozitivna
+        širenja = {V: set() for V in G.varijable}
         for pravilo in G.pravila:
             if len(pravilo) == 3:
                 A, B, C = pravilo
-                expand[A].add((B, C))
-
+                širenja[A].add((B, C))
         @memoiziraj
         def izvodi(A, i, j):
             assert j > i
-            if j - i == 1:
-                return (A, riječ[i]) in G.pravila
+            if j - i == 1: return (A, riječ[i]) in G.pravila
             for k in range(i + 1, j):
-                for B, C in expand[A]:
-                    if izvodi(B, i, k) and izvodi(C, k, j):
-                            return True
+                for B, C in širenja[A]:
+                    if izvodi(B, i, k) and izvodi(C, k, j): return True
             return False
         return izvodi(G.početna, 0, len(riječ))
 

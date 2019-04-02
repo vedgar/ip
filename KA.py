@@ -73,12 +73,12 @@ class KonačniAutomat(types.SimpleNamespace):
         return M
 
     def komplement(M):
-        """Konačni automat za (M.abeceda)*\L(M)."""
+        r"""Konačni automat za (M.abeceda)*\L(M)."""
         Q, Σ, δ, q0, F = M.komponente
         return KonačniAutomat.iz_komponenti(Q, Σ, δ, q0, Q - F)
 
     def razlika(M1, M2):
-        """Konačni automat za L(M1)\L(M2)."""
+        r"""Konačni automat za L(M1)\L(M2)."""
         return M1.presjek(M2.komplement())
 
     def simetrična_razlika(M1, M2):
