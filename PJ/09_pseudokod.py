@@ -1,3 +1,33 @@
+"""Interpreter za pseudokod, s funkcijskim pozivima i dva tipa podataka.
+
+Podržane naredbe:
+    ako je uvjet naredba inače naredba      ime = izraz
+    ako je uvjet naredba                    Ime = uvjet
+    ako nije uvjet naredba                  vrati izraz
+    dok je uvjet naredba                    vrati uvjet
+    dok nije uvjet naredba                  (naredba1, naredba2, ...)
+
+Podržani aritmetički izrazi:            Podržani logički uvjeti:
+    cijeli broj                             istina
+    ime                                     laž
+    ime(argumenti)                          Ime
+    izraz + izraz                           Ime(argumenti)
+    izraz - izraz                           uvjet ili uvjet
+    izraz * izraz                           izraz < izraz
+    -izraz                                  izraz = izraz
+    (izraz)                                 (uvjet)
+
+Program se sastoji od jedne ili više deklaracija funkcija, s ili bez parametara.
+    Jedna od njih mora biti program(parametri), od nje počinje izvršavanje.
+Tipovi varijabli (i povratni tipovi funkcija) se reprezentiraju leksički:
+    veliko početno slovo označava logički tip (bool)
+    malo početno slovo označava aritmetički tip (int)
+
+Minimalni kontekst je potreban da bismo zapamtili jesmo li trenutno u definiciji
+    aritmetičke ili logičke funkcije, kako bi naredba "vrati" znala što očekuje.
+"""
+
+
 from pj import *
 
 class PSK(enum.Enum):
@@ -173,7 +203,7 @@ def izvrši(funkcije, *argv):
     program = Token(PSK.AIME, 'program')
     if program in funkcije:
         izlazna_vrijednost = funkcije[program].pozovi(argv)
-        print('Program je vratio: ', izlazna_vrijednost)
+        print('Program je vratio:', izlazna_vrijednost)
     else: raise SemantičkaGreška('Nema glavne funkcije "program"')
 
 
@@ -182,6 +212,7 @@ class Funkcija(AST('ime parametri naredba')):
         lokalni = {p.sadržaj: arg for p, arg in zip(self.parametri, argumenti)}
         try: self.naredba.izvrši(lokalni)
         except Povratak as exc: return exc.povratna_vrijednost
+        else: raise GreškaIzvođenja('{} nije ništa vratila'.format(self.ime))
 
 class Poziv(AST('funkcija argumenti')):
     def vrijednost(self, mem):
@@ -235,7 +266,7 @@ class Povratak(Exception):
     def povratna_vrijednost(self): return self.args[0]
 
 
-faktorijela = PseudokodParser.parsiraj(pseudokod_lexer('''
+suma_faktorijela = PseudokodParser.parsiraj(pseudokod_lexer('''
 fakt(x) = (
     f = 1,
     dok nije x = 0 (
@@ -244,11 +275,14 @@ fakt(x) = (
     ),
     vrati f
 )
+Identiteta(V) = vrati V
+Negacija(V) = ako je Identiteta(V) (vrati laž) inače (vrati istina)
+
 Neparan(x) = (
     N = laž,
     dok nije x = 0 (
         x = x - 1,
-        ako je N N = laž inače N = istina
+        N = Negacija(N),
     ),
     vrati N
 )
@@ -262,6 +296,35 @@ program() = (
     vrati s
 )
 '''))
-print(faktorijela)
+print(suma_faktorijela)
+
+tablice_istinitosti = PseudokodParser.parsiraj(pseudokod_lexer('''
+broj(V) = ako je V vrati 1 inače vrati 0
+Negacija(P) = ako je P vrati laž inače vrati istina
+Konjunkcija(P, Q) = ako je P vrati Q inače vrati P
+Disjunkcija(P, Q) = ako je P vrati P inače vrati Q
+Multiplex(m, P, Q) =
+    ako je m = 1 vrati Konjunkcija(P, Q) inače
+    ako je m = 2 vrati Disjunkcija(P, Q) inače
+    vrati laž
+dodaj(broj, bit) = (
+    broj = broj * 10 + bit,
+    broj = broj * 10 + 8,
+    vrati broj
+)
+program(m) = (
+    b = 0,
+    povrat = 8,
+    dok je b < 4 (
+        Prvi = Negacija(b < 2),
+        Drugi = b = 1 ili b = 3,
+        rezultat = broj(Multiplex(m, Prvi, Drugi)),
+        povrat = dodaj(povrat, rezultat),
+        b = b + 1
+    ),
+    vrati povrat
+)
+'''))
 print()
-izvrši(faktorijela, {})
+izvrši(suma_faktorijela)
+izvrši(tablice_istinitosti, 3)

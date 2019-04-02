@@ -1,3 +1,13 @@
+"""Jednostavni kalkulator s (približnim) kompleksnim brojevima po IEEE-754.
+
+Ulaz je nula ili više naredbi pridruživanja izraz -> ime,
+    nakon kojih slijedi izraz čija vrijednost se računa i vraća.
+    Svaki izraz može koristiti sva prethodno definirana imena.
+
+Prikazano je čitanje decimalnih brojeva, aliasi, postfiksni operatori, ...
+"""
+
+
 from pj import *
 import cmath
 
@@ -56,11 +66,7 @@ class ACParser(Parser):
         trenutni = self.član()
         while True:
             if self >> {AC.PLUS, AC.MINUS}:
-                trenutni = Binarna(
-                    op = self.zadnji, 
-                    lijevo = trenutni, 
-                    desno = self.član()
-                )
+                trenutni = Binarna(self.zadnji, trenutni, self.član())
             else: return trenutni
 
     def član(self):

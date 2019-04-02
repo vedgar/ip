@@ -1,3 +1,14 @@
+"""Interpreter za jednostavni fragment jezika C++: petlje, grananja, ispis.
+
+    petlje: for(var = broj; var < broj; var ++ ili var += broj) naredba
+    grananja: if(var == broj) naredba
+    ispis: cout << var1 << var2 << ..., s opcionalnim << endl na kraju
+
+Naredba može biti i blok u vitičastim zagradama.
+Podržana je i naredba break za izlaz iz unutarnje petlje.
+"""
+
+
 from pj import *
 
 
@@ -25,11 +36,11 @@ def cpp_lex(source):
             elif sljedeći == '=': yield lex.token(CPP.PLUSJ)
             else: raise lex.greška('u ovom jeziku nema samostalnog +')
         elif znak == '<':
-            if lex.čitaj() == '<': yield lex.token(CPP.IZLAZ)
-            else: lex.vrati(); yield lex.token(CPP.MANJE)
+            if lex.slijedi('<'): yield lex.token(CPP.IZLAZ)
+            else: yield lex.token(CPP.MANJE)
         elif znak == '=':
-            if lex.čitaj() == '=': yield lex.token(CPP.JJEDNAKO)
-            else: lex.vrati(); yield lex.token(CPP.JEDNAKO)
+            if lex.slijedi('='): yield lex.token(CPP.JJEDNAKO)
+            else: yield lex.token(CPP.JEDNAKO)
         elif znak.islower():
             lex.zvijezda(str.islower)
             yield lex.literal(CPP.IME)
@@ -37,7 +48,7 @@ def cpp_lex(source):
             lex.zvijezda(str.isdigit)
             p = lex.sadržaj
             if p == '0' or p[0] != '0': yield lex.token(CPP.BROJ)
-            else: lex.greška('druge baze nisu podržane')
+            else: raise lex.greška('druge baze (osim 10) nisu podržane')
         else: yield lex.literal(CPP)
 
 

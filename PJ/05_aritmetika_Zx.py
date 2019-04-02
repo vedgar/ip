@@ -1,3 +1,16 @@
+"""Računanje s polinomima u jednoj varijabli s cjelobrojnim koeficijentima.
+
+Aritmetika cijelih brojeva je specijalni slučaj, kad se x ne pojavljuje.
+Dozvoljeno je ispuštanje znaka za množenje u slučajevima poput
+    23x, xxxx, 2(3+1), (x+1)x, (x)(7) -- ali ne x3, to znači potenciranje!
+Pokazuje se kako programirati jednostavne izuzetke od pravila BKG:
+    konkretno, zabranjeni su izrazi poput (x+2)3.
+
+Semantički analizator je napravljen u obliku prevoditelja (kompajlera) u
+    klasu Polinom, čiji objekti podržavaju operacije prstena i lijep ispis.
+"""
+
+
 from pj import *
 
 
@@ -80,12 +93,10 @@ class Umnožak(AST('lijevo desno')):
         return l * d
 
 class Suprotan(AST('od')):
-    def prevedi(self):
-        return -self.od.prevedi()
+    def prevedi(self): return -self.od.prevedi()
     
 class Xna(AST('eksponent')):
-    def prevedi(self):
-        return Polinom.x(self.eksponent.vrijednost())
+    def prevedi(self): return Polinom.x(self.eksponent.vrijednost())
 
 
 class Polinom(collections.Counter):
