@@ -13,7 +13,6 @@ import pprint
 class SQL(enum.Enum):
     class IME(Token): pass
     class BROJ(Token): pass
-    class KOMENTAR(Token): pass
     SELECT, FROM, CREATE, TABLE = 'select', 'from', 'create', 'table'
     OTVORENA, ZATVORENA, ZVJEZDICA, ZAREZ, TOČKAZAREZ = '()*,;'
 
@@ -27,9 +26,8 @@ def sql_lex(kôd):
             yield lex.token(SQL.BROJ)
         elif znak == '-':
             lex.pročitaj('-')
-            lex.zvijezda(lambda znak: znak != '\n')
-            lex.pročitaj('\n')
-            lex.token(SQL.KOMENTAR)
+            lex.pročitaj_do('\n')
+            lex.zanemari()
         elif znak.isalpha():
             lex.zvijezda(str.isalnum)
             yield lex.literal(SQL.IME, case=False)

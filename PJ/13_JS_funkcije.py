@@ -1,6 +1,10 @@
-# 2010 K2-popravni Z1,Z2
+"""Leksički i sintaksni analizator za JavaScript funkcije.
+Kolokvij 19. siječnja 2012. (Puljić)
+"""
+
 
 from pj import *
+
 
 class JS(enum.Enum):
     FUNCTION, VAR, NAREDBA = 'function', 'var', 'naredba'
@@ -17,13 +21,10 @@ def js_lex(string):
             lex.zvijezda(identifikator)
             yield lex.literal(JS.IME)
         elif znak == '/':
-            if lex.čitaj() == '/':
-                lex.zvijezda(lambda znak: znak != '\n')
-                lex.pročitaj('\n')
+            if lex.pogledaj() == '/':
+                lex.pročitaj_do('\n')
                 yield lex.token(JS.KOMENTAR)
-            else:
-                lex.vrati()
-                yield lex.token(JS.KOSACRTA)
+            else: yield lex.token(JS.KOSACRTA)
         else: yield lex.literal(JS)
 
 
@@ -32,7 +33,7 @@ def js_lex(string):
 # argumenti -> VAR IME ZAREZ argumenti | VAR IME | ε
 # tijelo -> komentari naredbe | naredbe
 # komentari -> KOMENTAR komentari | KOMENTAR
-# naredbe -> naredba separator naredbe | naredba | ε
+# naredbe -> NAREDBA separator naredbe | NAREDBA | ε
 # separator -> TOČKAZAREZ | komentari
 
 class Funkcija(AST('ime argumenti tijelo')): pass
@@ -79,13 +80,6 @@ class JSParser(Parser):
 if __name__ == '__main__':
     print(JSParser.parsiraj(js_lex('''\
         function ime (var x, var y, var z) {
-            //neke naredbe odvojenih s ; ili komentar
-            naredba; naredba //kom
-            naredba
-        }
-    ''')))
-    print(JSParser.parsiraj(js_lex('''\
-        function ime (var x, var y, var z) {
             //neke naredbe odvojene s ; ili komentarima
             naredba; naredba //kom
             naredba
@@ -95,3 +89,9 @@ if __name__ == '__main__':
         //
         }
     ''')))
+# Program(funkcije=[
+#   Funkcija(ime=IME'ime', argumenti=[IME'x', IME'y', IME'z'], tijelo=[
+#     NAREDBA'naredba', NAREDBA'naredba', NAREDBA'naredba']),
+#   Funkcija(ime=IME'ništa', argumenti=[], tijelo=[]),
+#   Funkcija(ime=IME'trivijalna', argumenti=[IME'hmmm'], tijelo=[
+#     NAREDBA'naredba'])])

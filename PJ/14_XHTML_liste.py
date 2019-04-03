@@ -1,3 +1,8 @@
+"""Renderer za XHTML dokumente koji sadrže samo liste.
+Kolokvij 2. veljače 2015. (Puljić)
+"""
+
+
 from pj import *
 
 
@@ -12,17 +17,11 @@ class HTML(enum.Enum):
 
 
 def html_lex(string):
-    def pp():
-        """Preskače praznine."""
-        lex.zvijezda(str.isspace)
-        lex.zanemari()
-
     lex = Tokenizer(string)
     for znak in iter(lex.čitaj, ''):
-        if znak.isspace(): pp()
+        if znak.isspace(): lex.zanemari()
         elif znak == '<':
-            lex.zvijezda(lambda znak: znak != '>')
-            lex.pročitaj('>')
+            lex.pročitaj_do('>')
             yield lex.literal(HTML)
         else:
             lex.zvijezda(lambda z: z and not z.isspace() and z != '<')
@@ -32,7 +31,7 @@ def html_lex(string):
 ### Beskontekstna gramatika
 # dokument -> HTML HEAD tekst ZHEAD BODY tijelo ZBODY ZHTML
 # tekst -> TEXT | TEXT tekst
-# tijelo -> ε | element tijelo
+# tijelo -> '' | element tijelo
 # element -> tekst | OL stavke ZOL | UL stavke ZUL
 # stavke -> LI element ZLI | LI element ZLI stavke
 
@@ -44,11 +43,14 @@ def html_lex(string):
 
 class XLParser(Parser):
     def start(self):
-        self.pročitaj(HTML.HTML), self.pročitaj(HTML.HEAD)
+        self.pročitaj(HTML.HTML)
+        self.pročitaj(HTML.HEAD)
         zaglavlje = self.tekst()
-        self.pročitaj(HTML.ZHEAD), self.pročitaj(HTML.BODY)
+        self.pročitaj(HTML.ZHEAD)
+        self.pročitaj(HTML.BODY)
         tijelo = self.tijelo()
-        self.pročitaj(HTML.ZBODY), self.pročitaj(HTML.ZHTML)
+        self.pročitaj(HTML.ZBODY)
+        self.pročitaj(HTML.ZHTML)
         return Dokument(zaglavlje, tijelo)
         
     def tekst(self):
@@ -78,9 +80,8 @@ class XLParser(Parser):
         rezultat = [self.element()]
         self.pročitaj(HTML.ZLI)
         while self >> HTML.LI:
-            stavka = self.element()
+            rezultat.append(self.element())
             self.pročitaj(HTML.ZLI)
-            rezultat.append(stavka)
         return rezultat
             
 
@@ -128,5 +129,5 @@ r = XLParser.parsiraj(html_lex('''\
         </body>
     </html>
 '''))
-
+print(r)
 r.render()

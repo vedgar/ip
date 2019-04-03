@@ -80,6 +80,13 @@ class Tokenizer:
         if znak != self.čitaj():
             raise self.greška('očekivano {!r}'.format(znak))
 
+    def pročitaj_do(self, znak, uključivo=True):
+        """Čita sve znakove do zadanog znaka."""
+        self.zvijezda(lambda z: z and z != znak)
+        if self.pogledaj() != znak:
+            raise self.greška('{!r} nije pronađen'.format(znak))
+        if uključivo: self.pročitaj(znak)
+
     def greška(self, info=''):
         """Konstruira leksičku grešku koja se treba prijaviti s raise."""
         if self.buffer: self.čitaj()
@@ -92,6 +99,7 @@ class Tokenizer:
         """Odašilje token."""
         t = Token(tip, self.sadržaj)
         t.početak = self.početak
+        t.kraj = self.pozicija
         self.zanemari()
         return t
 

@@ -25,6 +25,7 @@ High level API:
 	lex.zvijezda(str.is...), lex.plus(...)
 	for znak in iter(lex.čitaj, ''):
 	lex.pročitaj(znak)
+	lex.pročitaj_do(znak, uključivo=True ili False)
 	if lex.slijedi(znak):
 	raise lex.greška()
 	yield lex.literal(TT ili TT.DEFAULT, case=True ili False)
@@ -53,7 +54,8 @@ class MojParser(Parser):
 			self.zadnji: zadnji pročitani token
 			...
 		ili else: raise self.greška()
-	def v2(self): ...
+	def v2(self):
+		if self >= PRVITIP: ...
 
 	start = v1 (ili koja već)
 

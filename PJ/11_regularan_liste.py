@@ -1,4 +1,5 @@
-# 2010 K2 Z1,Z2
+"""Programski jezik za rad s listama; kolokvij 31. siječnja 2011. (Puljić)"""
+
 
 from pj import *
 
@@ -10,7 +11,9 @@ class LJ(enum.Enum):
         def ref(self, mem): return pogledaj(mem, self)
     class BROJ(Token):
         def vrijednost(self): return int(self.sadržaj)
-    class MINUSBROJ(Token): """Negativni broj."""
+    class MINUSBROJ(Token):
+        """Negativni broj."""
+        def vrijednost(self): return int(self.sadržaj)
 
 
 def lj_lex(string):
@@ -32,7 +35,7 @@ def lj_lex(string):
         else: raise lex.greška()
 
 
-### Beskontekstna gramatika
+### Beskontekstna gramatika (jezik je regularan!)
 # start -> naredba start | ε
 # naredba -> deklaracija | provjera | ubaci | izbaci | dohvati | duljina
 # deklaracija -> LISTA ID
@@ -128,7 +131,7 @@ if __name__ == '__main__':
 	ubaci L3 45 0  dohvati L3 0
 	koliko L1  koliko L3
 	prazna L1  prazna L3
-	lista L5  ubaci L5 6 0  ubaci L5 7 1  ubaci L5 8 1  ubaci L5 9 0
+	lista L5  ubaci L5 6 0  ubaci L5 -7 1  ubaci L5 8 1  ubaci L5 9 0
 	dohvati L5 0  dohvati L5 1  dohvati L5 2  dohvati L5 3  koliko L5
 	izbaci L5 1  dohvati L5 0 dohvati L5 1 dohvati L5 2  koliko L5
     ''')

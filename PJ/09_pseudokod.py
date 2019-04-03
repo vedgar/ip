@@ -15,7 +15,7 @@ Podržani aritmetički izrazi:            Podržani logički uvjeti:
     izraz - izraz                           uvjet ili uvjet
     izraz * izraz                           izraz < izraz
     -izraz                                  izraz = izraz
-    (izraz)                                 (uvjet)
+    (izraz)
 
 Program se sastoji od jedne ili više deklaracija funkcija, s ili bez parametara.
     Jedna od njih mora biti program(parametri), od nje počinje izvršavanje.
@@ -78,7 +78,7 @@ def pseudokod_lexer(program):
 # pridruži -> AIME JEDNAKO aritm | LIME JEDNAKO log
 # log -> log ILI disjunkt | disjunkt
 # disjunkt -> aritm (MANJE | JEDNAKO) aritm | LIME | LKONST |
-#             LIME OTV argumenti ZATV
+#             LIME OTV argumenti ZATV | OTV log ZATV
 # aritm -> aritm PLUS član | aritm MINUS član
 # član -> član ZVJEZDICA faktor | faktor | MINUS faktor
 # faktor -> BROJ | AIME | OTV aritm ZATV | AIME OTV argumenti ZATV
@@ -312,6 +312,7 @@ dodaj(broj, bit) = (
     broj = broj * 10 + 8,
     vrati broj
 )
+Proba() = ako je (2 + 3) * 5 < 7 vrati istina inače vrati laž
 program(m) = (
     b = 0,
     povrat = 8,
