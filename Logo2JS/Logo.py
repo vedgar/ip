@@ -32,7 +32,7 @@ def logo_lex(kod):
 
 ### Beskontekstna gramatika
 # program -> naredba program | naredba
-# naredba -> FORWARD BROJ | LEFT BROJ | RIGHT BROJ | BACKWARD BROJ | PU | PD | petlja
+# naredba -> FD BROJ | LT BROJ | RT BROJ | BW BROJ | PU | PD | petlja
 # petlja -> REPEAT BROJ OTVORENA program ZATVORENA
 
 ### Apstraktna sintaksna stabla
