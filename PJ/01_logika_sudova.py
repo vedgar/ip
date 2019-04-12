@@ -140,3 +140,6 @@ if __name__ == '__main__':
     
     print(fo.vrijednost(P0=False, P3=True, P5=False))
     # True
+
+# DZ: implementirajte još neke optimizacije: npr. F|!G u G->F.
+# DZ: Napravite totalnu optimizaciju negacije: svaka formula s najviše jednim !

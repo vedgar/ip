@@ -275,6 +275,37 @@ def parsiraj_tablicu_PA(tablica):
         završna.add('#')
     return stanja, abeceda, abeceda_stoga, prijelaz, početno, završna
 
+def parsiraj_tablicu_TS(tablica):
+    """Parsiranje tabličnog zapisa (funkcije prijelaza) Turingovog stroja.
+    Prvo stanje je početno, . prihvaća, ! odbija (beskonačna petlja udesno).
+    Prijelazi: znak+stanje ili znak-stanje. Ako nešto ne piše, ostaje isto.
+    Praznina je _, i njena pozicija označava kraj ulazne abecede."""
+    prva, *ostale = tablica.strip().splitlines()
+    znakovi = prva.split()
+    assert all(len(znak) == 1 for znak in znakovi) and '_' in znakovi
+    radna_abeceda = set(znakovi)
+    abeceda = set(znakovi[:znakovi.index('_')])
+    stanja, prijelaz, početno = {'.'}, {}, None
+    for linija in ostale:
+        stanje, *prijelazi = linija.split()
+        if početno is None: početno = stanje
+        assert len(prijelazi) == len(znakovi)
+        for znak, trojka in zip(znakovi, prijelazi):
+            if trojka in set('.!'): nstanje, nznak, smjer = trojka, znak, ''
+            else:
+                for smjer in '+-':
+                    nznak, smjer, nstanje = trojka.partition(smjer)
+                    if smjer: break
+                assert smjer
+                if not nznak: nznak = znak
+                if not nstanje: nstanje = stanje
+            stanja.add(nstanje)
+            prijelaz[stanje, znak] = (nstanje, nznak, int(smjer + '1'))
+        stanja.add(stanje)
+    if '!' in stanja:
+        for znak in znakovi: prijelaz['!', znak] = ('!', znak, 1)
+    return stanja, abeceda, radna_abeceda, '_', prijelaz, početno, '.'
+
 def parsiraj_strelice_BKG(strelice):
     """Čitanje gramatike zapisane u standardnom obliku pomoću strelica.
     Svaki red je oblika varijabla -> ds1 | ds2 | ... (moguće desne strane).
@@ -378,3 +409,8 @@ def DOT_PA(automat):
         obrazac.append('{} -> {} [ label="{}" ]'.format(r[p], r[q], linija))
     obrazac.append('}')
     return '\n'.join(obrazac).replace('ε', 'e')
+
+
+def prikaz(stanje, pozicija, traka):
+    print(*traka[:pozicija], '[{}>'.format(stanje),
+          *traka[pozicija:], '_', sep='')

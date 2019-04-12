@@ -2,12 +2,14 @@ from KA import *
 from RI import *
 from PA import *
 from BKG import *
+from TS import *
 
 
 tests = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
 tests |= {21, 22, 23, 24, 25, 26, 27, 28, 29, 30}
 tests |= {31, 32, 33, 34, 35, 36, 37, 38, 39, 40}
 tests |= {41, 42, 43, 44, 45, 46, 47, 48, 49, 50}
+tests = {51, 52, 53, 54, 55}
 
 
 def test(i):
@@ -496,7 +498,7 @@ if test(49):  # page 106
     strelice(G1.zvijezda())
 
 
-if test(50):
+if test(50):  # 2019-dz1-Z2a
     g = BeskontekstnaGramatika.iz_strelica('''
         S->S S|A B
         A->B a|ε
@@ -505,3 +507,61 @@ if test(50):
     c = g.ChNF()
     strelice(g)
     strelice(c)
+
+
+if test(51):  # page 171 example 3.7
+    ts = TuringovStroj.iz_tablice('''0    _   x
+                                  q1 _+q2 !   !
+                                  q2 x+q3 .   +
+                                  q3 +q4  -q5 +
+                                  q4 x+q3 !   +
+                                  q5 -    +q2 - ''')
+    for n in range(9): print(n, ts.prihvaća('0' * n), end='  ', sep=':')
+    print()
+    for konf in ts.izračunavanje('0000'): prikaz(*konf)
+
+
+if test(52):  # page 173 example 3.9
+    ts = TuringovStroj.iz_tablice('''0    1    #    _ x
+                                  q1 x+q2 x+q3 +q8  ! !
+                                  q2 +    +    +q4  ! !
+                                  q3 +    +    +q5  ! !
+                                  q4 x-q6 !    !    ! +
+                                  q5 !    x-q6 !    ! +
+                                  q6 -    -    -q7  ! -
+                                  q7 -    -    !    ! +q1
+                                  q8 !    !    !    . +    ''')
+    print(ts)
+    for konf in ts.izračunavanje('#'.join(['011000'] * 2)): prikaz(*konf)
+
+
+if test(53):  # Computonomicon, stranice 101~103, Primjer 4.6
+    tsh = TuringovStroj.iz_tablice('''a   b   _  c   d
+                                    A c+B d+B .  !   !
+                                    B +   +   -C !   !
+                                    C _-D _-D !  !   !
+                                    D -   -   !  a+A b+A''')
+    for korak, konf in enumerate(tsh.izračunavanje('aba')):
+        prikaz(*konf)
+        if korak > 9: break
+    print()
+    for konf in tsh.izračunavanje('abaa'): prikaz(*konf)
+    print(tsh.rezultat('abaa'))
+    print()
+    for konf in tsh.izračunavanje('aababa'): prikaz(*konf)
+    print(tsh.rezultat('aababa'))
+    print('\n', tsh.prihvaća('aabbaba'), tsh.rezultat('aabbaba'))
+
+
+if test(54):  # Computonomicon, stranice 107~108, Lema 4.16
+    def tsid(Σ):
+        _ = novo('_', Σ)
+        Γ = Σ | {_}
+        δ = {(0, α): (1, α, 1) for α in Γ}
+        return TuringovStroj.iz_komponenti({0, 1}, Σ, Γ, _, δ, 0, 1)
+
+    print(tsid(set('abc_')).rezultat('a_c_a_b_'))
+
+
+if test(55):
+    ...
