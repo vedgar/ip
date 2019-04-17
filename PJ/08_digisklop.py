@@ -1,5 +1,6 @@
 """Hardverski NAND-realizator i optimizator digitalnih sklopova.
-Zadatak s drugog kolokvija ljetnog semestra 2017. https://goo.gl/JGACGH"""
+Zadatak s drugog kolokvija ljetnog semestra 2017. https://goo.gl/JGACGH
+"""
 
 
 from pj import *

@@ -76,7 +76,7 @@ class Negacija(AST('ispod')):
 
     def optim(self):
         ispod_opt = self.ispod.optim()
-        if ispod_opt ** Negacija: return ispod_opt.ispod 
+        if ispod_opt ^ Negacija: return ispod_opt.ispod 
         else: return Negacija(ispod_opt)
 
 
@@ -85,10 +85,10 @@ class Binarna(AST('veznik lijevo desno')):
         v = formula.veznik
         l = formula.lijevo.vrijednost(**interpretacija)
         d = formula.desno.vrijednost(**interpretacija)
-        if v ** LS.DISJ: return l or d
-        elif v ** LS.KONJ: return l and d
-        elif v ** LS.KOND: return l <= d
-        elif v ** LS.BIKOND: return l == d
+        if v ^ LS.DISJ: return l or d
+        elif v ^ LS.KONJ: return l and d
+        elif v ^ LS.KOND: return l <= d
+        elif v ^ LS.BIKOND: return l == d
         else: assert False, 'nepokriveni slučaj'
 
     def optim(self):

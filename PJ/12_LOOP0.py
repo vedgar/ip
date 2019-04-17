@@ -44,7 +44,7 @@ class LOOPParser(Parser):
 
     def naredba(self):
         if self >> {LOOP.INC, LOOP.DEC}:
-            opkod = Inkrement if self.zadnji ** LOOP.INC else Dekrement
+            opkod = Inkrement if self.zadnji ^ LOOP.INC else Dekrement
             reg = self.pročitaj(LOOP.REG)
             self.pročitaj(LOOP.TOČKAZ)
             return opkod(reg)

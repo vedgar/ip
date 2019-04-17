@@ -147,7 +147,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         if sadržaj not in {ime, ''}: ime += repr(self.sadržaj)
         return ime
 
-    def __pow__(self, tip):
+    def __xor__(self, tip):
         """Vraća sebe (istina) ako je zadanog tipa, inače None (laž)."""
         if not isinstance(tip, set): tip = {tip}
         self.uspoređeni |= tip
@@ -228,7 +228,7 @@ class Parser:
     def pročitaj(self, *tipovi):
         """Čita jedan od dozvoljenih simbola, ili javlja sintaksnu grešku."""
         token = self.čitaj()
-        if token ** set(tipovi): return token
+        if token ^ set(tipovi): return token
         self.vrati()
         raise self.greška()
 
@@ -238,11 +238,11 @@ class Parser:
 
     def __rshift__(self, tip):
         """Čita sljedeći token samo ako je odgovarajućeg tipa."""
-        return self.zadnji if self.čitaj() ** tip else self.vrati()
+        return self.zadnji if self.čitaj() ^ tip else self.vrati()
 
     def vidi(self, *tipovi): return self.pogledaj().je(*tipovi)
 
-    def __ge__(self, tip): return self.pogledaj() ** tip
+    def __ge__(self, tip): return self.pogledaj() ^ tip
 
     def greška(self): return self.zadnji.neočekivan()
 
@@ -276,7 +276,7 @@ def AST_adapt(component):
 
 class AST0:
     """Bazna klasa za sva apstraktna sintaksna stabla."""
-    def __pow__(self, tip):
+    def __xor__(self, tip):
         return isinstance(tip, type) and isinstance(self, tip)
 
     def je(self, *tipovi): return isinstance(self, tipovi)

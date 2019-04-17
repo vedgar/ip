@@ -14,6 +14,7 @@ from pj import *
 BKSL, N1, N2, NOVIRED = '\\', "'", '"', '\n'
 
 def makni(it):
+    """Miče obrnute kose crte (backslashes) iz iteratora."""
     for znak in it:
         if znak == BKSL:
             sljedeći = next(it)

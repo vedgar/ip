@@ -3,7 +3,8 @@
 Ovaj fragment SQLa je zapravo regularan -- nigdje nema ugnježđivanja!
 Semantički analizator u obliku name resolvera:
     provjerava jesu li svi selektirani stupci prisutni, te broji pristupe.
-Na dnu je lista ideja za dalji razvoj."""
+Na dnu je lista ideja za dalji razvoj.
+"""
 
 
 from pj import *

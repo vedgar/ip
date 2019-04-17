@@ -98,8 +98,8 @@ class PseudokodParser(Parser):
 
     def naredba(self):
         if self >> {PSK.AKO, PSK.DOK}:
-            petlja = self.zadnji ** PSK.DOK
-            istina = bool(self.pročitaj(PSK.JE, PSK.NIJE) ** PSK.JE)
+            petlja = self.zadnji ^ PSK.DOK
+            istina = bool(self.pročitaj(PSK.JE, PSK.NIJE) ^ PSK.JE)
             uvjet, naredba = self.log(), self.naredba()
             if petlja: return Petlja(uvjet, istina, naredba)
             inače = self.naredba() if istina and self >> PSK.INAČE else Blok([])
@@ -112,7 +112,7 @@ class PseudokodParser(Parser):
         elif self >> {PSK.AIME, PSK.LIME}:
             ime = self.zadnji
             self.pročitaj(PSK.JEDNAKO)
-            vrijednost = self.log() if ime ** PSK.LIME else self.aritm()
+            vrijednost = self.log() if ime ^ PSK.LIME else self.aritm()
             return Pridruživanje(ime, vrijednost)
         elif self >> PSK.VRATI:
             return Vrati(self.log() if self.logička else self.aritm())
@@ -120,7 +120,7 @@ class PseudokodParser(Parser):
 
     def funkcija(self):
         ime = self.pročitaj(PSK.LIME, PSK.AIME)
-        self.logička = bool(ime ** PSK.LIME)
+        self.logička = bool(ime ^ PSK.LIME)
         self.pročitaj(PSK.OTV)
         if self >> PSK.ZATV: parametri = []
         elif self >> {PSK.LIME, PSK.AIME}:
@@ -151,7 +151,7 @@ class PseudokodParser(Parser):
             if self >= PSK.OTV: return self.poziv(ime)
             else: return ime
         lijevo = self.aritm()
-        manje = bool(self.pročitaj(PSK.JEDNAKO, PSK.MANJE) ** PSK.MANJE)
+        manje = bool(self.pročitaj(PSK.JEDNAKO, PSK.MANJE) ^ PSK.MANJE)
         desno = self.aritm()
         return Usporedba(manje, lijevo, desno)
 
@@ -166,7 +166,7 @@ class PseudokodParser(Parser):
         for parametar in parametri:
             self.pročitaj(PSK.OTV if prvi else PSK.ZAREZ)
             prvi = False
-            arg.append(self.log() if parametar ** PSK.LIME else self.aritm())
+            arg.append(self.log() if parametar ^ PSK.LIME else self.aritm())
         self.pročitaj(PSK.ZATV)
         return arg
     
@@ -175,7 +175,7 @@ class PseudokodParser(Parser):
         while self >> {PSK.PLUS, PSK.MINUS}:
             operator = self.zadnji
             dalje = self.član()
-            članovi.append(dalje if operator ** PSK.PLUS else Suprotan(dalje))
+            članovi.append(dalje if operator ^ PSK.PLUS else Suprotan(dalje))
         return članovi[0] if len(članovi) == 1 else Zbroj(članovi)
 
     def član(self):

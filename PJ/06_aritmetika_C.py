@@ -102,19 +102,19 @@ class Binarna(AST('op lijevo desno')):
     def vrijednost(self, env):
         o,x,y = self.op, self.lijevo.vrijednost(env), self.desno.vrijednost(env)
         try:
-            if o ** AC.PLUS: return x + y
-            elif o ** AC.MINUS: return x - y
-            elif o ** AC.PUTA: return x * y
-            elif o ** AC.KROZ: return x / y
-            elif o ** AC.NA: return x ** y
+            if o ^ AC.PLUS: return x + y
+            elif o ^ AC.MINUS: return x - y
+            elif o ^ AC.PUTA: return x * y
+            elif o ^ AC.KROZ: return x / y
+            elif o ^ AC.NA: return x ** y
             else: assert False, 'nepokriveni slučaj binarnog operatora' + str(o)
         except ArithmeticError as ex: o.problem(*ex.args)
 
 class Unarna(AST('op ispod')):
     def vrijednost(self, env):
         o, z = self.op, self.ispod.vrijednost(env)
-        if o ** AC.MINUS: return -z
-        elif o ** AC.KONJ: return z.conjugate()
+        if o ^ AC.MINUS: return -z
+        elif o ^ AC.KONJ: return z.conjugate()
 
 
 def izračunaj(string): return ACParser.parsiraj(ac_lex(string)).izvrši()
