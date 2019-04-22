@@ -10,9 +10,9 @@ class AQ(enum.Enum):
             return fractions.Fraction(self.sadržaj)
 
     class IME(Token):
-        def izračunaj(self, memorija, čemu):
+        def izračunaj(self, memorija, v):
             try: return memorija[self]
-            except KeyError: self.nedeklaracija('pridruženo {}'.format(čemu))
+            except KeyError: raise self.nedeklaracija('pridruženo {}'.format(v))
 
 
 def aq_lex(program):
@@ -25,12 +25,12 @@ def aq_lex(program):
             lex.zvijezda(identifikator)
             yield lex.token(AQ.IME)
         elif znak == '\n': yield lex.token(AQ.NOVIRED)
-        elif znak.isspace(): lex.token(E.PRAZNO)
-        else: yield lex.token(operator(AQ, znak) or lex.greška())
+        elif znak.isspace(): lex.zanemari()
+        else: yield lex.literal(AQ)
 
 
-# start = program -> '' | naredba | naredba NOVIRED program
-# naredba -> IME JEDNAKO izraz
+# start = program -> '' | naredba | naredba program
+# naredba -> IME JEDNAKO izraz NOVIRED
 # izraz -> član | izraz PLUS član | izraz MINUS član
 # član -> faktor | član PUTA faktor | član KROZ faktor
 # faktor -> BROJ | IME | OTV izraz ZATV
@@ -39,26 +39,20 @@ def aq_lex(program):
 class AQParser(Parser):
     def start(self):
         naredbe = []
-        while True:
-            if self >= AQ.IME:
-                naredbe.append(self.naredba())
-                self.pročitaj(AQ.NOVIRED)
-            elif self >> E.KRAJ: return Program(naredbe)
-            else: self.greška()
+        while self >= AQ.IME: naredbe.append(self.naredba())
+        return Program(naredbe)
 
     def naredba(self):
         ime = self.pročitaj(AQ.IME)
         self.pročitaj(AQ.JEDNAKO)
         pridruženo = self.izraz()
+        self.pročitaj(AQ.NOVIRED)
         return Naredba(ime, pridruženo)
 
     def izraz(self):
-        trenutni = self.član()
-        while self >> {AQ.PLUS, AQ.MINUS}:
-            operator = self.zadnji
-            novi = self.član()
-            trenutni = Op(self.zadnji, trenutni, novi)
-        return trenutni
+        t = self.član()
+        while self >> {AQ.PLUS, AQ.MINUS}: t = Op(self.zadnji, t, self.član())
+        return t
 
     def član(self):
         t = self.faktor()
@@ -74,9 +68,10 @@ class AQParser(Parser):
 
 
 class Program(AST('naredbe')):
-    def detektiraj(self):
+    def izvrši(self):
         memorija = {}
         for naredba in self.naredbe: naredba.izvrši(memorija)
+        return memorija
 
 
 class Naredba(AST('ime vrijednost')):
@@ -84,17 +79,16 @@ class Naredba(AST('ime vrijednost')):
         memorija[self.ime] = self.vrijednost.izračunaj(memorija, self.ime)
 
 
-class Op(AST('op lijevo desno')):
+class Op(AST('operator lijevo desno')):
     def izračunaj(self, memorija, pridruženo):
         l = self.lijevo.izračunaj(memorija, pridruženo)
         d = self.desno.izračunaj(memorija, pridruženo)
-        o = self.op
-        if o ** AQ.PLUS: return l + d
-        if o ** AQ.MINUS: return l - d
-        if o ** AQ.PUTA: return l * d
-        if d: return l / d
-        poruka = 'Dijeljenje broja {} nulom, linija {}, stupac {}'
-        raise GreškaIzvođenja(poruka.format(l, *o.početak))
+        o = self.operator
+        if o ^ AQ.PLUS: return l + d
+        elif o ^ AQ.MINUS: return l - d
+        elif o ^ AQ.PUTA: return l * d
+        elif d: return l / d
+        raise o.problem('dijeljenje nulom (pridruženo {})'.format(pridruženo))
 
 
 if __name__ == '__main__':
@@ -102,8 +96,9 @@ if __name__ == '__main__':
         a = 3 / 7
         b = a + 3
         c = b - b
-        b = a * f
-        d = a / c
-        e = 3 / 0
+        b = a * a
+        d = a / (c + 1)
+        e = 3 / 3
     '''
-    AQParser.parsiraj(aq_lex(program)).detektiraj()
+    for ime, vrijednost in AQParser.parsiraj(aq_lex(program)).izvrši().items():
+        print(ime.sadržaj, vrijednost, sep='=')

@@ -193,11 +193,18 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         i, j = getattr(self, 'početak', '??')
         return GreškaIzvođenja(poruka.format(i, j, self, info))
 
+    def krivi_tip(self, *tipovi):
+        """Konstruira semantičku grešku."""
+        poruka = 'Redak {}, stupac {}: {!r}: tipovi ne odgovaraju: '
+        poruka += ', '.join(map(str, tipovi))
+        i, j = getattr(self, 'početak', '??')
+        return SemantičkaGreška(poruka.format(i, j, self))
+
     @classmethod
     def kraj(cls):
         """Oznaka kraja niza tokena."""
         t = cls(E.KRAJ, '')
-        t.početak = 'zadnji', 0
+        t.početak = t.kraj = 'zadnji', 0
         t.razriješen = False
         return t
 
@@ -205,7 +212,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
 class Parser:
     def __init__(self, tokeni):
         self.buffer, self.stream = None, iter(tokeni)
-        self.zadnji, self.kraj = None, Token.kraj()
+        self.zadnji, self.KRAJ = None, Token.kraj()
 
     def čitaj(self):
         """Čitanje sljedećeg tokena iz buffera ili inicijalnog niza."""
@@ -213,7 +220,7 @@ class Parser:
         if token is None:
             if self.zadnji is not None and not self.zadnji.razriješen:
                 raise self.greška()
-            token = next(self.stream, self.kraj)
+            token = next(self.stream, self.KRAJ)
         self.buffer = None
         self.zadnji = token
         return token
@@ -293,6 +300,7 @@ class RječnikAST(tuple):
 class Nenavedeno(AST0):
     """Atribut koji nije naveden."""
     def __bool__(self): return False
+    def __repr__(self): return type(self).__name__.join('<>')
 
 nenavedeno = Nenavedeno()
 
