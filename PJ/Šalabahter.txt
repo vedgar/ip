@@ -30,35 +30,34 @@ High level API:
 	raise lex.greška()
 	yield lex.literal(TT ili TT.DEFAULT, case=True ili False)
 
-# Parsiranje #
-##############
+# Sintaksna analiza (Parsiranje) #
+##################################
 
-Za izraze:
-	* popišemo sve operatore
-	* rasporedimo ih u hijerarhiju razina po prioritetima
-	* svakoj razini pridijelimo asociranost
-Napomene:
-	* asociranost nema veze s asocijativnošću!
-	* prioritet nema veze s redoslijedom izvođenja!
+Za izraze: * popišemo sve operatore
+	   * rasporedimo ih u hijerarhiju razina po prioritetima
+	   * svakoj razini pridijelimo asociranost
+Napomene: * asociranost nema veze s asocijativnošću!
+	  * prioritet nema veze s redoslijedom izvođenja!
 
 * napišemo beskontekstnu gramatiku! (ne preskakati ovaj korak!:)
 * svakoj varijabli (otprilike) odgovara jedna metoda parsera
 
+postfiksni, i infiksni lijevo asocirani, operatori: iteracija (petlja)
+prefiksni, i infiksni desno asocirani, operatori, te zagrade: rekurzija
+
 class MojParser(Parser):
 	def v1(self):
-		if self >> PRVITIP: ...
-		elif self >> {DRUGITIP, TREĆITIP}: ...
+		if self >> PRVITIP: ...  # sljedeći je PRVITIP (pročitan)
+		elif self >> {DRUGITIP, TREĆITIP}: ...  # jedan od tipova
 		else:
 			self.pročitaj(MORABITIOVAJTIP)
 			return NekoApstraktnoStablo(tokeni...)
 			self.zadnji: zadnji pročitani token
-			...
 		ili else: raise self.greška()
 	def v2(self):
-		if self >= PRVITIP: ...
+		if self >= PRVITIP: ...  # sljedeći je PRVITIP (nepročitan)
 
 	start = v1 (ili koja već)
-
 
 stablo = MojParser.parsiraj(moj_lex(string))
 
@@ -70,7 +69,7 @@ class NekoApstraktnoStablo(AST('atribut')): ...
 class DrugoApstraktnoStablo(AST('atribut1 atribut2')): ...
 
 * te klase imaju metode koje rade dalju semantičku analizu
-  (ili je možemo raditi u globalnoj funkciji pomoću operatora **)
+  (ili je možemo raditi u globalnoj funkciji pomoću operatora ^)
 - metode su najčešće rekurzivne, i baza je zadana na tipovima tokena
 - često primaju parametar (mem), koji predstavlja stanje memorije:
   preslikavanje (dict) stringova (imena varijabli) u vrijednosti
@@ -95,6 +94,5 @@ class Grananje(AST('uvjet onda inače')):
   preslikava parametre deklaracije funkcije u argumente funkcijskog poziva
   i u njemu izvršimo tijelo funkcije
 
-Typechecking:
-Preslikavanje tip: kao mem, samo ne preslikava imena varijabli u njihove
-vrijednosti nego u njihove statičke tipove
+Typechecking: Preslikavanje symtab - kao mem, samo ne preslikava
+imena varijabli u njihove vrijednosti nego u njihove statičke tipove
