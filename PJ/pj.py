@@ -133,7 +133,10 @@ class E(enum.Enum):  # Everywhere
 class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
     # TODO: razmisliti je li Token unhashable, ili hashiran samo kao TokenTuple
     """Klasa koja predstavlja tokene."""
-    def __new__(cls, tip, sadržaj):
+    def __new__(cls, tip, sadržaj=None):
+        if sadržaj is None:
+            sadržaj = tip.value
+            if isinstance(sadržaj, type): sadržaj = sadržaj.literal
         if isinstance(tip.value, type): cls = tip.value
         return super().__new__(cls, tip, sadržaj)
 
