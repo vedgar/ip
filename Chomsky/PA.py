@@ -74,3 +74,6 @@ class PotisniAutomat(types.SimpleNamespace):
         Dobiveni string može se kopirati u sandbox.kidstrythisathome.com/erdos
         ili u www.webgraphviz.com."""
         print(DOT_PA(automat))
+
+
+# TODO: pretvorba PA -> JPA -> BKG, BKG -> (J)PA

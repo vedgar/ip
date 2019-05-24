@@ -10,6 +10,7 @@ tests |= {21, 22, 23, 24, 25, 26, 27, 28, 29, 30}
 tests |= {31, 32, 33, 34, 35, 36, 37, 38, 39, 40}
 tests |= {41, 42, 43, 44, 45, 46, 47, 48, 49, 50}
 tests = {51, 52, 53, 54, 55}
+tests = {90}
 
 
 def test(i):
@@ -565,3 +566,28 @@ if test(54):  # Computonomicon, stranice 107~108, Lema 4.16
 
 if test(55):
     ...
+
+if test(90):  # 2019-k1-z3
+    zadatak = jedan.p * nula * jedan.z | jedan.u * nula.z * jedan.p
+    naivno = zadatak.KA()
+    službeno_rješenje = '''     0   1
+                            S   /   J/N  N
+                            J   Z   J
+                            N   N   Z
+                            Z   /   Z    #   '''
+    službeni_NKA = NedeterminističkiKonačniAutomat.iz_tablice(službeno_rješenje)
+    službeni_KA = službeni_NKA.optimizirana_partitivna_konstrukcija()
+    rješenje = '''       0     1
+                    q0   q2    q3/q1
+                    q1   q3    q1
+                    q2   q2    q3
+                    q3   q2    q3    #
+    '''
+    rješenje = NedeterminističkiKonačniAutomat.iz_tablice(rješenje)
+    # print(*rješenje.izračunavanje('1101'))
+    deterministični = rješenje.optimizirana_partitivna_konstrukcija()
+    razlika = deterministični.optimizirana_simetrična_razlika(službeni_KA)
+    nedet = NedeterminističkiKonačniAutomat.iz_konačnog_automata(razlika)
+    prazni = nedet.optimizirana_partitivna_konstrukcija()
+    prazni.prirodni().crtaj()
+    assert not prazni.završna
