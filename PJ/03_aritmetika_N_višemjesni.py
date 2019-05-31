@@ -1,4 +1,5 @@
-"""Aritmetika na N, s jedinom razlikom što su + i * lijevo asocirani višemjesni.
+"""Aritmetika na N, s razlikom što su + i * lijevo asocirani višemjesni.
+Također je implementirano implicitno množenje (npr. 2(3+5)=2*8=10).
 Implementiran je i optimizator, baš kao u originalnom aritmetika_N.py."""
 
 from pj import *

@@ -8,11 +8,11 @@ Podržane naredbe:
     dok nije uvjet naredba                  (naredba1, naredba2, ...)
 
 Podržani aritmetički izrazi:            Podržani logički uvjeti:
-    cijeli broj                             istina
-    ime                                     laž
+    cijeli broj                             Istina
+    ime                                     Laž
     ime(argumenti)                          Ime
     izraz + izraz                           Ime(argumenti)
-    izraz - izraz                           uvjet ili uvjet
+    izraz - izraz                           uvjet Ili uvjet
     izraz * izraz                           izraz < izraz
     -izraz                                  izraz = izraz
     (izraz)
@@ -32,7 +32,7 @@ from pj import *
 
 class PSK(enum.Enum):
     AKO, DOK, INAČE, VRATI = 'ako', 'dok', 'inače', 'vrati'
-    JE, NIJE, ILI = 'je', 'nije', 'ili'
+    JE, NIJE, ILI = 'je', 'nije', 'Ili'
     OTV, ZATV, ZAREZ, JEDNAKO, MANJE, PLUS, MINUS, ZVJEZDICA = '(),=<+-*'
     
     class AIME(Token):
@@ -49,7 +49,7 @@ class PSK(enum.Enum):
 
     class LKONST(Token):
         """Logička konstanta (istina ili laž)."""
-        def vrijednost(self, mem): return self.sadržaj == 'istina'
+        def vrijednost(self, mem): return self.sadržaj == 'Istina'
 
 def pseudokod_lexer(program):
     lex = Tokenizer(program)
@@ -57,11 +57,11 @@ def pseudokod_lexer(program):
         if znak.isspace(): lex.zanemari()
         elif znak.islower():
             lex.zvijezda(str.isalpha)
-            if lex.sadržaj in {'istina', 'laž'}: yield lex.token(PSK.LKONST)
-            else: yield lex.literal(PSK.AIME)
+            yield lex.literal(PSK.AIME)
         elif znak.isalpha():
             lex.zvijezda(str.isalpha)
-            yield lex.token(PSK.LIME)
+            if lex.sadržaj in {'Istina', 'Laž'}: yield lex.token(PSK.LKONST)
+            else: yield lex.literal(PSK.LIME)
         elif znak.isdigit():
             lex.zvijezda(str.isdigit)
             yield lex.token(PSK.BROJ)
@@ -215,9 +215,10 @@ class Funkcija(AST('ime parametri naredba')):
         else: raise GreškaIzvođenja('{} nije ništa vratila'.format(self.ime))
 
 class Poziv(AST('funkcija argumenti')):
+    """Izraz koji predstavlja funkcijski poziv sa zadanim argumentima."""
     def vrijednost(self, mem):
-        arg = [argument.vrijednost(mem) for argument in self.argumenti]
-        return self.funkcija.pozovi(arg)
+        argumenti = [argument.vrijednost(mem) for argument in self.argumenti]
+        return self.funkcija.pozovi(argumenti)
 
 class Grananje(AST('uvjet istina naredba inače')):
     def izvrši(self, mem):
@@ -226,14 +227,16 @@ class Grananje(AST('uvjet istina naredba inače')):
 
 class Petlja(AST('uvjet istina naredba')):
     def izvrši(self, mem):
-        while self.uvjet.vrijednost(mem) == self.istina: self.naredba.izvrši(mem)
+        while self.uvjet.vrijednost(mem) == self.istina:
+            self.naredba.izvrši(mem)
 
 class Blok(AST('naredbe')):
     def izvrši(self, mem):
         for naredba in self.naredbe: naredba.izvrši(mem)
 
 class Pridruživanje(AST('ime pridruženo')):
-    def izvrši(self, mem): mem[self.ime.sadržaj] = self.pridruženo.vrijednost(mem)
+    def izvrši(self, mem):
+        mem[self.ime.sadržaj] = self.pridruženo.vrijednost(mem)
 
 class Vrati(AST('što')):
     def izvrši(self, mem): raise Povratak(self.što.vrijednost(mem))
@@ -248,8 +251,8 @@ class Usporedba(AST('manje lijevo desno')):
         return l < d if self.manje else l == d
 
 class Zbroj(AST('pribrojnici')):
-    def vrijednost(self, mem):
-        return sum(pribrojnik.vrijednost(mem) for pribrojnik in self.pribrojnici)
+    def vrijednost(self, mem): return sum(pribrojnik.vrijednost(mem)
+                                          for pribrojnik in self.pribrojnici)
     
 class Suprotan(AST('od')):
     def vrijednost(self, mem): return -self.od.vrijednost(mem)
@@ -276,10 +279,10 @@ fakt(x) = (
     vrati f
 )
 Identiteta(V) = vrati V
-Negacija(V) = ako je Identiteta(V) (vrati laž) inače (vrati istina)
+Negacija(V) = ako je Identiteta(V) (vrati Laž) inače (vrati Istina)
 
 Neparan(x) = (
-    N = laž,
+    N = Laž,
     dok nije x = 0 (
         x = x - 1,
         N = Negacija(N),
@@ -300,32 +303,46 @@ print(suma_faktorijela)
 
 tablice_istinitosti = PseudokodParser.parsiraj(pseudokod_lexer('''
 broj(V) = ako je V vrati 1 inače vrati 0
-Negacija(P) = ako je P vrati laž inače vrati istina
+Negacija(P) = ako je P vrati Laž inače vrati Istina
 Konjunkcija(P, Q) = ako je P vrati Q inače vrati P
 Disjunkcija(P, Q) = ako je P vrati P inače vrati Q
+Kondicional(P, Q) = vrati Disjunkcija(Negacija(P), Q)
+Bikondicional(P, Q) = vrati Konjunkcija(Kondicional(P, Q), Kondicional(Q, P))
 Multiplex(m, P, Q) =
-    ako je m = 1 vrati Konjunkcija(P, Q) inače
-    ako je m = 2 vrati Disjunkcija(P, Q) inače
-    vrati laž
+    ako je m = 1 vrati Konjunkcija(P, Q)   inače
+    ako je m = 2 vrati Disjunkcija(P, Q)   inače
+    ako je m = 3 vrati Kondicional(P, Q)   inače
+    ako je m = 4 vrati Bikondicional(P, Q) inače
+    ako je m = 5 vrati Negacija(P)         inače
+                 vrati Laž
+Neparan(x) = (
+    N = Laž,
+    dok nije x = 0 (
+        x = x - 1,
+        N = Negacija(N),
+    ),
+    vrati N
+)
 dodaj(broj, bit) = (
     broj = broj * 10 + bit,
     broj = broj * 10 + 8,
     vrati broj
 )
-Proba() = ako je (2 + 3) * 5 < 7 vrati istina inače vrati laž
 program(m) = (
     b = 0,
-    povrat = 8,
+    povrat = 6,
     dok je b < 4 (
         Prvi = Negacija(b < 2),
-        Drugi = b = 1 ili b = 3,
+        Drugi = Neparan(b),
         rezultat = broj(Multiplex(m, Prvi, Drugi)),
         povrat = dodaj(povrat, rezultat),
         b = b + 1
     ),
-    vrati povrat
+    vrati povrat + 1
 )
 '''))
 print()
 izvrši(suma_faktorijela)
-izvrši(tablice_istinitosti, 3)
+izvrši(tablice_istinitosti, 4)
+
+# DZ: dodajte određenu petlju: za ime = izraz .. izraz naredba

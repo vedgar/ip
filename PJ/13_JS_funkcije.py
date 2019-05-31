@@ -30,10 +30,10 @@ def js_lex(string):
 
 ### Beskontekstna gramatika
 # funkcija -> FUNCTION IME O_OTV argumenti O_ZATV V_OTV tijelo V_ZATV
-# argumenti -> VAR IME ZAREZ argumenti | VAR IME | ε
+# argumenti -> VAR IME ZAREZ argumenti | VAR IME | ''
 # tijelo -> komentari naredbe | naredbe
 # komentari -> KOMENTAR komentari | KOMENTAR
-# naredbe -> NAREDBA separator naredbe | NAREDBA | ε
+# naredbe -> NAREDBA separator naredbe | NAREDBA | ''
 # separator -> TOČKAZAREZ | komentari
 
 class Funkcija(AST('ime argumenti tijelo')): pass

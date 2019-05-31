@@ -44,12 +44,10 @@ class AZParser(Parser):
     def izraz(self):
         trenutni = self.član()
         while True:
-            if self >> AZ.PLUS: 
-                član = self.član()
-                trenutni = Zbroj(trenutni, član)
+            if self >> AZ.PLUS: trenutni = Zbroj(trenutni, self.član())
             elif self >> AZ.MINUS:
                 član = self.član()
-                trenutni = Razlika(trenutni, član)
+                trenutni = Zbroj(trenutni, Suprotan(član))  # a-b := a+(-b)
             else: break
         return trenutni
 
@@ -65,7 +63,7 @@ class AZParser(Parser):
     def faktor(self):
         if self >> AZ.BROJ: return self.zadnji
         elif self >> AZ.X:
-            x = self.zadnji
+            x = self.zadnji  # moramo spremiti x jer donji >> uništi self.zadnji
             if self >> AZ.BROJ: return Xna(self.zadnji)
             else: return x
         elif self >> AZ.OTVORENA:
@@ -81,11 +79,6 @@ class Zbroj(AST('lijevo desno')):
     def prevedi(self):
         l, d = self.lijevo.prevedi(), self.desno.prevedi()
         return l + d
-
-class Razlika(AST('lijevo desno')):
-    def prevedi(self):
-        l, d = self.lijevo.prevedi(), self.desno.prevedi()
-        return l - d
     
 class Umnožak(AST('lijevo desno')):
     def prevedi(self):
@@ -121,7 +114,8 @@ class Polinom(collections.Counter):
 
     def __sub__(p, q): return p + -q
 
-    def monomi(p):
+    def __str__(p):
+        monomi = []
         for e, k in sorted(p.items(), reverse=True):
             if not k: continue
             č = format(k, '+')
@@ -129,9 +123,8 @@ class Polinom(collections.Counter):
                 if abs(k) == 1: č = č[0]
                 č += 'x'
                 if e > 1: č += str(e)
-            yield č
-
-    def __str__(p): return ''.join(p.monomi()).lstrip('+') or '0'
+            monomi.append(č)
+        return ''.join(monomi).lstrip('+') or '0'
 
 
 def izračunaj(zadatak):

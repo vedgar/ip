@@ -139,3 +139,8 @@ if __name__ == '__main__':
         skoro0
     '''.format(pi))))
     print(izračunaj('6.022045e23->NA 1.6605e-27->u 1/(NA*u)'))
+
+
+# DZ: Dodajte implicitno množenje, barem s i -- tako da radi npr. 2+3i
+# DZ: Stritkno držanje IEEE-754 zahtijeva i ispravno tretiranje dijeljenja nulom
+# (a ako želite biti sasvim compliant, i potenciranja poput 0^-1): učinite to!

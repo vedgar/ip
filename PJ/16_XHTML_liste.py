@@ -1,4 +1,5 @@
 """Renderer za XHTML dokumente koji sadrže samo liste.
+
 Kolokvij 2. veljače 2015. (Puljić)
 """
 
@@ -125,9 +126,24 @@ r = XLParser.parsiraj(html_lex('''\
                 </li>
                 <li>nastavak...</li>
             </ol>
-            I još malo hm.<ul><li>jauč!</li></ul>Hm.
+            I još malo hm.<ul><li>uvučeno</li></ul>Hm.
         </body>
     </html>
 '''))
 print(r)
+# Dokument(zaglavlje=Tekst(dijelovi=[TEXT'bla', TEXT'bla']), tijelo=[
+#   Tekst(dijelovi=[TEXT'12#hmm', TEXT'hm', TEXT'hm']),
+#   Lista(uređena=True, stavke=[
+#     Tekst(dijelovi=[TEXT'Ovo', TEXT'je', TEXT'prvi', TEXT'item.']),
+#     Tekst(dijelovi=[TEXT'A', TEXT'ovo', TEXT'je', TEXT'drugi.']),
+#     Tekst(dijelovi=[TEXT'Ovo,', TEXT'pak,', TEXT'je', TEXT'---', TEXT'ne',
+#       TEXT'bi', TEXT'čovjek', TEXT'vjerovao', TEXT'---', TEXT'treći.']),
+#     Lista(uređena=False, stavke=[
+#       Lista(uređena=True, stavke=[
+#         Tekst(dijelovi=[TEXT'Trostruka', TEXT'dubina!'])]),
+#       Tekst(dijelovi=[TEXT'Dvostruka!'])]),
+#     Tekst(dijelovi=[TEXT'nastavak...'])]),
+#   Tekst(dijelovi=[TEXT'I', TEXT'još', TEXT'malo', TEXT'hm.']),
+#   Lista(uređena=False, stavke=[Tekst(dijelovi=[TEXT'uvučeno'])]),
+#   Tekst(dijelovi=[TEXT'Hm.'])])
 r.render()

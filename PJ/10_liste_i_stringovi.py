@@ -4,7 +4,7 @@ Brojevi su samo prirodni (veći od 0).
 Stringovi se pišu kao "...", gdje unutar ... ne smije biti znak ".
 Stringovi se mogu pisati i kao '...', gdje unutar ... nema znaka '.
 Zapravo, "..."-stringovi smiju sadržavati i ", ali escape-ane znakom \.
-\n označava novi red. \\ označava \.
+Dakle, \" označava ". \n označava novi red. \\ označava \.
 Unutar '...'-stringova \ nema nikakvo posebno značenje.
 """
 
@@ -86,3 +86,8 @@ if __name__ == '__main__':
         [23, "ab\"c]", 'a[]', [2, 3], 523,
         '"', '\', "\e", "\\"]
     ''')).vrijednost())
+
+# DZ: sve više jezika dopušta "zarez na kraju" stil pisanja listi
+#     (npr. [2,3,] je isto što i [2,3]) -- omogućite to!)
+# DZ: omogućite razne druge \-escape sekvence (npr. \u za Unicode znakove)
+# DZ: omogućite izraze umjesto literala: polimorfni + za zbrajanje/konkatenaciju

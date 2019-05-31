@@ -2,17 +2,16 @@
 import itertools, math, pathlib, webbrowser, time, logging
 
 
-class LOGO(enum.Enum):
+class LG(enum.Enum):
     OTVORENA, ZATVORENA = '[]'
-    REPEAT, FORWARD, LEFT, RIGHT = 'repeat', 'forward', 'left', 'right'
-    PENUP, PENDOWN = 'penup', 'pendown'
-    BACKWARD = 'backward'
-
+    FORWARD, BACKWARD, LEFT, RIGHT = 'forward', 'backward', 'left', 'right'
+    REPEAT, PENUP, PENDOWN = 'repeat', 'penup', 'pendown'
     class BROJ(Token):
         def vrijednost(self): return int(self.sadržaj)
 
-alias = {'fd': 'forward', 'lt': 'left', 'rt': 'right', 'pu': 'penup',
-    'pd': 'pendown', 'bk': 'backward', 'back': 'backward', 'bw': 'backward'}
+alias = {'fd': 'forward', 'fw': 'forward',
+         'lt': 'left', 'rt': 'right', 'pu': 'penup', 'pd': 'pendown',
+         'bk': 'backward', 'back': 'backward', 'bw': 'backward'}
 
 def logo_lex(kod):
     lex = Tokenizer(kod)
@@ -20,13 +19,13 @@ def logo_lex(kod):
         if znak.isspace(): lex.zanemari()
         elif znak.isdigit():
             lex.zvijezda(str.isdigit)
-            yield lex.token(LOGO.BROJ)
+            yield lex.token(LG.BROJ)
         elif znak.isalpha():
             lex.zvijezda(str.isalpha)
             s = lex.sadržaj.casefold()
             if s in alias: s = alias[s]
-            yield lex.token(LOGO(s))
-        else: yield lex.literal(LOGO)
+            yield lex.token(LG(s))
+        else: yield lex.literal(LG)
 
 
 ### Beskontekstna gramatika
@@ -36,25 +35,25 @@ def logo_lex(kod):
 
 ### Apstraktna sintaksna stabla
 # Program: naredbe:list - LOGO program
-# Pomak: pikseli:LOGO.BROJ, smjer:+-1 - FORWARD ili BACKWARD naredba
-# Okret: stupnjevi:LOGO.BROJ, smjer:+-1 - LEFT ili RIGHT naredba
-# Ponavljanje: koliko:LOGO.BROJ, naredbe:list - REPEAT naredba
-# Olovka: down:bool - PU ili PD naredba
+# Pomak: pikseli:BROJ, smjer:+-1 - FORWARD ili BACKWARD naredba
+# Okret: stupnjevi:BROJ, smjer:+-1 - LEFT ili RIGHT naredba
+# Ponavljanje: koliko:BROJ, naredbe:list - REPEAT naredba
+# Olovka: down:bool - PENUP ili PENDOWN naredba
 
 def naredbe(parser):
     for kw in iter(parser.čitaj, None):
-        if kw ** {LOGO.FORWARD,LOGO.BACKWARD,LOGO.LEFT,LOGO.RIGHT,LOGO.REPEAT}:
-            koliko = parser.pročitaj(LOGO.BROJ)
-        if kw ** LOGO.PENUP: yield Olovka(False)
-        elif kw ** LOGO.PENDOWN: yield Olovka(True)
-        elif kw ** LOGO.FORWARD: yield Pomak(koliko, +1)
-        elif kw ** LOGO.LEFT: yield Okret(koliko, +1)
-        elif kw ** LOGO.BACKWARD: yield Pomak(koliko, -1)
-        elif kw ** LOGO.RIGHT: yield Okret(koliko, -1)
-        elif kw ** LOGO.REPEAT:
-            parser.pročitaj(LOGO.OTVORENA)
+        if kw ^ {LG.FORWARD, LG.BACKWARD, LG.LEFT, LG.RIGHT, LG.REPEAT}:
+            koliko = parser.pročitaj(LG.BROJ)
+        if kw ^ LG.PENUP: yield Olovka(False)
+        elif kw ^ LG.PENDOWN: yield Olovka(True)
+        elif kw ^ LG.FORWARD: yield Pomak(koliko, +1)
+        elif kw ^ LG.LEFT: yield Okret(koliko, +1)
+        elif kw ^ LG.BACKWARD: yield Pomak(koliko, -1)
+        elif kw ^ LG.RIGHT: yield Okret(koliko, -1)
+        elif kw ^ LG.REPEAT:
+            parser.pročitaj(LG.OTVORENA)
             u_petlji = list(naredbe(parser))
-            parser.pročitaj(LOGO.ZATVORENA)
+            parser.pročitaj(LG.ZATVORENA)
             yield Ponavljanje(koliko, u_petlji)
         else:
             parser.vrati()
@@ -76,13 +75,13 @@ def prevedi(naredbe):
 
 class Pomak(AST('pikseli smjer')):
     def js(self, _):
-        yield 'to.apply(ctx, [x-=Math.sin(h)*{0}, y-=Math.cos(h)*{0}]);'\
-              .format(self.pikseli.vrijednost() * self.smjer)
+        yield 'to.apply(ctx, [x-=Math.sin(h)*{d}, y-=Math.cos(h)*{d}]);'\
+              .format(d = self.pikseli.vrijednost() * self.smjer)
 
 class Okret(AST('stupnjevi smjer')):
     def js(self, _):
         zaokret = math.radians(self.stupnjevi.vrijednost() * self.smjer)
-        yield 'h += {};'.format(zaokret)
+        yield 'h += {kut};'.format(kut=zaokret)
 
 class Ponavljanje(AST('koliko naredbe')):
     def js(self, repeat_br):
@@ -94,7 +93,8 @@ class Ponavljanje(AST('koliko naredbe')):
 
 class Olovka(AST('crtaj')):
     def js(self, _):
-        yield 'to = ctx.{}To;'.format('line' if self.crtaj else 'move')
+        if self.crtaj: yield 'to = ctx.lineTo;'
+        else: yield 'to = ctx.moveTo;'
 
 
 def prevedi_string(kôd):
@@ -131,8 +131,12 @@ def nacrtaj(ime):
 
 dat = {f.stem: f for f in (pathlib.Path(__file__).parent/'crteži').iterdir()}
 crteži = set(dat)
+print(crteži)
 
 def nacrtaj_sve():
     for crtež in crteži:
         nacrtaj(crtež)
         time.sleep(8)
+
+# DZ: pogledati http://www.mathcats.com/gallery/15wordcontest.html
+#     i implementirati neke od tih crteža (za mnoge trebaju varijable!)

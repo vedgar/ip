@@ -4,8 +4,9 @@
     grananja: if(var == broj) naredba
     ispis: cout << var1 << var2 << ..., s opcionalnim << endl na kraju
 
-Naredba može biti i blok u vitičastim zagradama.
-Podržana je i naredba break za izlaz iz unutarnje petlje.
+Tijelo petlje može biti i blok u vitičastim zagradama.
+Podržana je i naredba break za izlaz iz unutarnje petlje:
+    nelokalna kontrola toka realizirana je pomoću izuzetka Prekid.
 """
 
 
@@ -16,7 +17,7 @@ class CPP(enum.Enum):
     FOR, COUT, ENDL, IF = 'for', 'cout', 'endl', 'if'
     OOTV, OZATV, VOTV, VZATV = '(){}'
     MANJE, JEDNAKO, TOČKAZ = '<=;'
-    PLUSP, PLUSJ, ISPIS, JJEDNAKO = '++', '+=', '<<', '=='
+    PLUSP, PLUSJ, MMANJE, JJEDNAKO = '++', '+=', '<<', '=='
     class BREAK(Token):
         literal = 'break'
         def izvrši(self, mem): raise Prekid
@@ -36,13 +37,13 @@ def cpp_lex(source):
             elif sljedeći == '=': yield lex.token(CPP.PLUSJ)
             else: raise lex.greška('u ovom jeziku nema samostalnog +')
         elif znak == '<':
-            if lex.slijedi('<'): yield lex.token(CPP.ISPIS)
+            if lex.slijedi('<'): yield lex.token(CPP.MMANJE)
             else: yield lex.token(CPP.MANJE)
         elif znak == '=':
             if lex.slijedi('='): yield lex.token(CPP.JJEDNAKO)
             else: yield lex.token(CPP.JEDNAKO)
-        elif znak.islower():
-            lex.zvijezda(str.islower)
+        elif znak.isalpha():
+            lex.zvijezda(str.isalpha)
             yield lex.literal(CPP.IME)
         elif znak.isdigit():
             lex.zvijezda(str.isdigit)
@@ -59,8 +60,8 @@ def cpp_lex(source):
 # 	  TOČKAZ IME inkrement OZATV
 # petlja -> for naredba | for VOTV naredbe VZATV
 # inkrement -> PLUSP | PLUSJ BROJ
-# ispis -> COUT varijable | COUT varijable ISPIS ENDL
-# varijable -> '' | ISPIS IME varijable
+# ispis -> COUT varijable | COUT varijable MMANJE ENDL
+# varijable -> '' | MMANJE IME varijable
 # grananje -> IF OOTV IME JJEDNAKO BROJ OZATV naredba
 
 class CPPParser(Parser):
@@ -104,9 +105,11 @@ class CPPParser(Parser):
     def ispis(self):
         varijable = []
         novired = False
-        while self >> CPP.ISPIS:
+        while self >> CPP.MMANJE:
             if self >> CPP.IME: varijable.append(self.zadnji)
-            elif self >> CPP.ENDL: novired = True; break
+            elif self >> CPP.ENDL:
+                novired = True
+                break
         self.pročitaj(CPP.TOČKAZ)
         return Ispis(varijable, novired)
 
@@ -128,6 +131,12 @@ class CPPParser(Parser):
 class Prekid(Exception): pass
 
 
+## Apstraktna sintaksna stabla:
+# Program: naredbe:list
+# Petlja: varijabla:IME početak:BROJ granica:BROJ inkrement:BROJ? blok:list
+# Ispis: varijable:list novired:bool
+# Grananje: lijevo:IME desno:BROJ naredba
+
 class Program(AST('naredbe')):
     def izvrši(self):
         memorija = {}
@@ -140,8 +149,7 @@ class Petlja(AST('varijabla početak granica inkrement blok')):
         while mem[kv] < self.granica.vrijednost(mem):
             try:
                 for naredba in self.blok: naredba.izvrši(mem)
-            except Prekid:
-                break
+            except Prekid: break
             inkr = self.inkrement
             if inkr is nenavedeno: inkr = 1
             else: inkr = inkr.vrijednost(mem)
@@ -163,12 +171,21 @@ if __name__ == '__main__':
         for ( i = 8 ; i < 13 ; i += 2 )
             for(j=0; j<3; j++) {
                 cout<<i<<j<<endl;
-                if(i == 9) if (j == 1) break;
+                if(i == 10) if (j == 1) break;
             }
     '''))
     print(cpp)
+    # Program(naredbe=[
+    #   Petlja(varijabla=IME'i', početak=BROJ'8', granica=BROJ'13',
+    #          inkrement=BROJ'2', blok=[
+    #     Petlja(varijabla=IME'j', početak=BROJ'0', granica=BROJ'3',
+    #            inkrement=<Nenavedeno>, blok=[
+    #       Ispis(varijable=[IME'i', IME'j'], novired=True),
+    #       Grananje(lijevo=IME'i', desno=BROJ'10', naredba=
+    #         Grananje(lijevo=IME'j', desno=BROJ'1', naredba=BREAK'break'))])])])
     cpp.izvrši()
 
 
 # DZ: omogućiti i grananjima da imaju blokove - uvesti novi AST Blok
-#     omogućiti da parametri petlje budu varijable, ne samo brojevi
+# DZ: omogućiti da parametri petlje budu varijable, ne samo brojevi
+# DZ: implementirati naredbu continue

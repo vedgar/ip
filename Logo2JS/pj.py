@@ -72,14 +72,20 @@ class Tokenizer:
     def plus(self, uvjet):
         """Čita Kleene+ (jedan ili više) znakova koji zadovoljavaju uvjet."""
         prvi = self.čitaj()
-        if not uvjet(prvi):
-            raise self.greška('očekivan ' + uvjet.__name__)
+        if not uvjet(prvi): raise self.greška('očekivan ' + uvjet.__name__)
         self.zvijezda(uvjet)
     
     def pročitaj(self, znak):
         """Čita zadani znak, ili prijavljuje leksičku grešku."""
         if znak != self.čitaj():
             raise self.greška('očekivano {!r}'.format(znak))
+
+    def pročitaj_do(self, znak, uključivo=True):
+        """Čita sve znakove do zadanog znaka."""
+        self.zvijezda(lambda z: z and z != znak)
+        if self.pogledaj() != znak:
+            raise self.greška('{!r} nije pronađen'.format(znak))
+        if uključivo: self.pročitaj(znak)
 
     def greška(self, info=''):
         """Konstruira leksičku grešku koja se treba prijaviti s raise."""
@@ -93,6 +99,7 @@ class Tokenizer:
         """Odašilje token."""
         t = Token(tip, self.sadržaj)
         t.početak = self.početak
+        t.kraj = self.pozicija
         self.zanemari()
         return t
 
@@ -124,9 +131,12 @@ class E(enum.Enum):  # Everywhere
 
 
 class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
-    # TODO: razmisliti treba li Token biti unhashable, ili hashiran samo kao TokenTuple
+    # TODO: razmisliti je li Token unhashable, ili hashiran samo kao TokenTuple
     """Klasa koja predstavlja tokene."""
-    def __new__(cls, tip, sadržaj):
+    def __new__(cls, tip, sadržaj=None):
+        if sadržaj is None:
+            sadržaj = tip.value
+            if isinstance(sadržaj, type): sadržaj = sadržaj.literal
         if isinstance(tip.value, type): cls = tip.value
         return super().__new__(cls, tip, sadržaj)
 
@@ -140,7 +150,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         if sadržaj not in {ime, ''}: ime += repr(self.sadržaj)
         return ime
 
-    def __pow__(self, tip):
+    def __xor__(self, tip):
         """Vraća sebe (istina) ako je zadanog tipa, inače None (laž)."""
         if not isinstance(tip, set): tip = {tip}
         self.uspoređeni |= tip
@@ -186,11 +196,18 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         i, j = getattr(self, 'početak', '??')
         return GreškaIzvođenja(poruka.format(i, j, self, info))
 
+    def krivi_tip(self, *tipovi):
+        """Konstruira semantičku grešku."""
+        poruka = 'Redak {}, stupac {}: {!r}: tipovi ne odgovaraju: '
+        poruka += ', '.join(map(str, tipovi))
+        i, j = getattr(self, 'početak', '??')
+        return SemantičkaGreška(poruka.format(i, j, self))
+
     @classmethod
     def kraj(cls):
         """Oznaka kraja niza tokena."""
         t = cls(E.KRAJ, '')
-        t.početak = 'zadnji', 0
+        t.početak = t.kraj = 'zadnji', 0
         t.razriješen = False
         return t
 
@@ -198,7 +215,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
 class Parser:
     def __init__(self, tokeni):
         self.buffer, self.stream = None, iter(tokeni)
-        self.zadnji, self.kraj = None, Token.kraj()
+        self.zadnji, self.KRAJ = None, Token.kraj()
 
     def čitaj(self):
         """Čitanje sljedećeg tokena iz buffera ili inicijalnog niza."""
@@ -206,7 +223,7 @@ class Parser:
         if token is None:
             if self.zadnji is not None and not self.zadnji.razriješen:
                 raise self.greška()
-            token = next(self.stream, self.kraj)
+            token = next(self.stream, self.KRAJ)
         self.buffer = None
         self.zadnji = token
         return token
@@ -221,7 +238,7 @@ class Parser:
     def pročitaj(self, *tipovi):
         """Čita jedan od dozvoljenih simbola, ili javlja sintaksnu grešku."""
         token = self.čitaj()
-        if token ** set(tipovi): return token
+        if token ^ set(tipovi): return token
         self.vrati()
         raise self.greška()
 
@@ -231,11 +248,11 @@ class Parser:
 
     def __rshift__(self, tip):
         """Čita sljedeći token samo ako je odgovarajućeg tipa."""
-        return self.zadnji if self.čitaj() ** tip else self.vrati()
+        return self.zadnji if self.čitaj() ^ tip else self.vrati()
 
     def vidi(self, *tipovi): return self.pogledaj().je(*tipovi)
 
-    def __ge__(self, tip): return self.pogledaj() ** tip
+    def __ge__(self, tip): return self.pogledaj() ^ tip
 
     def greška(self): return self.zadnji.neočekivan()
 
@@ -269,7 +286,7 @@ def AST_adapt(component):
 
 class AST0:
     """Bazna klasa za sva apstraktna sintaksna stabla."""
-    def __pow__(self, tip):
+    def __xor__(self, tip):
         return isinstance(tip, type) and isinstance(self, tip)
 
     def je(self, *tipovi): return isinstance(self, tipovi)
@@ -286,6 +303,7 @@ class RječnikAST(tuple):
 class Nenavedeno(AST0):
     """Atribut koji nije naveden."""
     def __bool__(self): return False
+    def __repr__(self): return type(self).__name__.join('<>')
 
 nenavedeno = Nenavedeno()
 

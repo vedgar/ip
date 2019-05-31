@@ -6,7 +6,7 @@ Standardna definicija iz [Vuković, Matematička logika]:
 * Ako su F i G formule, tada su i (F&G), (F|G), (F->G) i (F<->G) formule
 Sve zagrade (oko binarnih veznika) su obavezne!
 
-Interpretacija se zadaje imenovanim argumentima:
+Interpretacija se zadaje imenovanim argumentima (**interpretacija):
     formula.vrijednost(P2=True, P7=False, P1=True, ...)
 
 Optimizacija (formula.optim()) zamjenjuje potformule oblika !!F sa F.
@@ -143,3 +143,4 @@ if __name__ == '__main__':
 
 # DZ: implementirajte još neke optimizacije: npr. F|!G u G->F.
 # DZ: Napravite totalnu optimizaciju negacije: svaka formula s najviše jednim !
+# (Za ovo bi vjerojatno bilo puno lakše imati po jedno AST za svaki veznik.)

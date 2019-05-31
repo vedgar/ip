@@ -34,7 +34,8 @@ class DSParser(Parser):
 
     def disjunkt(self):
         konjunkti = [self.faktor()]
-        while self>={DS.SLOVO,DS.OOTV,DS.UOTV}: konjunkti.append(self.faktor())
+        while self >= {DS.SLOVO, DS.OOTV, DS.UOTV}:
+            konjunkti.append(self.faktor())
         return konjunkti[0] if len(konjunkti) == 1 else And(konjunkti)
 
     def faktor(self):

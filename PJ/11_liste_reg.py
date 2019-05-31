@@ -1,4 +1,9 @@
-"""Programski jezik za rad s listama; kolokvij 31. siječnja 2011. (Puljić)"""
+"""Virtualna mašina za rad s listama; kolokvij 31. siječnja 2011. (Puljić).
+
+9 registara (L1 do L9) koji drže liste cijelih brojeva (počinju od prazne),
+2 naredbe (ubacivanje i izbacivanje elementa po indeksu),
+3 upita (duljina i praznost liste, dohvaćanje elementa po indeksu).
+"""
 
 
 from pj import *
