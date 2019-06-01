@@ -13,7 +13,7 @@ LOOP-program je slijed (jedne ili više) instrukcija sljedećeg oblika:
         puta koliki je broj bio u registru Rj na početku izvršavanja petlje
         (program može mijenjati Rj, ali to ne mijenja broj izvršavanja petlje).
 
-Npr. LOOP-program R2*DECR2,R3*(INCR2,DECR3) premješta broj iz R3 u R2.
+Npr. LOOP-program "R2{DECR2;} R3{INCR2;DECR3;}" premješta broj iz R3 u R2.
 """
 
 from pj import *
