@@ -21,6 +21,7 @@ class AN(enum.Enum):
     class BROJ(Token):
         def vrijednost(self): return int(self.sadržaj)
         def optim(self): return self
+        def prevedi(self): yield 'PUSH', self.vrijednost()
 
 
 def an_lex(izraz):
@@ -91,6 +92,12 @@ class Zbroj(AST('pribrojnici')):
         elif b == nula: return a
         else: return Zbroj([a, b])
 
+    def prevedi(izraz):
+        a, b = izraz.pribrojnici
+        yield from a.prevedi()
+        yield from b.prevedi()
+        yield 'ADD',
+
 
 class Umnožak(AST('faktori')):
     def vrijednost(izraz):
@@ -105,6 +112,12 @@ class Umnožak(AST('faktori')):
         elif nula in {a, b}: return nula
         else: return Umnožak([a, b])
 
+    def prevedi(izraz):
+        a, b = izraz.faktori
+        yield from a.prevedi()
+        yield from b.prevedi()
+        yield 'MUL',
+
 
 class Potencija(AST('baza eksponent')):
     def vrijednost(izraz):
@@ -117,6 +130,11 @@ class Potencija(AST('baza eksponent')):
         elif jedan in {b, e}: return b
         else: return Potencija(b, e)
 
+    def prevedi(izraz):
+        yield from izraz.baza.prevedi()
+        yield from izraz.eksponent.prevedi()
+        yield 'POW',
+
 
 def testiraj(izraz):
     stablo = ANParser.parsiraj(an_lex(izraz))
@@ -126,6 +144,7 @@ def testiraj(izraz):
     Python = eval(izraz.replace('^', '**'))
     if mi == Python: print(izraz, '==', mi, 'OK')
     else: print(izraz, 'mi:', mi, 'Python:', Python)
+    for instrukcija in opt.prevedi(): print('\t', *instrukcija)
 
 if __name__ == '__main__':
     testiraj('(2+3)*4^1')
