@@ -9,8 +9,8 @@ tests = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
 tests |= {21, 22, 23, 24, 25, 26, 27, 28, 29, 30}
 tests |= {31, 32, 33, 34, 35, 36, 37, 38, 39, 40}
 tests |= {41, 42, 43, 44, 45, 46, 47, 48, 49, 50}
-tests = {51, 52, 53, 54, 55}
-tests = {90}
+tests = {51, 52, 53, 54}
+# tests = {90}
 
 
 def test(i):
@@ -536,7 +536,7 @@ if test(52):  # page 173 example 3.9
     for konf in ts.izračunavanje('#'.join(['011000'] * 2)): prikaz(*konf)
 
 
-if test(53):  # Computonomicon, stranice 101~103, Primjer 4.6
+if test(53):  # Komputonomikon, Primjer 4.6
     tsh = TuringovStroj.iz_tablice('''a   b   _  c   d
                                     A c+B d+B .  !   !
                                     B +   +   -C !   !
@@ -554,7 +554,7 @@ if test(53):  # Computonomicon, stranice 101~103, Primjer 4.6
     print('\n', tsh.prihvaća('aabbaba'), tsh.rezultat('aabbaba'))
 
 
-if test(54):  # Computonomicon, stranice 107~108, Lema 4.16
+if test(54):  # Komputonomikon, Lema 4.16
     def tsid(Σ):
         _ = novo('_', Σ)
         Γ = Σ | {_}
