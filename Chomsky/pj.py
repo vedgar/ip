@@ -1,4 +1,4 @@
-#TODO: pogledati može li se upotrebljivo ukrasti pprinter od astpretty
+# TODO: pogledati može li se upotrebljivo ukrasti pprinter od astpretty
 
 
 import enum, types, collections, contextlib
@@ -75,7 +75,7 @@ class Tokenizer:
         if not uvjet(prvi):
             raise self.greška('očekivan ' + uvjet.__name__)
         self.zvijezda(uvjet)
-    
+
     def pročitaj(self, znak):
         """Čita zadani znak, ili prijavljuje leksičku grešku."""
         if znak != self.čitaj():
@@ -124,7 +124,8 @@ class E(enum.Enum):  # Everywhere
 
 
 class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
-    # TODO: razmisliti treba li Token biti unhashable, ili hashiran samo kao TokenTuple
+    # TODO: razmisliti treba li Token biti unhashable,
+    #       ili hashiran samo kao TokenTuple
     """Klasa koja predstavlja tokene."""
     def __new__(cls, tip, sadržaj):
         if isinstance(tip.value, type): cls = tip.value
@@ -134,7 +135,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         # if self.tip is E.GREŠKA: prijavi grešku na početku tokena, ne na kraju
         self.uspoređeni = set()
         self.razriješen = False
-    
+
     def __repr__(self):
         ime, sadržaj = self.tip.name, self.sadržaj
         if sadržaj not in {ime, ''}: ime += repr(self.sadržaj)
@@ -247,7 +248,7 @@ class Parser:
         else:
             parser.pročitaj(E.KRAJ)
             return rezultat
-        
+
 
 elementarni = str, int, bool
 
@@ -269,11 +270,12 @@ def AST_adapt(component):
 
 class AST0:
     """Bazna klasa za sva apstraktna sintaksna stabla."""
+
     def __pow__(self, tip):
         return isinstance(tip, type) and isinstance(self, tip)
 
     def je(self, *tipovi): return isinstance(self, tipovi)
-    
+
 
 class Atom(Token, AST0): """Atomarni token kao apstraktno stablo."""
 
@@ -292,7 +294,7 @@ nenavedeno = Nenavedeno()
 def AST(atributi):
     AST2 = collections.namedtuple('AST2', atributi)
     # AST2.__new__.__defaults__ = tuple(nenavedeno for field in AST2._fields)
-    
+
     class AST1(AST2, AST0):
         def __new__(cls, *args, **kw):
             new_args = [AST_adapt(arg) for arg in args]

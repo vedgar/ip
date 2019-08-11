@@ -9,7 +9,7 @@ tests = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
 tests |= {21, 22, 23, 24, 25, 26, 27, 28, 29, 30}
 tests |= {31, 32, 33, 34, 35, 36, 37, 38, 39, 40}
 tests |= {41, 42, 43, 44, 45, 46, 47, 48, 49, 50}
-tests = {51, 52, 53, 54}
+tests |= {51, 52, 53, 54}
 # tests = {90}
 
 
@@ -239,7 +239,7 @@ if test(23):  # page 64 example 1.51
     provjeri(sve, lambda ulaz: True)
     provjeri(nula*sve | sve*jedan,
              lambda ulaz: ulaz.startswith('0') or ulaz.endswith('1'))
-    
+
 
 if test(24):  # page 65 example 1.53
     sigma = nula | jedan
@@ -274,7 +274,7 @@ if test(25):  # page 68 example 1.56
     e1.NKA().crtaj()
 
 
-if test(26):  # page 69 example 1.58 
+if test(26):  # page 69 example 1.58
     e2 = (a|b).z * a * b * a
     e2.NKA().crtaj()
     provjeri(e2, lambda ulaz: ulaz.endswith('aba'))
@@ -566,6 +566,7 @@ if test(54):  # Komputonomikon, Lema 4.16
 
 if test(55):
     ...
+
 
 if test(90):  # 2019-k1-z3
     zadatak = jedan.p * nula * jedan.z | jedan.u * nula.z * jedan.p

@@ -39,7 +39,7 @@ class BeskontekstnaGramatika(types.SimpleNamespace):
         rezultat = klasa.iz_nedeterminističkog_konačnog_automata(nka)
         assert rezultat.desnolinearna()
         return rezultat
-        
+
     @classmethod
     def iz_nedeterminističkog_konačnog_automata(klasa, nka):
         """Pretvorba NKA u desnolinearnu gramatiku."""
@@ -118,7 +118,7 @@ class BeskontekstnaGramatika(types.SimpleNamespace):
                         G.pravila.add((N[α], α))
                     G.pravila.remove(pravilo)
                     G.pravila.add(tuple(N[α] if s == α else s for s in pravilo))
-                
+
     def faza_BIN(G):
         for pravilo in G.pravila.copy():
             if len(pravilo) >= 4:
@@ -167,7 +167,7 @@ class BeskontekstnaGramatika(types.SimpleNamespace):
                                 G.pravila.add(novo)
                     break
             else: break
-            
+
     def ChNF(gramatika):
         """Ekvivalentna (do na ε) gramatika u Chomskyjevoj normalnoj formi."""
         if gramatika.Chomskyjeva(): return gramatika

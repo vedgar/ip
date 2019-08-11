@@ -42,7 +42,7 @@ class KonačniAutomat(types.SimpleNamespace):
     def prirodni(automat):
         """Zamjenjuje stanja prirodnim brojevima, radi preglednosti."""
         Q, Σ, δ, q0, F = automat.komponente
-        rječnik = {q:i for i, q in enumerate(Q, 1)}
+        rječnik = {q: i for i, q in enumerate(Q, 1)}
         QN = set(rječnik.values())
         δN = {(rječnik[polazno], znak): rječnik[dolazno]
             for (polazno, znak), dolazno in δ.items()}
@@ -96,6 +96,7 @@ def dohvatljiva(δ, S, α):
     """Stanja do kojih je moguće doći iz stanja iz S čitanjem znaka α."""
     return unija_familije(δ[q, α] for q in S)
 
+
 def ε_ljuska(δ, S):
     """Stanja do kojih je moguće doći iz stanja iz S bez čitanja znaka."""
     while True:
@@ -107,7 +108,7 @@ def ε_ljuska(δ, S):
 
 class NedeterminističkiKonačniAutomat(types.SimpleNamespace):
     """Nedeterministički automat koji prepoznaje regularni jezik."""
-    
+
     @classmethod
     def iz_komponenti(klasa, stanja, abeceda, prijelaz, početno, završna):
         """Relacijska definicija: Δ⊆Q×(Σ∪{ε})×Q"""
@@ -172,7 +173,7 @@ class NedeterminističkiKonačniAutomat(types.SimpleNamespace):
         Q, Σ, Δ, q0, F = nka.komponente
         δ = nka.funkcija_prijelaza
         PQ = partitivni_skup(Q)
-        δ_KA = {(S,α): ε_ljuska(δ, dohvatljiva(δ, S, α)) for S in PQ for α in Σ}
+        δ_KA = {(S,α): ε_ljuska(δ, dohvatljiva(δ,S,α)) for S in PQ for α in Σ}
         F_KA = {S for S in PQ if S & F}
         q0_KA = ε_ljuska(δ, {q0})
         return KonačniAutomat.iz_komponenti(PQ, Σ, δ_KA, q0_KA, F_KA)

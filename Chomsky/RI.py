@@ -6,7 +6,7 @@ class RegularniIzraz(types.SimpleNamespace, abc.ABC):
     """Svaki RegularniIzraz predstavlja neki regularni jezik,
     dobiven pomoću operacija unije, konkatenacije te Kleenejevih operatora
     iz inicijalnih jezika (∅, ε, te elementarnih jezika)."""
-    
+
     @abc.abstractmethod
     def prazan(self):
         """Je li jezik jednak ∅?"""
@@ -35,7 +35,7 @@ class RegularniIzraz(types.SimpleNamespace, abc.ABC):
         """Omogućuje iteriranje kroz regularni jezik, primjerice for petljom."""
         dosad = set()
         for riječ in self.enumerator():
-            if not riječ in dosad:
+            if riječ not in dosad:
                 yield riječ
                 dosad.add(riječ)
 
@@ -175,7 +175,7 @@ jedan = Elementaran('1')
 
 class Binaran(RegularniIzraz, abc.ABC):
     """Zajednička natklasa za binarne operacije: uniju i konkatenaciju."""
-    
+
     def __init__(self, r1, r2):
         assert isinstance(r1, RegularniIzraz) and isinstance(r2, RegularniIzraz)
         self.lijevo, self.desno = r1, r2
@@ -185,11 +185,11 @@ class Binaran(RegularniIzraz, abc.ABC):
 
     def trivijalan(ri):
         return ri.lijevo.trivijalan() and ri.desno.trivijalan() or ri.prazan()
-    
+
 
 class Unija(Binaran):
     """L ∪ M = {w : w ∈ L ∨ w ∈ M}"""
-    
+
     def __str__(self):
         return '({}|{})'.format(self.lijevo, self.desno)
 
@@ -222,7 +222,7 @@ class Unija(Binaran):
 
 class Konkatenacija(Binaran):
     """LM = {uv : u ∈ L ∧ v ∈ M}"""
-    
+
     def __str__(self):
         return '({}{})'.format(self.lijevo, self.desno)
 
@@ -295,6 +295,7 @@ class Zvijezda(RegularniIzraz):
 def Plus(ri):
     """L+ := L ∪ LL ∪ LLL ∪ ...."""
     return Konkatenacija(Zvijezda(ri), ri)
+
 
 def Upitnik(ri):
     """L? := ε ∪ L"""

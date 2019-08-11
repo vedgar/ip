@@ -21,7 +21,7 @@ def funkcija(f, domena, kodomena):
 
 class fset(set):
     """Ponaša se kao frozenset, ispisuje se kao set."""
-    
+
     def __repr__(self):
         return repr(set(self)) if self else '∅'
 
@@ -169,7 +169,7 @@ class Kontraprimjer(Exception):
 
 class PrazanString(str):
     """Klasa koja određuje ponašanje objekta ε."""
-    
+
     def __add__(self, other):
         return other
 
@@ -243,7 +243,7 @@ def parsiraj_tablicu_PA(tablica):
     Svaki redak ima polazno stanje, čitani znak, pop znak, dolazno, push znak.
     Prvo polazno stanje je početno, završna su označena znakom # na kraju reda.
     ε se označava znakom /. Završno stanje iz kojeg ne izlazi strelica je #."""
-    
+
     stanja, abeceda, abeceda_stoga, prijelaz = set(), set(), set(), set()
     početno, završna = None, set()
 
@@ -252,7 +252,7 @@ def parsiraj_tablicu_PA(tablica):
             return ε
         skup.add(znak)
         return znak
-        
+
     for linija in tablica.strip().splitlines():
         trenutno_završno = False
         ćelije = linija.split()
@@ -271,8 +271,7 @@ def parsiraj_tablicu_PA(tablica):
             završna.add(polazno)
         prijelaz.add((polazno, znak, stog_pop, dolazno, stog_push))
 
-    if '#' in stanja:
-        završna.add('#')
+    if '#' in stanja: završna.add('#')
     return stanja, abeceda, abeceda_stoga, prijelaz, početno, završna
 
 def parsiraj_tablicu_TS(tablica):
@@ -357,7 +356,7 @@ def provjeri(objekt, specifikacija, koliko=999, maxduljina=9):
         jezik = objekt.CYK
     else:
         jezik = objekt.prihvaća
-        
+
     for test in slučajni_testovi(objekt.abeceda, koliko, maxduljina):
         lijevo = jezik(test)
         if isinstance(test, tuple) and all(
@@ -382,9 +381,9 @@ def novo(prefiks, iskorišteni):
 
 
 def DOT_PA(automat):
-    """Dijagram danog PA u DOT formatu. ε se piše kao e.""" 
+    """Dijagram danog PA u DOT formatu. ε se piše kao e."""
     Q, Σ, Γ, Δ, q0, F = automat.komponente
-    r = {q:i for i, q in enumerate(Q, 1)}
+    r = {q: i for i, q in enumerate(Q, 1)}
     obrazac = [
         'digraph {',
         'rankdir = LR',
@@ -401,10 +400,8 @@ def DOT_PA(automat):
     for (p, q, t, s), znakovi in brid.items():
         linija = ','.join(map(str, znakovi))
         if not s == t == ε:
-            if linija == 'ε':
-                linija = ''
-            else:
-                linija += ','
+            if linija == 'ε': linija = ''
+            else: linija += ','
             linija += '{}:{}'.format(t if t != ε else '', s if s != ε else '')
         obrazac.append('{} -> {} [ label="{}" ]'.format(r[p], r[q], linija))
     obrazac.append('}')
