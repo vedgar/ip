@@ -30,7 +30,7 @@ class CPP(enum.Enum):
 def cpp_lex(source):
     lex = Tokenizer(source)
     for znak in iter(lex.čitaj, ''):
-        if znak.isspace(): lex.token(E.PRAZNO)
+        if znak.isspace(): lex.zanemari()
         elif znak == '+':
             sljedeći = lex.čitaj()
             if sljedeći == '+': yield lex.token(CPP.PLUSP)
