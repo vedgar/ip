@@ -82,20 +82,6 @@ class Umnožak(AST('faktori')):
         else: return Umnožak(opt_fakt)
 
 
-class Potencija(AST('baza eksponent')):
-    def vrijednost(self):
-        return self.baza.vrijednost() ** self.eksponent.vrijednost()
-
-    def optim(self):
-        opt_baza = self.baza.optim()
-        opt_eksponent = self.eksponent.optim()
-        if opt_eksponent == nula: return jedan
-        elif opt_baza == nula: return nula  
-            # 0^0 je gore; prepoznamo sve nule
-        elif jedan in {opt_baza, opt_eksponent}: return opt_baza
-        else: return Potencija(opt_baza, opt_eksponent)
-
-
 def testiraj(izraz):
     stablo = ANParser.parsiraj(an_lex(izraz))
     opt = stablo.optim()
