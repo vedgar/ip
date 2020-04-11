@@ -21,6 +21,13 @@ class SemantičkaGreška(Greška):"""Greška nastala prilikom semantičke analiz
 class GreškaIzvođenja(Greška): """Greška nastala prilikom izvođenja."""
 
 
+@contextlib.contextmanager
+def očekivano(tip_greške):
+    try: yield
+    except tip_greške as e: print(type(e).__name__, e, sep=': ')
+    else: raise Greška('{} nije dignuta'.format(tip_greške.__name__))
+
+
 class Tokenizer:
     def __init__(self, string):
         self.pročitani, self.buffer, self.stream = [], None, iter(string)

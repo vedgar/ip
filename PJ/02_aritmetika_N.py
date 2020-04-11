@@ -150,3 +150,5 @@ if __name__ == '__main__':
     testiraj('(2+3)*4^1')
     testiraj('2^0^0^0^0')
     testiraj('2+(0+1*1*2)')
+    with očekivano(LeksičkaGreška): testiraj('2 3')
+    with očekivano(SintaksnaGreška): testiraj('2+')
