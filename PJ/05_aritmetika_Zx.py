@@ -1,13 +1,13 @@
-"""Računanje s polinomima u jednoj varijabli s cjelobrojnim koeficijentima.
+"""Računanje polinomima u jednoj varijabli s cjelobrojnim koeficijentima.
 
 Aritmetika cijelih brojeva je specijalni slučaj, kad se x ne pojavljuje.
-Dozvoljeno je ispuštanje znaka za množenje u slučajevima poput
-    23x, xxxx, 2(3+1), (x+1)x, (x)(7) -- ali ne x3, to znači potenciranje!
+Dozvoljeno je ispuštanje zvjezdice za množenje u slučajevima poput
+  23x, xxxx, 2(3+1), (x+1)x, (x)(7) -- ali ne x3: to znači potenciranje!
 Pokazuje se kako programirati jednostavne izuzetke od pravila BKG:
-    konkretno, zabranjeni su izrazi poput (x+2)3.
+  konkretno, zabranjeni su izrazi poput (x+2)3, te (već leksički) 2 3.
 
 Semantički analizator je napravljen u obliku prevoditelja (kompajlera) u
-    klasu Polinom, čiji objekti podržavaju operacije prstena i lijep ispis.
+  klasu Polinom, čiji objekti podržavaju operacije prstena i lijep ispis.
 """
 
 
@@ -21,7 +21,8 @@ class AZ(enum.Enum):
         def prevedi(self): return Polinom.konstanta(self.vrijednost())
     class X(Token):
         literal = 'x'
-        def vrijednost(self): raise NotImplementedError('Nepoznata vrijednost')
+        def vrijednost(self):
+            raise NotImplementedError('Nepoznata vrijednost')
         def prevedi(self): return Polinom.x()
 
 
@@ -36,7 +37,7 @@ def az_lex(izraz):
 
 ### Beskontekstna gramatika:
 # izraz -> izraz PLUS član | izraz MINUS član | član
-# član -> član PUTA faktor | faktor | MINUS član | član faktor *>vidi dolje!
+# član -> član PUTA faktor | faktor | MINUS član | član faktor *>vidi ↓ 
 # faktor -> BROJ | X | X BROJ | OTVORENA izraz ZATVORENA
 
 
@@ -47,7 +48,7 @@ class AZParser(Parser):
             if self >> AZ.PLUS: trenutni = Zbroj(trenutni, self.član())
             elif self >> AZ.MINUS:
                 član = self.član()
-                trenutni = Zbroj(trenutni, Suprotan(član))  # a-b := a+(-b)
+                trenutni = Zbroj(trenutni, Suprotan(član))  # a-b:=a+(-b)
             else: break
         return trenutni
 
@@ -55,15 +56,14 @@ class AZParser(Parser):
         if self >> AZ.MINUS: return Suprotan(self.član())
         trenutni = self.faktor()
         while True:
-            if self >> AZ.PUTA: trenutni = Umnožak(trenutni, self.faktor())
-            elif self >= {AZ.X, AZ.OTVORENA}:  # *ovdje AZ.BROJ je ružno: (x+2)3
-                trenutni = Umnožak(trenutni, self.faktor())
+            if self>>AZ.PUTA or self>={AZ.X,AZ.OTVORENA}:  # ali ne BROJ!
+                trenutni = Umnožak(trenutni,self.faktor())
             else: return trenutni
 
     def faktor(self):
         if self >> AZ.BROJ: return self.zadnji
         elif self >> AZ.X:
-            x = self.zadnji  # moramo spremiti x jer donji >> uništi self.zadnji
+            x = self.zadnji  # spremimo x jer donji >> uništi self.zadnji
             if self >> AZ.BROJ: return Xna(self.zadnji)
             else: return x
         elif self >> AZ.OTVORENA:
@@ -101,7 +101,7 @@ class Polinom(collections.Counter):
 
     def __add__(p, q):
         r = Polinom(p)
-        for eksponent, koeficijent in q.items(): r[eksponent] += koeficijent
+        for exp in q: r[exp] += q[exp]
         return r
 
     def __mul__(p, q):
@@ -120,7 +120,7 @@ class Polinom(collections.Counter):
             if not k: continue
             č = format(k, '+')
             if e:
-                if abs(k) == 1: č = č[0]
+                if abs(k) == 1: č = č.rstrip('1')  # samo '+' ili '-'
                 č += 'x'
                 if e > 1: č += str(e)
             monomi.append(č)
@@ -134,6 +134,6 @@ if __name__ == '__main__':
     izračunaj('(5+2*8-3)(3-1)-(-4+2*19)')
     izračunaj('x-2+5x-(7x-5)')
     izračunaj('(((x-2)x+4)x-8)x+7')
-    izračunaj('x2-2x+3')
+    izračunaj('xx-2x+3')
     izračunaj('(x+1)' * 7)
-    izračunaj('-'.join(['(x-2+5x-(7x-5))'] * 2))
+    izračunaj('-'.join(['(x2-2x3-(7x+5))'] * 2))

@@ -1,12 +1,12 @@
 """Aritmetika na N, s razlikom što su + i * lijevo asocirani višemjesni.
-Također je implementirano implicitno množenje (npr. 2(3+5)=2*8=10).
+Uz implicitno množenje ako desni faktor počinje zagradom (npr. 2(3+1)=8).
 Implementiran je i optimizator, baš kao u originalnom aritmetika_N.py."""
 
 from pj import *
 
 
 class AN(enum.Enum):
-    PLUS, PUTA, NA, OTVORENA, ZATVORENA = '+*^()'
+    PLUS, PUTA, OTVORENA, ZATVORENA = '+*()'
     class BROJ(Token):
         def vrijednost(self): return int(self.sadržaj)
         def optim(self): return self
@@ -22,11 +22,11 @@ def an_lex(izraz):
         else: yield lex.literal(AN)
 
 
-### Beskontekstna gramatika: (+ i * proizvoljne mjesnosti)
+### Beskontekstna gramatika
 # izraz -> izraz PLUS član | član
-# član -> član PUTA faktor | faktor | član faktor
-# faktor -> baza NA faktor | baza
-# baza -> BROJ | OTVORENA izraz ZATVORENA
+# član -> član PUTA faktor | faktor | član zagrade
+# faktor -> BROJ | zagrade
+# zagrade -> OTVORENA izraz ZATVORENA
 
 
 class ANParser(Parser):
@@ -42,11 +42,6 @@ class ANParser(Parser):
         return trenutni[0] if len(trenutni) == 1 else Umnožak(trenutni)
 
     def faktor(self):
-        baza = self.baza()
-        if self >> AN.NA: return Potencija(baza, self.faktor())
-        else: return baza
-
-    def baza(self):
         if self >> AN.BROJ: return self.zadnji
         elif self >> AN.OTVORENA:
             u_zagradi = self.izraz()
@@ -61,7 +56,8 @@ nula, jedan = Token(AN.BROJ, '0'), Token(AN.BROJ, '1')
 
 
 class Zbroj(AST('pribrojnici')):
-    def vrijednost(self): return sum(x.vrijednost() for x in self.pribrojnici)
+    def vrijednost(self):
+        return sum(x.vrijednost() for x in self.pribrojnici)
     
     def optim(self):
         opt_pribr = [x.optim() for x in self.pribrojnici]
@@ -94,7 +90,8 @@ class Potencija(AST('baza eksponent')):
         opt_baza = self.baza.optim()
         opt_eksponent = self.eksponent.optim()
         if opt_eksponent == nula: return jedan
-        elif opt_baza == nula: return nula  # 0^0 je gore; prepoznamo sve nule
+        elif opt_baza == nula: return nula  
+            # 0^0 je gore; prepoznamo sve nule
         elif jedan in {opt_baza, opt_eksponent}: return opt_baza
         else: return Potencija(opt_baza, opt_eksponent)
 
@@ -104,7 +101,7 @@ def testiraj(izraz):
     opt = stablo.optim()
     print(stablo, opt, sep='\n')
     mi = opt.vrijednost()
-    try: Python = eval(izraz.replace('^', '**'))
+    try: Python = eval(izraz)
     except (SyntaxError, TypeError):
         print('Python ne zna ovo izračunati!', izraz, '==', mi)
     else:
@@ -112,7 +109,7 @@ def testiraj(izraz):
         else: print(izraz, 'mi:', mi, 'Python:', Python, 'krivo')
 
 if __name__ == '__main__':
-    testiraj('(2+3)*4^1')
-    testiraj('2^0^0^0^0')
+    testiraj('(2+3)*4')
     testiraj('2+(0+1*1*2)')
     testiraj('2(3+5)')
+    testiraj('(1+1)(0+2+0)(0+1)(3+4)')
