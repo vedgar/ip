@@ -98,7 +98,9 @@ class Tokenizer:
         """Konstruira leksičku grešku koja se treba prijaviti s raise."""
         if self.buffer: self.čitaj()
         poruka = 'Redak {}, stupac {}: '.format(*self.pozicija)
-        poruka += 'neočekivan znak {!r}'.format(self.pročitani.pop())
+        zadnji = self.pročitani.pop()
+        opis = 'znak {!r}'.format(zadnji) if zadnji else 'kraj ulaza'
+        poruka += 'neočekivan {}'.format(opis)
         if info: poruka += ' (' + info + ')'
         return LeksičkaGreška(poruka)
 
