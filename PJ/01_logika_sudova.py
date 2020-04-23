@@ -107,7 +107,7 @@ if __name__ == '__main__':
     # OTV'(' PVAR'P3' KOND'->' PVAR'P0' ZATV')' ZATV')'
 
     fo = LSParser.parsiraj(tokeni)
-    print(fo)
+    fo.prikaz(6)
     # Negacija(
     #   ispod=Binarna(
     #     veznik=KONJ'&',
@@ -125,7 +125,7 @@ if __name__ == '__main__':
     # )
     
     fo = fo.optim()
-    print(fo)
+    fo.prikaz()
     # Negacija(
     #   ispod=Binarna(
     #     veznik=KONJ'&',

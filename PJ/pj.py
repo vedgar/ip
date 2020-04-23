@@ -298,10 +298,26 @@ class AST0:
     def __xor__(self, tip):
         return isinstance(tip, type) and isinstance(self, tip)
 
+    def prikaz(self, dubina=3, tab=4, širina=72, ime=None, uvlaka=0):
+        intro = uvlaka*' '
+        outro = intro + ')'
+        if ime: 
+            intro += ime + ' = '
+            outro += ','
+        jedanred = intro + repr(self) + ','*bool(ime)
+        if not dubina or len(jedanred) < širina: print(jedanred)
+        else:
+            print(uvlaka*' ', type(self).__name__, '(', sep='')
+            for ime, vrijednost in self._asdict().items():
+                vrijednost.prikaz(dubina-1, tab, širina, ime, uvlaka+tab)
+            print(outro)
+
     def je(self, *tipovi): return isinstance(self, tipovi)
     
 
 class Atom(Token, AST0): """Atomarni token kao apstraktno stablo."""
+
+Token.prikaz = AST0.prikaz
 
 class ListaAST(tuple):
     def __repr__(self): return repr(list(self))
