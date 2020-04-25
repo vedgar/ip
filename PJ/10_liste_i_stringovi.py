@@ -82,10 +82,16 @@ class Lista(AST('elementi')):
 
 
 if __name__ == '__main__':
-    print(LParser.parsiraj(l_lex(r'''
+    lista = r'''
         [23, "ab\"c]", 'a[]', [2, 3], 523,
         '"', '\', "\e", "\\"]
-    ''')).vrijednost())
+    '''
+    print(lista)
+    tokeni = list(l_lex(lista))
+    print(*tokeni)
+    ast = LParser.parsiraj(tokeni)
+    prikaz(ast, 4)
+    print(ast.vrijednost())
 
 # DZ: sve više jezika dopušta "zarez na kraju" stil pisanja listi
 #     (npr. [2,3,] je isto što i [2,3]) -- omogućite to!)

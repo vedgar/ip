@@ -47,7 +47,7 @@ class AQParser(Parser):
         self.pročitaj(AQ.JEDNAKO)
         pridruženo = self.izraz()
         self.pročitaj(AQ.NOVIRED)
-        return Naredba(ime, pridruženo)
+        return Pridruživanje(ime, pridruženo)
 
     def izraz(self):
         t = self.član()
@@ -74,7 +74,7 @@ class Program(AST('naredbe')):
         return memorija
 
 
-class Naredba(AST('ime vrijednost')):
+class Pridruživanje(AST('ime vrijednost')):
     def izvrši(self, memorija):
         memorija[self.ime] = self.vrijednost.izračunaj(memorija, self.ime)
 
@@ -100,5 +100,7 @@ if __name__ == '__main__':
         d = a / (c + 1)
         e = 3 / 3
     '''
-    for ime, vrijednost in AQParser.parsiraj(aq_lex(program)).izvrši().items():
+    ast = AQParser.parsiraj(aq_lex(program))
+    prikaz(ast, 3)
+    for ime, vrijednost in ast.izvrši().items():
         print(ime.sadržaj, vrijednost, sep='=')

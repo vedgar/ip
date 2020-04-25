@@ -220,6 +220,8 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         t.razriješen = False
         return t
 
+    def prikaz(self, dubina): print(self)
+
 
 class Parser:
     def __init__(self, tokeni):
@@ -293,34 +295,41 @@ def AST_adapt(component):
     else: raise TypeError('Nepoznat tip komponente {}'.format(type(component)))
 
 
+def prikaz(objekt, dubina:int, uvlaka:str='', ime:str=None):
+    intro = uvlaka
+    if ime is not None: intro += ime + ' = '
+    if isinstance(objekt, (Token, elementarni, Nenavedeno, enum.Enum)) \
+            or not dubina:
+        return print(intro, repr(objekt), sep='')
+    if isinstance(objekt, ListaAST):
+        print(intro + '[...]:')
+        for vrijednost in objekt:
+            prikaz(vrijednost, dubina-1, uvlaka+'. ')
+    elif isinstance(objekt, AST0):
+        print(intro + type(objekt).__name__ + ':')
+        for ime, vrijednost in objekt._asdict().items():
+            prikaz(vrijednost, dubina-1, uvlaka+' '*2, ime)
+    elif isinstance(objekt, (RječnikAST, dict)):
+        print(intro + '{...}:')
+        for ključ, vrijednost in dict(objekt).items():
+            prikaz(vrijednost, dubina-1, uvlaka+': ', repr(ključ))
+    else: assert False, 'Ne znam lijepo prikazati ' + str(objekt)
+
+
 class AST0:
     """Bazna klasa za sva apstraktna sintaksna stabla."""
     def __xor__(self, tip):
         return isinstance(tip, type) and isinstance(self, tip)
-
-    def prikaz(self, dubina=3, tab=4, širina=72, ime=None, uvlaka=0):
-        intro = uvlaka*' '
-        outro = intro + ')'
-        if ime: 
-            intro += ime + ' = '
-            outro += ','
-        jedanred = intro + repr(self) + ','*bool(ime)
-        if not dubina or len(jedanred) < širina: print(jedanred)
-        else:
-            print(uvlaka*' ', type(self).__name__, '(', sep='')
-            for ime, vrijednost in self._asdict().items():
-                vrijednost.prikaz(dubina-1, tab, širina, ime, uvlaka+tab)
-            print(outro)
 
     def je(self, *tipovi): return isinstance(self, tipovi)
     
 
 class Atom(Token, AST0): """Atomarni token kao apstraktno stablo."""
 
-Token.prikaz = AST0.prikaz
 
 class ListaAST(tuple):
     def __repr__(self): return repr(list(self))
+
 
 class RječnikAST(tuple):
     def __repr__(self): return repr(dict(self))

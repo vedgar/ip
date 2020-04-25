@@ -137,9 +137,12 @@ class Potencija(AST('baza eksponent')):
 
 
 def testiraj(izraz):
+    print('-' * 60)
+    print(izraz)
     stablo = ANParser.parsiraj(an_lex(izraz))
+    prikaz(stablo, 6)
     opt = stablo.optim()
-    print(izraz, stablo, opt, sep='\n')
+    prikaz(opt, 6)
     mi = opt.vrijednost()
     Python = eval(izraz.replace('^', '**'))
     if mi == Python: print(izraz, '==', mi, 'OK')

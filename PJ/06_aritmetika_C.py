@@ -117,28 +117,32 @@ class Unarna(AST('op ispod')):
         elif o ^ AC.KONJ: return z.conjugate()
 
 
-def izračunaj(string): return ACParser.parsiraj(ac_lex(string)).izvrši()
+def izračunaj(string): 
+    print('-' * 60)
+    print(string.rstrip(), end=' = ')
+    print(ACParser.parsiraj(ac_lex(string)).izvrši())
+
 
 if __name__ == '__main__':
     from math import pi
-    print(izračunaj('2+2*3'))
-    print(izračunaj('(1+6*i)/(3*i-4)~^2~'))
-    print(izračunaj('i^i'))
-    print(izračunaj('''\
+    izračunaj('2+2*3')
+    izračunaj('(1+6*i)/(3*i-4)~^2~')
+    izračunaj('i^i')
+    izračunaj('''\
         i+1 -> t
         t/2^2^-1 -> a
         a^2^2^2^2^0 -> b
         b
-    '''))
-    print(abs(izračunaj('''\
+    ''')
+    izračunaj('''\
         8 -> d
         10^d -> n
         (1+1/n)^n -> e
         {} -> pi
         e^(i*pi) + 1 -> skoro0
         skoro0
-    '''.format(pi))))
-    print(izračunaj('6.022045e23->NA 1.6605e-27->u 1/(NA*u)'))
+    '''.format(pi))
+    izračunaj('6.022045e23->NA 1.6605e-27->u 1/(NA*u)')
 
 
 # DZ: Dodajte implicitno množenje, barem s i -- tako da radi npr. 2+3i

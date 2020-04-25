@@ -78,7 +78,7 @@ class JSParser(Parser):
 
 
 if __name__ == '__main__':
-    print(JSParser.parsiraj(js_lex('''\
+    prikaz(JSParser.parsiraj(js_lex('''\
         function ime (var x, var y, var z) {
             //neke naredbe odvojene s ; ili komentarima
             naredba; naredba //kom
@@ -88,7 +88,7 @@ if __name__ == '__main__':
         function trivijalna(var hmmm){naredba//
         //
         }
-    ''')))
+    ''')), 3)
 # Program(funkcije=[
 #   Funkcija(ime=IME'ime', argumenti=[IME'x', IME'y', IME'z'], tijelo=[
 #     NAREDBA'naredba', NAREDBA'naredba', NAREDBA'naredba']),

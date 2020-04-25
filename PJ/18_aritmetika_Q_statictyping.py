@@ -56,7 +56,7 @@ class AQParser(Parser):
         while not self >> E.KRAJ:
             n = self.naredba()
             if n ^ Pridruživanje:
-                print(n, self.symtab)
+                # print(n, self.symtab)
                 if n.tip is nenavedeno:
                     pogledaj(self.symtab, n.varijabla)
                 elif n.varijabla.sadržaj in self.symtab:
@@ -147,7 +147,7 @@ class BinOp(AST('operator lijevo desno')):
             return Tip.Q if drugi == Tip.Z else prvi
 
 
-AQParser.parsiraj(aq_lex('''\
+ast = AQParser.parsiraj(aq_lex('''\
     rat a = 6 / 2
     a = a + 4
     nat b = 8 + 1
@@ -157,4 +157,6 @@ AQParser.parsiraj(aq_lex('''\
     ? b mod 1
     ? c mod b
     ? 6 ^ -3 - 3
-''')).provjeri_tipove()
+'''))
+prikaz(ast, 3)
+ast.provjeri_tipove()

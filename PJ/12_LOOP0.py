@@ -108,7 +108,7 @@ if __name__ == '__main__':
             R3{DECR3;INCR0;}
         }
     '''))
-    print(power)
+    prikaz(power, 9)
     # Program(naredbe=[
     #   Inkrement(registar=REG'R0'),
     #   Petlja(registar=REG'R2', tijelo=Program(naredbe=[

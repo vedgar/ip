@@ -126,12 +126,9 @@ class Ubaci(AST('lista element indeks')):
         else: raise self.indeks.problem('Prevelik indeks')
 
 
-def rezultati(lj_program):
-    print(*LJParser.parsiraj(lj_lex(lj_program)).izvrši())
-
 if __name__ == '__main__':
-    print(*lj_lex('lista L1 prazna ubaci -2345 izbaci L9 dohvati 3 koliko'))
-    rezultati('''\
+    # print(*lj_lex('lista L1 prazna ubaci -2345 izbaci L9 dohvati 3 koliko'))
+    source = '''\
 	lista L1  lista L3
 	ubaci L3 45 0  dohvati L3 0
 	koliko L1  koliko L3
@@ -139,4 +136,7 @@ if __name__ == '__main__':
 	lista L5  ubaci L5 6 0  ubaci L5 -7 1  ubaci L5 8 1  ubaci L5 9 0
 	dohvati L5 0  dohvati L5 1  dohvati L5 2  dohvati L5 3  koliko L5
 	izbaci L5 1  dohvati L5 0 dohvati L5 1 dohvati L5 2  koliko L5
-    ''')
+    '''
+    bytecode = LJParser.parsiraj(lj_lex(source))
+    prikaz(bytecode, 2)
+    print(*bytecode.izvrši())

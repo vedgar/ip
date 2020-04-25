@@ -174,7 +174,7 @@ if __name__ == '__main__':
                 if(i == 10) if (j == 1) break;
             }
     '''))
-    print(cpp)
+    prikaz(cpp, 8)
     # Program(naredbe=[
     #   Petlja(varijabla=IME'i', početak=BROJ'8', granica=BROJ'13',
     #          inkrement=BROJ'2', blok=[

@@ -21,6 +21,13 @@ class SemantičkaGreška(Greška):"""Greška nastala prilikom semantičke analiz
 class GreškaIzvođenja(Greška): """Greška nastala prilikom izvođenja."""
 
 
+@contextlib.contextmanager
+def očekivano(tip_greške):
+    try: yield
+    except tip_greške as e: print(type(e).__name__, e, sep=': ')
+    else: raise Greška('{} nije dignuta'.format(tip_greške.__name__))
+
+
 class Tokenizer:
     def __init__(self, string):
         self.pročitani, self.buffer, self.stream = [], None, iter(string)
@@ -91,7 +98,9 @@ class Tokenizer:
         """Konstruira leksičku grešku koja se treba prijaviti s raise."""
         if self.buffer: self.čitaj()
         poruka = 'Redak {}, stupac {}: '.format(*self.pozicija)
-        poruka += 'neočekivan znak {!r}'.format(self.pročitani.pop())
+        zadnji = self.pročitani.pop()
+        opis = 'znak {!r}'.format(zadnji) if zadnji else 'kraj ulaza'
+        poruka += 'neočekivan {}'.format(opis)
         if info: poruka += ' (' + info + ')'
         return LeksičkaGreška(poruka)
 
@@ -211,6 +220,8 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         t.razriješen = False
         return t
 
+    def prikaz(self, dubina): print(self)
+
 
 class Parser:
     def __init__(self, tokeni):
@@ -284,6 +295,26 @@ def AST_adapt(component):
     else: raise TypeError('Nepoznat tip komponente {}'.format(type(component)))
 
 
+def prikaz(objekt, dubina:int, uvlaka:str='', ime:str=None):
+    intro = uvlaka
+    if ime is not None: intro += ime + ' = '
+    if isinstance(objekt, (Token,elementarni,Nenavedeno)) or not dubina:
+        return print(intro, repr(objekt), sep='')
+    if isinstance(objekt, ListaAST):
+        print(intro + '[...]:')
+        for vrijednost in objekt:
+            prikaz(vrijednost, dubina-1, uvlaka+'. ')
+    elif isinstance(objekt, AST0):
+        print(intro + type(objekt).__name__ + ':')
+        for ime, vrijednost in objekt._asdict().items():
+            prikaz(vrijednost, dubina-1, uvlaka+' '*2, ime)
+    elif isinstance(objekt, dict):
+        print(intro + '{...}:')
+        for ključ, vrijednost in objekt.items():
+            prikaz(vrijednost, dubina-1, uvlaka+': ', repr(ključ))
+    else: assert False, 'Ne znam lijepo prikazati ' + str(objekt)
+
+
 class AST0:
     """Bazna klasa za sva apstraktna sintaksna stabla."""
     def __xor__(self, tip):
@@ -294,8 +325,10 @@ class AST0:
 
 class Atom(Token, AST0): """Atomarni token kao apstraktno stablo."""
 
+
 class ListaAST(tuple):
     def __repr__(self): return repr(list(self))
+
 
 class RječnikAST(tuple):
     def __repr__(self): return repr(dict(self))

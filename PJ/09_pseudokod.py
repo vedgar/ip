@@ -220,6 +220,9 @@ class Poziv(AST('funkcija argumenti')):
         argumenti = [argument.vrijednost(mem) for argument in self.argumenti]
         return self.funkcija.pozovi(argumenti)
 
+    def _asdict(self):  # samo za ispis, da se ne ispiše čitava funkcija
+        return {'*ime': self.funkcija.ime, 'argumenti': self.argumenti}
+
 class Grananje(AST('uvjet istina naredba inače')):
     def izvrši(self, mem):
         if self.uvjet.vrijednost(mem) == self.istina: self.naredba.izvrši(mem)
@@ -299,7 +302,7 @@ program() = (
     vrati s
 )
 '''))
-print(suma_faktorijela)
+prikaz(suma_faktorijela, 22)
 
 tablice_istinitosti = PseudokodParser.parsiraj(pseudokod_lexer('''
 broj(V) = ako je V vrati 1 inače vrati 0

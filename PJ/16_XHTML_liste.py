@@ -130,7 +130,7 @@ r = XLParser.parsiraj(html_lex('''\
         </body>
     </html>
 '''))
-print(r)
+prikaz(r, 7)
 # Dokument(zaglavlje=Tekst(dijelovi=[TEXT'bla', TEXT'bla']), tijelo=[
 #   Tekst(dijelovi=[TEXT'12#hmm', TEXT'hm', TEXT'hm']),
 #   Lista(uređena=True, stavke=[

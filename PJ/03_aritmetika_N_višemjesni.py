@@ -83,9 +83,11 @@ class Umnožak(AST('faktori')):
 
 
 def testiraj(izraz):
+    print('-' * 60)
     stablo = ANParser.parsiraj(an_lex(izraz))
+    prikaz(stablo, 6)
     opt = stablo.optim()
-    print(stablo, opt, sep='\n')
+    prikaz(opt, 6)
     mi = opt.vrijednost()
     try: Python = eval(izraz)
     except (SyntaxError, TypeError):

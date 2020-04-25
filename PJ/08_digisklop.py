@@ -81,13 +81,14 @@ print(*tokeni)  # SLOVO'x' OOTV'(' UOTV'[' SLOVO'y' SLOVO'x' SLOVO'x'
                 # NE"'" UZATV']' ILI'+' SLOVO'y' NE"'" OZATV')'
 
 ast = DSParser.parsiraj(tokeni)
-print(ast)  # And(ulazi=[
-            #   SLOVO'x',
-            #   Or(ulazi=[
-            #     Not(ulaz=And(ulazi=[SLOVO'y', SLOVO'x', Not(ulaz=SLOVO'x')])),
-            #     Not(ulaz=SLOVO'y')
-            #   ])
-            # ])
+prikaz(ast, 4)
+# And(ulazi=[
+#   SLOVO'x',
+#   Or(ulazi=[
+#     Not(ulaz=And(ulazi=[SLOVO'y', SLOVO'x', Not(ulaz=SLOVO'x')])),
+#     Not(ulaz=SLOVO'y')
+#   ])
+# ])
 
 nand = ast.uNand()
 print(nand)  # [['x', [[[[['y', 'x', ['x']]]]], [['y']]]]]

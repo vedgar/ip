@@ -126,6 +126,7 @@ def logirano_prevedi_datoteku(datoteka):
     print('\n'.join(j))
 
 def nacrtaj(ime):
+    print('Crtam:', ime)
     prevedi_datoteku(dat[ime])
     webbrowser.open(str(pathlib.Path('loader.html')))
 
@@ -137,6 +138,8 @@ def nacrtaj_sve():
     for crtež in crteži:
         nacrtaj(crtež)
         time.sleep(8)
+
+nacrtaj('kućica')
 
 # DZ: pogledati http://www.mathcats.com/gallery/15wordcontest.html
 #     i implementirati neke od tih crteža (za mnoge trebaju varijable!)

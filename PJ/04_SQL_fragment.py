@@ -149,7 +149,7 @@ if __name__ == '__main__':
             SELECT Name, Married FROM Persons;
             SELECT Name from Persons;
     '''))
-    print(skripta)
+    prikaz(skripta, 4)
     # Skripta(naredbe=[
     #   Create(tablica=IME'Persons', specifikacije=[
     #     Stupac(ime=IME'PersonID', tip=IME'int', veličina=nenavedeno), 
