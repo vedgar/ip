@@ -178,7 +178,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         poruka = 'Redak {}, stupac {}: neočekivan token {!r}'
         if info: poruka += ' (' + info + ')'
         očekivano = ' ili '.join(t.name for t in self.uspoređeni if t!=self.tip)
-        if očekivano: poruka += '\nOčekivano: ' + očekivano
+        if očekivano: poruka += '\n  Očekivano: ' + očekivano
         i, j = getattr(self, 'početak', '??')
         return SintaksnaGreška(poruka.format(i, j, self))
 
