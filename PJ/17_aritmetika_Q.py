@@ -88,7 +88,7 @@ class Op(AST('operator lijevo desno')):
         elif o ^ AQ.MINUS: return l - d
         elif o ^ AQ.PUTA: return l * d
         elif d: return l / d
-        raise o.problem('dijeljenje nulom (pridruženo {})'.format(pridruženo))
+        raise o.iznimka('dijeljenje nulom (pridruženo {})'.format(pridruženo))
 
 
 if __name__ == '__main__':

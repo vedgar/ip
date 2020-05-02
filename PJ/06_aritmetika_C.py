@@ -108,13 +108,14 @@ class Binarna(AST('op lijevo desno')):
             elif o ^ AC.KROZ: return x / y
             elif o ^ AC.NA: return x ** y
             else: assert False, 'nepokriveni slučaj binarnog operatora' + str(o)
-        except ArithmeticError as ex: o.problem(*ex.args)
+        except ArithmeticError as ex: raise o.iznimka(ex)
 
 class Unarna(AST('op ispod')):
     def vrijednost(self, env):
         o, z = self.op, self.ispod.vrijednost(env)
         if o ^ AC.MINUS: return -z
         elif o ^ AC.KONJ: return z.conjugate()
+        else: assert False, 'nepokriveni slučaj unarnog operatora' + str(o)
 
 
 def izračunaj(string): 
@@ -143,6 +144,7 @@ if __name__ == '__main__':
         skoro0
     '''.format(pi))
     izračunaj('6.022045e23->NA 1.6605e-27->u 1/(NA*u)')
+    with očekivano(GreškaIzvođenja): izračunaj('2+2/0')
 
 
 # DZ: Dodajte implicitno množenje, barem s i -- tako da radi npr. 2+3i

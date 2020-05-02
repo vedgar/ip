@@ -199,8 +199,9 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         if dodatak: poruka += ' ' + dodatak.join('()')
         return SemantičkaGreška(poruka)
 
-    def problem(self, info):
+    def iznimka(self, info):
         """Konstruira grešku izvođenja."""
+        if isinstance(info, BaseException): info = info.args[0]
         poruka = 'Redak {}, stupac {}: {!r}: {}'
         i, j = getattr(self, 'početak', '??')
         return GreškaIzvođenja(poruka.format(i, j, self, info))

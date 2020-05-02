@@ -107,7 +107,7 @@ class Dohvati(AST('lista indeks')):
         l = self.lista.ref(memorija)
         i = self.indeks.vrijednost()
         if i < len(l): return l[i]
-        else: raise self.indeks.problem('Prevelik indeks')
+        else: raise self.indeks.iznimka('Prevelik indeks')
         
 class Izbaci(AST('lista indeks')):
     """Izbacuje element zadanog indeksa iz liste ili javlja grešku izvođenja."""
@@ -115,7 +115,7 @@ class Izbaci(AST('lista indeks')):
         l = self.lista.ref(memorija)
         i = self.indeks.vrijednost()
         if i < len(l): del l[i]
-        else: raise self.indeks.problem('Prevelik indeks')
+        else: raise self.indeks.iznimka('Prevelik indeks')
 
 class Ubaci(AST('lista element indeks')):
     """Ubacuje vrijednost u listu na zadanom indeksu, ili javlja grešku."""
@@ -123,7 +123,7 @@ class Ubaci(AST('lista element indeks')):
         l = self.lista.ref(memorija)
         i = self.indeks.vrijednost()
         if i <= len(l): l.insert(i, self.element.vrijednost())
-        else: raise self.indeks.problem('Prevelik indeks')
+        else: raise self.indeks.iznimka('Prevelik indeks')
 
 
 if __name__ == '__main__':
