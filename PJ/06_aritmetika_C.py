@@ -144,6 +144,7 @@ if __name__ == '__main__':
         skoro0
     '''.format(pi))
     izračunaj('6.022045e23->NA 1.6605e-27->u 1/(NA*u)')
+    with očekivano(LeksičkaGreška): izračunaj('2e-+3')
     with očekivano(GreškaIzvođenja): izračunaj('2+2/0')
 
 

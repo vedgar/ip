@@ -1,4 +1,5 @@
 from pj import *
+from backend import StrojSaStogom
 
 
 class AN(enum.Enum):
@@ -75,36 +76,13 @@ class Umnožak(Binarni): opkod = 'MUL'
 class Potencija(Binarni): opkod = 'POW'
 
 
-class VirtualnaMašina:
-    def __init__(self): self.stog = []
-
-    def PUSH(self, vrijednost): self.stog.append(vrijednost)
-
-    def ADD(self): self.stog.append(self.stog.pop() + self.stog.pop())
-
-    def MUL(self): self.stog.append(self.stog.pop() * self.stog.pop())
-
-    def POW(self):
-        eksponent, baza = self.stog.pop(), self.stog.pop()
-        self.stog.append(baza ** eksponent)
-
-    def izvrši(self, instr, *args): getattr(self, instr)(*args) 
-
-    def __repr__(self): return '[ ' + ' '.join(map(str, self.stog)) + '<'
-
-    @property
-    def rezultat(self):
-        [jedini_element_stoga] = self.stog
-        return jedini_element_stoga
-
-
 def testiraj(izraz):
     print('-' * 60)
     print(izraz)
     stablo = ANParser.parsiraj(an_lex(izraz))
     prikaz(stablo, 8)
 
-    vm = VirtualnaMašina()
+    vm = StrojSaStogom()
     for instrukcija in stablo.prevedi(): 
         vm.izvrši(*instrukcija)
         print(*instrukcija, '\t'*2, vm)

@@ -1,4 +1,4 @@
-"""Leksički i sintaksni analizator za JavaScript funkcije.
+"""Leksički i sintaksni analizator za JavaScriptove funkcije.
 Kolokvij 19. siječnja 2012. (Puljić)
 """
 

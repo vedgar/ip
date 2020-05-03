@@ -155,3 +155,4 @@ if __name__ == '__main__':
     testiraj('2+(0+1*1*2)')
     with očekivano(LeksičkaGreška): testiraj('2 3')
     with očekivano(SintaksnaGreška): testiraj('2+')
+    with očekivano(SintaksnaGreška): testiraj('(2+3)45')

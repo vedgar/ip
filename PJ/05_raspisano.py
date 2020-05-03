@@ -1,29 +1,17 @@
-"""Računanje polinomima u jednoj varijabli s cjelobrojnim koeficijentima.
-
-Aritmetika cijelih brojeva je specijalni slučaj, kad se x ne pojavljuje.
-Dozvoljeno je ispuštanje zvjezdice za množenje u slučajevima poput
-  23x, xxxx, 2(3+1), (x+1)x, (x)(7) -- ali ne x3: to znači potenciranje!
-Pokazuje se kako programirati jednostavne izuzetke od pravila BKG:
-  konkretno, zabranjeni su izrazi poput (x+2)3, te (već leksički) 2 3.
-
-Semantički analizator je napravljen u obliku prevoditelja (kompajlera) u
-  klasu Polinom, čiji objekti podržavaju operacije prstena i lijep ispis.
-"""
-
-
 from pj import *
 from backend import Polinom
 
 
 class AZ(enum.Enum):
-    PLUS, MINUS, PUTA, OTVORENA, ZATVORENA = '+-*()'
+    PLUS = '+'
+    MINUS = '-'
+    PUTA = '*'
+    OTVORENA = '('
+    ZATVORENA = ')'
     class BROJ(Token):
         def vrijednost(self): return int(self.sadržaj)
         def prevedi(self): return Polinom.konstanta(self.vrijednost())
     class X(Token):
-        literal = 'x'
-        def vrijednost(self):
-            raise NotImplementedError('Nepoznata vrijednost')
         def prevedi(self): return Polinom.x()
 
 
@@ -33,41 +21,40 @@ def az_lex(izraz):
         if znak.isdigit():
             lex.zvijezda(str.isdigit)
             yield lex.token(AZ.BROJ)
+        elif znak == 'x': yield lex.token(AZ.X)
         else: yield lex.literal(AZ)
 
 
 ### Beskontekstna gramatika:
 # izraz -> izraz PLUS član | izraz MINUS član | član
-# član -> član PUTA faktor | faktor | MINUS član | član faktor *>vidi ↓ 
-# faktor -> BROJ | X | X BROJ | OTVORENA izraz ZATVORENA
+# član -> član PUTA faktor | faktor | član faktor  *> osim: član BROJ!
+# faktor -> MINUS faktor | BROJ | X | X BROJ | OTVORENA izraz ZATVORENA
 
 
 class AZParser(Parser):
     def izraz(self):
-        trenutni = self.član()
+        t = self.član()
         while True:
-            if self >> AZ.PLUS: trenutni = Zbroj(trenutni, self.član())
-            elif self >> AZ.MINUS:
-                član = self.član()
-                trenutni = Zbroj(trenutni, Suprotan(član))  # a-b:=a+(-b)
-            else: break
-        return trenutni
+            if self >> AZ.PLUS: t = Zbroj(t, self.član())
+            elif self >> AZ.MINUS: t = Zbroj(t, Suprotan(self.član()))
+            else: return t
 
     def član(self):
-        if self >> AZ.MINUS: return Suprotan(self.član())
         trenutni = self.faktor()
         while True:
-            if self>>AZ.PUTA or self>={AZ.X,AZ.OTVORENA}:  # ali ne BROJ!
+            if self >> AZ.PUTA or self >= {AZ.X, AZ.OTVORENA}:
                 trenutni = Umnožak(trenutni,self.faktor())
             else: return trenutni
 
     def faktor(self):
-        if self >> AZ.BROJ: return self.zadnji
-        elif self >> AZ.X:
-            x = self.zadnji  # spremimo x jer donji >> uništi self.zadnji
-            if self >> AZ.BROJ: return Xna(self.zadnji)
+        if self >> AZ.MINUS: return Suprotan(self.faktor())
+        elif self >= AZ.BROJ: return self.pročitaj(AZ.BROJ)
+        elif self >= AZ.X:
+            x = self.pročitaj(AZ.X)
+            if self >= AZ.BROJ: return Xna(self.pročitaj(AZ.BROJ))
             else: return x
-        elif self >> AZ.OTVORENA:
+        elif self >= AZ.OTVORENA:
+            self.pročitaj(AZ.OTVORENA)
             u_zagradi = self.izraz()
             self.pročitaj(AZ.ZATVORENA)
             return u_zagradi
@@ -103,3 +90,5 @@ if __name__ == '__main__':
     izračunaj('xx-2x+3')
     izračunaj('(x+1)' * 7)
     izračunaj('-'.join(['(x2-2x3-(7x+5))'] * 2))
+    with očekivano(SintaksnaGreška): izračunaj('(x)x+(x)3')
+    with očekivano(LeksičkaGreška): izračunaj('x x')

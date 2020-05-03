@@ -161,7 +161,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         poruka = 'Redak {}, stupac {}: {} {!r}'.format(i, j, info, self)
         raise SemantičkaGreška(poruka)
 
-    def problem(self, info):
+    def iznimka(self, info):
         """Prijavljuje grešku izvođenja."""
         poruka = 'Redak {}, stupac {}: {!r}: {}'
         i, j = getattr(self, 'početak', '??')

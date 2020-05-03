@@ -132,9 +132,9 @@ class Prekid(Exception): pass
 
 
 ## Apstraktna sintaksna stabla:
-# Program: naredbe:list
-# Petlja: varijabla:IME početak:BROJ granica:BROJ inkrement:BROJ? blok:list
-# Ispis: varijable:list novired:bool
+# Program: naredbe:[Petlja|Ispis|Grananje|BREAK]
+# Petlja: varijabla:IME početak:BROJ granica:BROJ inkrement:BROJ? blok:[...]
+# Ispis: varijable:[IME] novired:bool
 # Grananje: lijevo:IME desno:BROJ naredba
 
 class Program(AST('naredbe')):
@@ -165,7 +165,6 @@ class Grananje(AST('lijevo desno naredba')):
         if self.lijevo.vrijednost(mem) == self.desno.vrijednost(mem):
             self.naredba.izvrši(mem)
 
-
 if __name__ == '__main__':
     cpp = CPPParser.parsiraj(cpp_lex('''
         for ( i = 8 ; i < 13 ; i += 2 )
@@ -184,7 +183,12 @@ if __name__ == '__main__':
     #       Grananje(lijevo=IME'i', desno=BROJ'10', naredba=
     #         Grananje(lijevo=IME'j', desno=BROJ'1', naredba=BREAK'break'))])])])
     cpp.izvrši()
-
+    with očekivano(LeksičkaGreška):
+        list(cpp_lex('2+3'))
+    with očekivano(SemantičkaGreška):
+        prikaz(CPPParser.parsiraj(cpp_lex('for(a=1; b<3; c++);')), 5)
+    with očekivano(SintaksnaGreška):
+        prikaz(CPPParser.parsiraj(cpp_lex('for(c=1; c<3; c++);')), 5)
 
 # DZ: omogućiti i grananjima da imaju blokove - uvesti novi AST Blok
 # DZ: omogućiti da parametri petlje budu varijable, ne samo brojevi

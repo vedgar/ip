@@ -16,9 +16,7 @@ class LJ(enum.Enum):
         def ref(self, mem): return pogledaj(mem, self)
     class BROJ(Token):
         def vrijednost(self): return int(self.sadržaj)
-    class MINUSBROJ(Token):
-        """Negativni broj."""
-        def vrijednost(self): return int(self.sadržaj)
+    class MINUSBROJ(BROJ): """Negativni broj."""
 
 
 def lj_lex(string):
@@ -27,7 +25,7 @@ def lj_lex(string):
         if znak.isspace(): lex.zanemari()
         elif znak == 'L':
             if '1' <= lex.čitaj() <= '9': yield lex.token(LJ.ID)
-            else: lex.greška('očekivana znamenka između 1 i 9')
+            else: raise lex.greška('očekivana znamenka između 1 i 9')
         elif znak.isalpha():
             lex.zvijezda(str.isalpha)
             yield lex.literal(LJ, case=False)
@@ -127,7 +125,7 @@ class Ubaci(AST('lista element indeks')):
 
 
 if __name__ == '__main__':
-    # print(*lj_lex('lista L1 prazna ubaci -2345 izbaci L9 dohvati 3 koliko'))
+    print(*lj_lex('lista L172prazna ubaci -2345 izbaci L9 dohvati 3 koliko'))
     source = '''\
 	lista L1  lista L3
 	ubaci L3 45 0  dohvati L3 0
@@ -140,3 +138,7 @@ if __name__ == '__main__':
     bytecode = LJParser.parsiraj(lj_lex(source))
     prikaz(bytecode, 2)
     print(*bytecode.izvrši())
+    with očekivano(LeksičkaGreška): print(*lj_lex('L0'))
+    with očekivano(SintaksnaGreška): LJParser.parsiraj(lj_lex('ubaci L5 6 -2'))
+    with očekivano(SemantičkaGreška):
+        print(*LJParser.parsiraj(lj_lex('ubaci L5 5 0')).izvrši())

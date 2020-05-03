@@ -85,6 +85,7 @@ class Umnožak(AST('faktori')):
 def testiraj(izraz):
     print('-' * 60)
     stablo = ANParser.parsiraj(an_lex(izraz))
+    izraz = izraz.strip()
     prikaz(stablo, 6)
     opt = stablo.optim()
     prikaz(opt, 6)
@@ -99,8 +100,8 @@ def testiraj(izraz):
 if __name__ == '__main__':
     testiraj('(2+3)*4')
     testiraj('2+(0+1*1*2)')
-    testiraj('2(3+5)')
+    testiraj('2(3+5)\n')
     testiraj('(1+1)(0+2+0)(0+1)(3+4)')
     with očekivano(SintaksnaGreška): testiraj('(2+3)4')
-    with očekivano(SintaksnaGreška): testiraj('2 3')
+    with očekivano(SintaksnaGreška): testiraj('2\n37')
     with očekivano(LeksičkaGreška): testiraj('2^3')

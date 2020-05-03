@@ -95,5 +95,5 @@ if __name__ == '__main__':
 
 # DZ: sve više jezika dopušta "zarez na kraju" stil pisanja listi
 #     (npr. [2,3,] je isto što i [2,3]) -- omogućite to!)
-# DZ: omogućite razne druge \-escape sekvence (npr. \u za Unicode znakove)
+# DZ: omogućite razne druge \-escape sekvence (npr. \u za znakove Unikoda)
 # DZ: omogućite izraze umjesto literala: polimorfni + za zbrajanje/konkatenaciju

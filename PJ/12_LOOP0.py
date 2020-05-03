@@ -17,6 +17,7 @@ Npr. LOOP-program "R2{DECR2;} R3{INCR2;DECR3;}" premješta broj iz R3 u R2.
 """
 
 from pj import *
+from backend import RAMStroj
 
 
 class LOOP(enum.Enum):
@@ -49,7 +50,7 @@ def loop_lex(prog):
 # Petlja: registar:R, tijelo:Program
 # Inkrement: registar:R
 # Dekrement: registar:R
-# Program: naredbe:List[Petlja|Inkrement|Dekrement]
+# Program: naredbe:[Petlja|Inkrement|Dekrement]
 
 
 class LOOPParser(Parser):
@@ -75,26 +76,25 @@ class LOOPParser(Parser):
 
 
 class Program(AST('naredbe')):
-    def izvrši(self, registri):
-        for naredba in self.naredbe: naredba.izvrši(registri)
+    def izvrši(self, stroj):
+        for naredba in self.naredbe: naredba.izvrši(stroj)
 
 class Inkrement(AST('registar')):
-    def izvrši(self, registri): registri[self.registar.broj()] += 1
+    def izvrši(self, stroj): stroj.inc(self.registar.broj())
 
 class Dekrement(AST('registar')):
-    def izvrši(self, registri):
-        if registri[self.registar.broj()]: registri[self.registar.broj()] -= 1
+    def izvrši(self, stroj): stroj.dec(self.registar.broj())
         
 class Petlja(AST('registar tijelo')):
-    def izvrši(self, registri):
-        for ponavljanje in range(registri[self.registar.broj()]):
-            self.tijelo.izvrši(registri)
+    def izvrši(self, stroj):
+        for ponavljanje in range(stroj.registri[self.registar.broj()]):
+            self.tijelo.izvrši(stroj)
 
 
 def računaj(program, *ulazi):
-    registri = collections.Counter(dict(enumerate(ulazi, 1)))
-    program.izvrši(registri)
-    return registri[0]
+    stroj = RAMStroj(*ulazi)
+    program.izvrši(stroj)
+    return stroj.rezultat
 
 
 if __name__ == '__main__':

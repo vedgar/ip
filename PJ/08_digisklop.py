@@ -89,9 +89,7 @@ prikaz(ast, 4)
 #     Not(ulaz=SLOVO'y')
 #   ])
 # ])
-
 nand = ast.uNand()
 print(nand)  # [['x', [[[[['y', 'x', ['x']]]]], [['y']]]]]
-
 opt = optimiziraj(nand)
 print(opt)  # [['x', [[['y', 'x', ['x']]], 'y']]]

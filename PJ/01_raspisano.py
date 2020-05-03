@@ -138,6 +138,8 @@ def optim(formula):
 
 kod = '(!P0&(!P1<->!P5))'
 fo = LSParser.parsiraj(ls_lex(kod))
+for token in ls_lex(kod):
+    print(token.tip, token.sadržaj, token.početak, token.kraj)
 print(kod)
 print(fo.ispis())
 prikaz(fo, 5)
@@ -145,3 +147,6 @@ print('-' * 60)
 fo = optim(fo)
 print(fo.ispis())
 prikaz(fo, 4)
+print('-' * 60)
+for krivo in 'P00', 'P1\nP2', 'P34<>P56':
+    with očekivano(LeksičkaGreška): print(*ls_lex(krivo))

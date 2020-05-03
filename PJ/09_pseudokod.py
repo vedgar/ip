@@ -65,6 +65,9 @@ def pseudokod_lexer(program):
         elif znak.isdigit():
             lex.zvijezda(str.isdigit)
             yield lex.token(PSK.BROJ)
+        elif znak == '#':
+            lex.pročitaj_do('\n')
+            lex.zanemari()
         else: yield lex.literal(PSK)
 
 
@@ -83,7 +86,7 @@ def pseudokod_lexer(program):
 # član -> član ZVJEZDICA faktor | faktor | MINUS faktor
 # faktor -> BROJ | AIME | OTV aritm ZATV | AIME OTV argumenti ZATV
 # argumenti -> izraz (ZAREZ argumenti)?
-# izraz -> aritm |! log [KONTEKST!]
+# izraz -> aritm |! log  [KONTEKST!]
 
 class PseudokodParser(Parser):
     def program(self):
@@ -272,18 +275,11 @@ class Povratak(Exception):
     def povratna_vrijednost(self): return self.args[0]
 
 
-suma_faktorijela = PseudokodParser.parsiraj(pseudokod_lexer('''
-fakt(x) = (
-    f = 1,
-    dok nije x = 0 (
-        f = f*x,
-        x = x-1
-    ),
-    vrati f
-)
-Identiteta(V) = vrati V
-Negacija(V) = ako je Identiteta(V) (vrati Laž) inače (vrati Istina)
-
+modul = '''\
+Identiteta(V) = vrati V  # potrebno zbog dvoznačnosti: u "ako je V (...",
+                         # ( se interpretira kao poziv a ne kao blok
+                         # "ako je Identiteta(V) (..." nema taj problem
+Negacija(V) = ako je V vrati Laž inače vrati Istina
 Neparan(x) = (
     N = Laž,
     dok nije x = 0 (
@@ -292,7 +288,17 @@ Neparan(x) = (
     ),
     vrati N
 )
-program() = (
+'''
+suma_faktorijela = PseudokodParser.parsiraj(pseudokod_lexer(modul + '''\
+fakt(x) = (  # faktorijel, računamo iterativno (mora biti x>0)
+    f = 1,
+    dok nije x = 0 (
+        f = f*x,
+        x = x-1
+    ),
+    vrati f
+)
+program() = (  # suma faktorijelâ neparnih brojeva do isključivo 9
     s = 0,
     t = 0,
     dok je t < 9 (
@@ -302,50 +308,53 @@ program() = (
     vrati s
 )
 '''))
-prikaz(suma_faktorijela, 22)
+prikaz(suma_faktorijela, dubina=22)
+izvrši(suma_faktorijela)
 
-tablice_istinitosti = PseudokodParser.parsiraj(pseudokod_lexer('''
-broj(V) = ako je V vrati 1 inače vrati 0
-Negacija(P) = ako je P vrati Laž inače vrati Istina
+tablice_istinitosti = PseudokodParser.parsiraj(pseudokod_lexer(modul + '''\
 Konjunkcija(P, Q) = ako je P vrati Q inače vrati P
 Disjunkcija(P, Q) = ako je P vrati P inače vrati Q
 Kondicional(P, Q) = vrati Disjunkcija(Negacija(P), Q)
 Bikondicional(P, Q) = vrati Konjunkcija(Kondicional(P, Q), Kondicional(Q, P))
-Multiplex(m, P, Q) =
+Multiplex(m, P, Q) =  # rudimentarni switch/case
     ako je m = 1 vrati Konjunkcija(P, Q)   inače
     ako je m = 2 vrati Disjunkcija(P, Q)   inače
     ako je m = 3 vrati Kondicional(P, Q)   inače
     ako je m = 4 vrati Bikondicional(P, Q) inače
     ako je m = 5 vrati Negacija(P)         inače
                  vrati Laž
-Neparan(x) = (
-    N = Laž,
-    dok nije x = 0 (
-        x = x - 1,
-        N = Negacija(N),
-    ),
-    vrati N
+
+# Iako PSK 'nativno' radi samo s logičkim vrijednostima i cijelim brojevima,
+# možemo raditi s raznim drugim tipovima podataka pomoću _kodiranja_.
+# Primjer: listu malih brojeva (a,b,...,n) kodiramo u broj 6a8b8...8n9
+# (mali brojevi su do 5; 6 i 9 su zagrade, 8 je zarez/separator).
+# Naravno, logičke vrijednosti kodiramo kao male brojeve 0 odnosno 1.
+# Može se činiti umjetnim, ali zapravo je sveprisutno pri funkcioniranju
+# modernih računala: svaki objekt je predstavljen nizom bajtova.
+
+broj(Bool) = ako je Bool vrati 1 inače vrati 0
+dodaj(lista, Bool) = (
+    bit = broj(Bool),
+    lista = lista * 10 + bit,
+    lista = lista * 10 + 8,
+    vrati lista
 )
-dodaj(broj, bit) = (
-    broj = broj * 10 + bit,
-    broj = broj * 10 + 8,
-    vrati broj
-)
-program(m) = (
+program(m) = (  # rudimentarni prijenos argumenta preko "komandne linije"
+    lista = 6,  # alokacija nove liste: počinje otvorenom zagradom
     b = 0,
-    povrat = 6,
     dok je b < 4 (
-        Prvi = Negacija(b < 2),
+        Prvi = Negacija(b < 2),  # ekstrakcija bitova od b
         Drugi = Neparan(b),
-        rezultat = broj(Multiplex(m, Prvi, Drugi)),
-        povrat = dodaj(povrat, rezultat),
+        Rezultat = Multiplex(m, Prvi, Drugi),
+        lista = dodaj(lista, Rezultat),  # lista.append(Rezultat)
         b = b + 1
     ),
-    vrati povrat + 1
+    vrati lista + 1  # zatvaranje liste: zadnji 8 postaje zatvorena zagrada 9
 )
 '''))
 print()
-izvrši(suma_faktorijela)
-izvrši(tablice_istinitosti, 4)
+prikaz(tablice_istinitosti, 13)
+izvrši(tablice_istinitosti, 3)  # poziv iz komandne linije, prijenos m=3
 
 # DZ: dodajte određenu petlju: za ime = izraz .. izraz naredba
+# DZ*: dodajte late binding, da se modul i program mogu zasebno kompajlirati

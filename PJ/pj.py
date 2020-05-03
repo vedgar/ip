@@ -1,4 +1,5 @@
 #TODO: pogledati može li se upotrebljivo ukrasti pprinter od astpretty
+#TODO: negirani >= (i možda >>), s defaultom KRAJ, da ga ne smatra opcijom
 
 
 import enum, types, collections, contextlib
@@ -53,7 +54,7 @@ class Tokenizer:
 
     def vrati(self):
         """Poništava čitanje zadnjeg pročitanog znaka."""
-        assert not self.buffer
+        assert not self.buffer, 'Buffer je pun'
         self.buffer = self.pročitani.pop()
         if self.j: self.j -= 1
         else:
@@ -95,12 +96,14 @@ class Tokenizer:
         if uključivo: self.pročitaj(znak)
 
     def greška(self, info=''):
-        """Konstruira leksičku grešku koja se treba prijaviti s raise."""
+        """Konstruira leksičku grešku."""
         if self.buffer: self.čitaj()
-        poruka = 'Redak {}, stupac {}: '.format(*self.pozicija)
+        if self.j: pozicija = self.i, self.j
+        else: pozicija = self.i - 1, self.gornji_j + 1
+        poruka = 'Redak {}, stupac {}: '.format(*pozicija)
         zadnji = self.pročitani.pop()
         opis = 'znak {!r}'.format(zadnji) if zadnji else 'kraj ulaza'
-        poruka += 'neočekivan {}'.format(opis)
+        poruka += 'neočekivani {}'.format(opis)
         if info: poruka += ' (' + info + ')'
         return LeksičkaGreška(poruka)
 
@@ -128,15 +131,15 @@ class Tokenizer:
     def zanemari(self):
         """Resetira pročitano."""
         self.pročitani.clear()
-        self.početak = self.pozicija
+        self.početak = self.i, self.j + 1
 
 
 class E(enum.Enum):  # Everywhere
     """Često korišteni tipovi tokena, neovisno o konkretnom jeziku."""
-    KRAJ = None      # End
-    GREŠKA = '\x00'  # Error
-    PRAZNO = ' '     # Empty
-    VIŠAK = ''       # Extra
+    KRAJ = None        # End
+    # GREŠKA = '\x00'  # Error
+    # PRAZNO = ' '     # Empty
+    # VIŠAK = ''       # Extra
 
 
 class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
@@ -173,51 +176,58 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
             self.razriješen = True
             return self
 
+    def raspon(self):
+        if hasattr(self, 'početak'):
+            ip, jp = self.početak
+            ik, jk = self.kraj
+            if ip == ik:
+                if jp == jk: return 'Redak {}, stupac {}'.format(ip, jp)
+                else: return 'Redak {}, stupci {}–{}'.format(ip, jp, jk)
+            else: return 'Redak {}, stupac {} – redak {}, stupac {}'.format(
+                ip, jp, ik, jk)
+        else: return 'Nepoznata pozicija'
+
     def neočekivan(self, info=''):
-        """Konstruira sintaksnu grešku: neočekivan tip tokena."""
-        poruka = 'Redak {}, stupac {}: neočekivan token {!r}'
+        """Konstruira sintaksnu grešku: neočekivani tip tokena."""
+        if self ^ E.KRAJ: poruka = 'Neočekivani kraj ulaza'
+        else: poruka = self.raspon() + ': neočekivani token {!r}'
         if info: poruka += ' (' + info + ')'
         očekivano = ' ili '.join(t.name for t in self.uspoređeni if t!=self.tip)
         if očekivano: poruka += '\n  Očekivano: ' + očekivano
-        i, j = getattr(self, 'početak', '??')
-        return SintaksnaGreška(poruka.format(i, j, self))
+        return SintaksnaGreška(poruka.format(self))
 
     if False:
       def redeklaracija(self, prvi=None):
         """Konstruira semantičku grešku redeklaracije."""
-        i, j = getattr(self, 'početak', '??')
-        poruka = 'Redak {}, stupac {}: redeklaracija {!r}'.format(i, j, self)
+        poruka = self.raspon() + ': redeklaracija {!r}'.format(self)
         if prvi is not None:
-            info = 'Prva deklaracija je bila ovdje: redak {}, stupac {}'
+            info = 'Prva deklaracija je bila ovdje: ' + prvi.raspon().lower()
             poruka += '\n' + info.format(*prvi.početak)
         return SemantičkaGreška(poruka)
 
-    def nedeklaracija(self, dodatak=''):
+    def nedeklaracija(self, info=''):
         """Konstruira semantičku grešku nedeklariranog simbola."""
-        i, j = getattr(self, 'početak', '??')
-        poruka = 'Redak {}, stupac {}: nedeklarirano {!r}'.format(i, j, self)
-        if dodatak: poruka += ' ' + dodatak.join('()')
+        poruka = self.raspon() + ': nedeklarirano {!r}'.format(self)
+        if info: poruka += ' ' + info.join('()')
         return SemantičkaGreška(poruka)
 
     def iznimka(self, info):
         """Konstruira grešku izvođenja."""
         if isinstance(info, BaseException): info = info.args[0]
-        poruka = 'Redak {}, stupac {}: {!r}: {}'
-        i, j = getattr(self, 'početak', '??')
-        return GreškaIzvođenja(poruka.format(i, j, self, info))
+        poruka = self.raspon() + ': {!r}: {}'
+        return GreškaIzvođenja(poruka.format(self, info))
 
     def krivi_tip(self, *tipovi):
         """Konstruira semantičku grešku."""
-        poruka = 'Redak {}, stupac {}: {!r}: tipovi ne odgovaraju: '
+        poruka = self.raspon() + ': {!r}: tipovi ne odgovaraju: '
         poruka += ', '.join(map(str, tipovi))
-        i, j = getattr(self, 'početak', '??')
-        return SemantičkaGreška(poruka.format(i, j, self))
+        return SemantičkaGreška(poruka.format(self))
 
     @classmethod
     def kraj(cls):
         """Oznaka kraja niza tokena."""
         t = cls(E.KRAJ, '')
-        t.početak = t.kraj = 'zadnji', 0
+        t.početak = t.kraj = 'zadnji', 'nepoznat'
         t.razriješen = False
         return t
 
