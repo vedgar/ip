@@ -1,4 +1,4 @@
-import collections
+import collections, types
 
 
 class Polinom(collections.Counter):
@@ -71,3 +71,14 @@ class RAMStroj:
 
     @property
     def rezultat(self): return self.registri[0]
+
+
+class PristupLog(types.SimpleNamespace):
+    """Broji pristupe pojedinom objektu."""
+
+    def __init__(self, objekt):
+        self.objekt = objekt
+        self.pristup = 0
+
+    def pristupi(self): self.pristup += 1
+

@@ -189,7 +189,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
 
     def neočekivan(self, info=''):
         """Konstruira sintaksnu grešku: neočekivani tip tokena."""
-        if self ^ E.KRAJ: poruka = 'Neočekivani kraj ulaza'
+        if self.tip == E.KRAJ: poruka = 'Neočekivani kraj ulaza'
         else: poruka = self.raspon() + ': neočekivani token {!r}'
         if info: poruka += ' (' + info + ')'
         očekivano = ' ili '.join(t.name for t in self.uspoređeni if t!=self.tip)

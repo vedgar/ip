@@ -1,4 +1,5 @@
 from pj import *
+from backend import PristupLog
 import pprint
 
 
@@ -112,28 +113,19 @@ class Create(AST('tablica specifikacije')):
     def razriješi(self, imena):
         t = imena[self.tablica.sadržaj] = {}
         for stupac in self.specifikacije:
-            t[stupac.ime.sadržaj] = StupacLog(stupac)
+            t[stupac.ime.sadržaj] = PristupLog(stupac.tip)
         
 class Select(AST('tablica stupci')):
     """SELECT naredba."""
     def razriješi(self, imena):
         t = pogledaj(imena, self.tablica)
         if self.stupci is nenavedeno:
-            for log in t.values(): log.pristup += 1
+            for log in t.values(): log.pristupi()
         else:
-            for c in self.stupci: pogledaj(t, c).pristup += 1
+            for c in self.stupci: pogledaj(t, c).pristupi()
 
 class Stupac(AST('ime tip veličina')):
     """Specifikacija stupca u tablici."""
-
-
-class StupacLog(types.SimpleNamespace):
-    """Zapis o tome koliko je puta pristupljeno određenom stupcu."""
-    def __init__(self, specifikacija):
-        self.tip = specifikacija.tip.sadržaj
-        vel = specifikacija.veličina
-        if vel is not nenavedeno: self.veličina = int(vel.sadržaj)
-        self.pristup = 0
 
 
 def za_indeks(skripta):
@@ -177,6 +169,4 @@ if __name__ == '__main__':
         sql = 'CREATE TABLE mala (stupac int); SELECT drugi FROM mala;'
         SQLParser.parsiraj(sql_lex(sql)).razriješi()
     with očekivano(SintaksnaGreška):
-        SQLParser.parsiraj(sql_lex('CREATE TABLE 2 (s t);'))
-    with očekivano(SintaksnaGreška):
-        SQLParser.parsiraj(sql_lex('CREATE TABLE'))
+        SQLParser.parsiraj(sql_lex('CREATE TABLE 2000 (s t);'))
