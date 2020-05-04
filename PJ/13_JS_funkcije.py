@@ -21,7 +21,7 @@ def js_lex(string):
             lex.zvijezda(identifikator)
             yield lex.literal(JS.IME)
         elif znak == '/':
-            if lex.pogledaj() == '/':
+            if lex.slijedi('/'):
                 lex.pročitaj_do('\n')
                 yield lex.token(JS.KOMENTAR)
             else: yield lex.token(JS.KOSACRTA)

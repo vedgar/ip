@@ -49,13 +49,13 @@ def lj_lex(string):
 # duljina -> KOLIKO ID
 
 ### Apstraktna sintaksna stabla
-# Program: naredbe
-# Deklaracija: lista
-# Provjera: lista
-# Ubaci: lista vrijednost indeks
-# Izbaci: lista indeks
-# Dohvati: lista indeks
-# Duljina: lista
+# Program: naredbe:[Deklaracija|Provjera|Ubaci|Izbaci|Dohvati|Duljina]
+# Deklaracija: lista:ID
+# Provjera: lista:ID
+# Ubaci: lista:ID vrijednost:BROJ|MINUSBROJ indeks:BROJ
+# Izbaci: lista:ID indeks:BROJ
+# Dohvati: lista:ID indeks:BROJ
+# Duljina: lista:ID
 
 class LJParser(Parser):
     def start(self):
@@ -79,6 +79,7 @@ class LJParser(Parser):
 class Program(AST('naredbe')):
     """Program u jeziku listâ."""
     def izvrši(self):
+        """Izvršava program, odašiljući rezultate naredbi koje ih imaju."""
         memorija = {}
         for naredba in self.naredbe:
             izlaz = naredba.izvrši(memorija)

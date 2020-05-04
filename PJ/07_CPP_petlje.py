@@ -53,20 +53,26 @@ def cpp_lex(source):
         else: yield lex.literal(CPP)
 
 
+## Beskontekstna gramatika
 # start -> naredba naredbe
 # naredbe -> '' | naredba naredbe
-# naredba -> petlja | ispis TOČKAZ | BREAK TOČKAZ | grananje
-# for -> FOR OOTV IME JEDNAKO BROJ TOČKAZ IME MANJE BROJ
-# 	  TOČKAZ IME inkrement OZATV
+# naredba -> petlja | grananje | ispis TOČKAZ | BREAK TOČKAZ
+# for -> FOR OOTV IME JEDNAKO BROJ TOČKAZ IME MANJE BROJ TOČKAZ
+# 	     IME inkrement OZATV
 # petlja -> for naredba | for VOTV naredbe VZATV
 # inkrement -> PLUSP | PLUSJ BROJ
 # ispis -> COUT varijable | COUT varijable MMANJE ENDL
 # varijable -> '' | MMANJE IME varijable
 # grananje -> IF OOTV IME JJEDNAKO BROJ OZATV naredba
 
+ 
+kriva_varijabla = SemantičkaGreška(
+    'Sva tri dijela for-petlje moraju imati istu varijablu')
+
+
 class CPPParser(Parser):
     def start(self):
-        naredbe = []
+        naredbe = [self.naredba()]
         while not self >> E.KRAJ: naredbe.append(self.naredba())
         return Program(naredbe)
 
@@ -85,15 +91,16 @@ class CPPParser(Parser):
         self.pročitaj(CPP.TOČKAZ)
 
         i2 = self.pročitaj(CPP.IME)
-        if i != i2: raise SemantičkaGreška('nisu podržane različite varijable')
+        if i != i2: raise kriva_varijabla
         self.pročitaj(CPP.MANJE)
         granica = self.pročitaj(CPP.BROJ)
         self.pročitaj(CPP.TOČKAZ)
 
         i3 = self.pročitaj(CPP.IME)
-        if i != i3: raise SemantičkaGreška('nisu podržane različite varijable')
+        if i != i3: raise kriva_varijabla
         if self >> CPP.PLUSP: inkrement = nenavedeno
         elif self >> CPP.PLUSJ: inkrement = self.pročitaj(CPP.BROJ)
+        else: raise self.greška()
         self.pročitaj(CPP.OZATV)
 
         if self >> CPP.VOTV:
@@ -110,6 +117,7 @@ class CPPParser(Parser):
             elif self >> CPP.ENDL:
                 novired = True
                 break
+            else: raise self.greška()
         self.pročitaj(CPP.TOČKAZ)
         return Ispis(varijable, novired)
 
@@ -140,7 +148,9 @@ class Prekid(Exception): pass
 class Program(AST('naredbe')):
     def izvrši(self):
         memorija = {}
-        for naredba in self.naredbe: naredba.izvrši(memorija)
+        try:
+            for naredba in self.naredbe: naredba.izvrši(memorija)
+        except Prekid: raise SemantičkaGreška('nedozvoljen break izvan petlje')
     
 class Petlja(AST('varijabla početak granica inkrement blok')):
     def izvrši(self, mem):
@@ -165,6 +175,11 @@ class Grananje(AST('lijevo desno naredba')):
         if self.lijevo.vrijednost(mem) == self.desno.vrijednost(mem):
             self.naredba.izvrši(mem)
 
+
+def očekuj(greška, kôd):
+    with očekivano(greška): CPPParser.parsiraj(cpp_lex(kôd)).izvrši()
+
+
 if __name__ == '__main__':
     cpp = CPPParser.parsiraj(cpp_lex('''
         for ( i = 8 ; i < 13 ; i += 2 )
@@ -174,22 +189,19 @@ if __name__ == '__main__':
             }
     '''))
     prikaz(cpp, 8)
-    # Program(naredbe=[
-    #   Petlja(varijabla=IME'i', početak=BROJ'8', granica=BROJ'13',
-    #          inkrement=BROJ'2', blok=[
-    #     Petlja(varijabla=IME'j', početak=BROJ'0', granica=BROJ'3',
-    #            inkrement=<Nenavedeno>, blok=[
-    #       Ispis(varijable=[IME'i', IME'j'], novired=True),
-    #       Grananje(lijevo=IME'i', desno=BROJ'10', naredba=
-    #         Grananje(lijevo=IME'j', desno=BROJ'1', naredba=BREAK'break'))])])])
     cpp.izvrši()
-    with očekivano(LeksičkaGreška):
-        list(cpp_lex('2+3'))
-    with očekivano(SemantičkaGreška):
-        prikaz(CPPParser.parsiraj(cpp_lex('for(a=1; b<3; c++);')), 5)
-    with očekivano(SintaksnaGreška):
-        prikaz(CPPParser.parsiraj(cpp_lex('for(c=1; c<3; c++);')), 5)
+    prikaz(CPPParser.parsiraj(cpp_lex('cout;')), 4)
+    očekuj(SintaksnaGreška, '')
+    očekuj(SintaksnaGreška, 'for(c=1; c<3; c++);')
+    očekuj(LeksičkaGreška, '+1')
+    očekuj(SemantičkaGreška, 'for(a=1; b<3; c++);')
+    očekuj(SemantičkaGreška, 'break;')
 
-# DZ: omogućiti i grananjima da imaju blokove - uvesti novi AST Blok
-# DZ: omogućiti da parametri petlje budu varijable, ne samo brojevi
+
 # DZ: implementirati naredbu continue
+# DZ: implementirati praznu naredbu (for/if(...);)
+# DZ: omogućiti i grananjima da imaju blokove - uvesti novo AST Blok
+# DZ: omogućiti da parametri petlje budu varijable, ne samo brojevi
+# DZ: omogućiti grananja s obzirom na relaciju <, ne samo ==
+# DZ: dodati kontekstnu varijablu 'jesmo li u petlji' za dozvolu BREAK
+# DZ: uvesti deklaracije varijabli i pratiti jesu li varijable deklarirane

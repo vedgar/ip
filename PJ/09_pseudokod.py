@@ -95,7 +95,7 @@ class PseudokodParser(Parser):
             funkcija = self.funkcija()
             imef = funkcija.ime
             if imef in self.funkcije: raise SemantičkaGreška(
-                'Dvaput definirana funkcija ' + imef.sadržaj)
+                'Dvaput definirana funkcija {}'.format(imef))
             self.funkcije[imef] = funkcija
         return self.funkcije
 
@@ -355,6 +355,9 @@ program(m) = (  # rudimentarni prijenos argumenta preko "komandne linije"
 print()
 prikaz(tablice_istinitosti, 13)
 izvrši(tablice_istinitosti, 3)  # poziv iz komandne linije, prijenos m=3
+
+with očekivano(SemantičkaGreška):
+    PseudokodParser.parsiraj(pseudokod_lexer('f(x)=() f(x)=()'))
 
 # DZ: dodajte određenu petlju: za ime = izraz .. izraz naredba
 # DZ*: dodajte late binding, da se modul i program mogu zasebno kompajlirati

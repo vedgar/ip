@@ -313,7 +313,7 @@ def prikaz(objekt, dubina:int, uvlaka:str='', ime:str=None):
             or not dubina:
         return print(intro, repr(objekt), sep='')
     if isinstance(objekt, ListaAST):
-        print(intro + '[...]:')
+        print(intro, end='[...]:\n' if objekt else '[]\n')
         for vrijednost in objekt:
             prikaz(vrijednost, dubina-1, uvlaka+'. ')
     elif isinstance(objekt, AST0):
@@ -321,7 +321,7 @@ def prikaz(objekt, dubina:int, uvlaka:str='', ime:str=None):
         for ime, vrijednost in objekt._asdict().items():
             prikaz(vrijednost, dubina-1, uvlaka+' '*2, ime)
     elif isinstance(objekt, (RječnikAST, dict)):
-        print(intro + '{...}:')
+        print(intro, end='{:::}:\n' if objekt else '{}\n')
         for ključ, vrijednost in dict(objekt).items():
             prikaz(vrijednost, dubina-1, uvlaka+': ', repr(ključ))
     else: assert False, 'Ne znam lijepo prikazati ' + str(objekt)

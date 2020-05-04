@@ -25,12 +25,14 @@ def makni(it):
 class L(enum.Enum):
     UOTV, UZATV, ZAREZ = '[],'
     class BROJ(Token):
+        """Pozitivni prirodni broj."""
         def vrijednost(self): return int(self.sadržaj)
-    class STRING(Token):
-        def vrijednost(self):
-            s = self.sadržaj[1:-1]
-            if self.sadržaj.startswith(N2): return ''.join(makni(iter(s)))
-            else: return s
+    class STRING1(Token):
+        """String u jednostrukim navodnicima (raw string)."""
+        def vrijednost(self): return self.sadržaj[1:-1]
+    class STRING2(Token):
+        """String u dvostrukim navodnicima (backslash kao escape)."""
+        def vrijednost(self): return ''.join(makni(iter(self.sadržaj[1:-1])))
 
 def l_lex(lista):
     lex = Tokenizer(lista)
@@ -41,20 +43,21 @@ def l_lex(lista):
             yield lex.token(L.BROJ)
         elif znak == N1:
             lex.pročitaj_do(N1)
-            yield lex.token(L.STRING)
+            yield lex.token(L.STRING1)
         elif znak == N2:
             while True:
                 z = lex.čitaj()
                 if not z: raise lex.greška('Nezavršeni string!')
                 elif z == BKSL: lex.čitaj()
                 elif z == N2:
-                    yield lex.token(L.STRING)
+                    yield lex.token(L.STRING2)
                     break
         else: yield lex.literal(L)
 
+## Beskontekstna gramatika
+# element -> BROJ | STRING1 | STRING2 | lista
 # lista -> UOTV elementi UZATV
 # elementi -> element | element ZAREZ elementi | ''
-# element -> BROJ | STRING | lista
 
 class LParser(Parser):
     def lista(self):
@@ -72,7 +75,7 @@ class LParser(Parser):
 
     def element(self):
         if self >= L.UOTV: return self.lista()
-        else: return self.pročitaj(L.BROJ, L.STRING)
+        else: return self.pročitaj(L.BROJ, L.STRING1, L.STRING2)
     
     start = element
 
@@ -94,6 +97,6 @@ if __name__ == '__main__':
     print(ast.vrijednost())
 
 # DZ: sve više jezika dopušta "zarez na kraju" stil pisanja listi
-#     (npr. [2,3,] je isto što i [2,3]) -- omogućite to!)
+#     (npr. [2,3,] je isto što i [2,3]) -- omogućite to!
 # DZ: omogućite razne druge \-escape sekvence (npr. \u za znakove Unikoda)
 # DZ: omogućite izraze umjesto literala: polimorfni + za zbrajanje/konkatenaciju

@@ -4,6 +4,11 @@ RAM-stroj je virtualna mašina s prebrojivo mnogo registara R0, R1, R2, ....
 U svakom registru može se nalaziti proizvoljni prirodni broj (uključujući 0).
 Na početku rada RAM-stroja (reset) su svi registri inicijalizirani na 0.
 
+RAM-stroj se može koristiti za izračunavanje brojevnih funkcija
+(kao što se Turingov stroj može koristiti za izračunavanje jezičnih funkcija).
+U tu svrhu, k ulaznih podataka se zapiše u registre R1--Rk (ostali su 0)
+na početku rada, a na kraju rada se izlazni podatak pročita iz registra R0.
+
 LOOP je strojni jezik (machine code) za RAM-stroj.
 LOOP-program je slijed (jedne ili više) instrukcija sljedećeg oblika:
   * INC Rj; (inkrement), čije izvršavanje povećava broj u Rj za 1
@@ -44,12 +49,12 @@ def loop_lex(prog):
 
 ### Beskontekstna gramatika:
 # program -> naredba | naredba program
-# naredba -> (INC | DEC) R TOČKAZ | R VOTV program VZATV
+# naredba -> (INC | DEC) REG TOČKAZ | REG VOTV program VZATV
 
 ### Apstraktna sintaksna stabla:
-# Petlja: registar:R, tijelo:Program
-# Inkrement: registar:R
-# Dekrement: registar:R
+# Petlja: registar:REG, tijelo:Program
+# Inkrement: registar:REG
+# Dekrement: registar:REG
 # Program: naredbe:[Petlja|Inkrement|Dekrement]
 
 
@@ -102,27 +107,19 @@ if __name__ == '__main__':
         INC R0;
         R2{
             R0{
-                R1{INCR3;}
-                DECR0;
+                R1 {INC R3;}
+                DEC R0;
             }
             R3{DECR3;INCR0;}
         }
     '''))
     prikaz(power, 9)
-    # Program(naredbe=[
-    #   Inkrement(registar=REG'R0'),
-    #   Petlja(registar=REG'R2', tijelo=Program(naredbe=[
-    #     Petlja(registar=REG'R0', tijelo=Program(naredbe=[
-    #       Petlja(registar=REG'R1', tijelo=Program(naredbe=[
-    #         Inkrement(registar=REG'R3')])),
-    #       Dekrement(registar=REG'R0')])),
-    #     Petlja(registar=REG'R3', tijelo=Program(naredbe=[
-    #       Dekrement(registar=REG'R3'),
-    #       Inkrement(registar=REG'R0')]))]))])
-    print(računaj(power, 3, 7))
+    baza, eksponent = 3, 7
+    print(baza, '^', eksponent, '=', računaj(power, baza, eksponent))
 
+# DZ: napišite multiply i add (puno su jednostavniji od power)
 # DZ: Primitivno rekurzivne funkcije predstavljaju funkcijski programski jezik
-#     u kojem postoje inicijalne funkcije [nul Z(x)=0, sljedbenik Sc(x)=x+1, te
+# **  u kojem postoje inicijalne funkcije [nul Z(x)=0, sljedbenik Sc(x)=x+1, te
 #     koordinatne projekcije Ink(x1,...,xk)=xn za sve prirodne 1 <= n <= k].
 #     Također postoji operator kompozicije [f(xs)=h(g1(xs),...,gl(xs))]
 #     i primitivne rekurzije [f(xs,0)=g(xs); f(xs,y+1)=h(xs,y,f(xs,y))].
