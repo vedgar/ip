@@ -2,28 +2,28 @@ from pj import *
 import RI
 
 
-class Ri(enum.Enum):
-    OTV, ZATV, ILI, ZVIJEZDA, PLUS, UPITNIK = '()|*+?'
+specijalni = '()|*+?'
+
+class RX(enum.Enum):
+    OTV, ZATV, ILI, ZVIJEZDA, PLUS, UPITNIK = specijalni
     PRAZAN, EPSILON = '/0', '/1'
     class ZNAK(Token): pass
-
-
-def specijalan(znak): return znak in '()|*+?/'
 
 
 def ri_lex(ri):
     lex = Tokenizer(ri)
     for znak in iter(lex.čitaj, ''):
-        if znak == '/':
+        if znak in specijalni: yield lex.literal(RX)
+        elif znak == '/':
             lex.zanemari()
             sljedeći = lex.čitaj()
-            if sljedeći == '0': yield lex.token(Ri.PRAZAN)
-            elif sljedeći == '1': yield lex.token(Ri.EPSILON)
-            elif not sljedeći: lex.greška('"escape"an kraj stringa')
-            elif specijalan(sljedeći): yield lex.token(Ri.ZNAK)
+            if not sljedeći: lex.greška('"escape"an kraj stringa')
+            elif sljedeći == '0': yield lex.token(RX.PRAZAN)
+            elif sljedeći == '1': yield lex.token(RX.EPSILON)
+            elif sljedeći == '/': yield lex.token(RX.ZNAK)  # // kao /
+            elif sljedeći in specijalni: yield lex.token(RX.ZNAK)
             else: lex.greška('nepostojeći "escape" znak')
-        elif specijalan(znak): yield lex.literal(Ri)
-        else: yield lex.token(Ri.ZNAK)
+        else: yield lex.token(RX.ZNAK)
 
 
 ### Beskontekstna gramatika
@@ -45,30 +45,30 @@ def ri_lex(ri):
 class RIParser(Parser):
     def izraz(self):
         disjunkt = self.disjunkt()
-        if self >> Ri.ILI: return RI.Unija(disjunkt, self.izraz())
+        if self >> RX.ILI: return RI.Unija(disjunkt, self.izraz())
         else: return disjunkt
 
     def disjunkt(self):
         faktor = self.faktor()
-        if self >= {Ri.PRAZAN, Ri.EPSILON, Ri.ZNAK, Ri.OTV}:
+        if self >= {RX.PRAZAN, RX.EPSILON, RX.ZNAK, RX.OTV}:
             return RI.Konkatenacija(faktor, self.disjunkt())
         else: return faktor
 
     def faktor(self):
         trenutni = self.element()
         while True:
-            if self >> Ri.ZVIJEZDA: trenutni = RI.Zvijezda(trenutni)
-            elif self >> Ri.PLUS: trenutni = RI.Plus(trenutni)
-            elif self >> Ri.UPITNIK: trenutni = RI.Upitnik(trenutni)
+            if self >> RX.ZVIJEZDA: trenutni = RI.Zvijezda(trenutni)
+            elif self >> RX.PLUS: trenutni = RI.Plus(trenutni)
+            elif self >> RX.UPITNIK: trenutni = RI.Upitnik(trenutni)
             else: return trenutni
 
     def element(self):
-        if self >> Ri.PRAZAN: return RI.prazan
-        elif self >> Ri.EPSILON: return RI.epsilon
-        elif self >> Ri.ZNAK: return RI.Elementaran(self.zadnji.sadržaj)
-        elif self >> Ri.OTV:
+        if self >> RX.PRAZAN: return RI.prazan
+        elif self >> RX.EPSILON: return RI.epsilon
+        elif self >> RX.ZNAK: return RI.Elementaran(self.zadnji.sadržaj)
+        elif self >> RX.OTV:
             u_zagradi = self.izraz()
-            self.pročitaj(Ri.ZATV)
+            self.pročitaj(RX.ZATV)
             return u_zagradi
         else: self.greška()
 
