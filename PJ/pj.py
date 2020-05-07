@@ -1,16 +1,14 @@
-#TODO: pogledati može li se upotrebljivo ukrasti pprinter od astpretty
-#TODO: negirani >= (i možda >>), s defaultom KRAJ, da ga ne smatra opcijom
-
-
 import enum, types, collections, contextlib
 
 
 def identifikator(znak): return znak.isalnum() or znak == '_'
 
 
+# TODO: `pogledaj` preimenovati u `dohvati`
 def pogledaj(mem, token):
-    try: return mem[token.sadržaj]
-    except KeyError: raise token.nedeklaracija() from None
+    if token in mem: return mem[token]
+    elif token.sadržaj in mem: return mem[token.sadržaj]
+    else: raise token.nedeklaracija()
 
 
 # TODO: bolji API: Greška(poruka, pozicija ili token ili AST...)
@@ -143,7 +141,6 @@ class E(enum.Enum):  # Everywhere
 
 
 class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
-    # TODO: razmisliti je li Token unhashable, ili hashiran samo kao TokenTuple
     """Klasa koja predstavlja tokene."""
     def __new__(cls, tip, sadržaj=None):
         if sadržaj is None:
@@ -330,9 +327,15 @@ def prikaz(objekt, dubina:int, uvlaka:str='', ime:str=None):
 class AST0:
     """Bazna klasa za sva apstraktna sintaksna stabla."""
     def __xor__(self, tip):
-        return isinstance(tip, type) and isinstance(self, tip)
+        if isinstance(tip, type) and isinstance(self, tip): return self
 
     def je(self, *tipovi): return isinstance(self, tipovi)
+
+    @classmethod
+    def ili_samo(cls, lista):
+        if not lista or len(cls._fields) != 1:
+            raise SemantičkaGreška('Ispuštanje korijena nije dozvoljeno!')
+        return lista[0] if len(lista) == 1 else cls(lista)
     
 
 class Atom(Token, AST0): """Atomarni token kao apstraktno stablo."""
@@ -345,12 +348,14 @@ class ListaAST(tuple):
 class RječnikAST(tuple):
     def __repr__(self): return repr(dict(self))
 
+
 class Nenavedeno(AST0):
     """Atribut koji nije naveden."""
     def __bool__(self): return False
-    def __repr__(self): return type(self).__name__.join('<>')
+    def __repr__(self): return type(self).__name__.lower().join('<>')
 
 nenavedeno = Nenavedeno()
+
 
 def AST(atributi):
     AST2 = collections.namedtuple('AST2', atributi)
@@ -362,3 +367,8 @@ def AST(atributi):
             new_kw = {k: AST_adapt(v) for k, v in kw.items()}
             return super().__new__(cls, *new_args, **new_kw)
     return AST1
+
+
+class NelokalnaKontrolaToka(Exception):
+    @property
+    def preneseno(self): return self.args[0] if self.args else nenavedeno

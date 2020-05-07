@@ -8,14 +8,14 @@ Podržane naredbe:
     dok nije uvjet naredba                  (naredba1, naredba2, ...)
 
 Podržani aritmetički izrazi:            Podržani logički uvjeti:
-    cijeli broj                             Istina
+    cijeli_broj                             Istina
     ime                                     Laž
     ime(argumenti)                          Ime
     izraz + izraz                           Ime(argumenti)
     izraz - izraz                           uvjet Ili uvjet
     izraz * izraz                           izraz < izraz
     -izraz                                  izraz = izraz
-    (izraz)
+    (izraz)                                 (uvjet)
 
 Program se sastoji od jedne ili više deklaracija funkcija, s ili bez parametara.
     Jedna od njih mora biti program(parametri), od nje počinje izvršavanje.
@@ -73,7 +73,7 @@ def pseudokod_lexer(program):
 
 ### BKG (ne sasvim BK:)
 # naredba -> pridruži | OTV naredbe? ZATV | (AKO | DOK) (JE | NIJE) log naredba
-#            | AKO JE log naredba INAČE naredba | VRATI izraz
+#            | AKO JE log naredba INAČE naredba | VRATI argument
 # ime -> AIME | LIME
 # parametri -> ime (ZAREZ parametri)?
 # naredbe -> naredba (ZAREZ naredbe)?
@@ -85,8 +85,8 @@ def pseudokod_lexer(program):
 # aritm -> aritm PLUS član | aritm MINUS član
 # član -> član ZVJEZDICA faktor | faktor | MINUS faktor
 # faktor -> BROJ | AIME | OTV aritm ZATV | AIME OTV argumenti ZATV
-# argumenti -> izraz (ZAREZ argumenti)?
-# izraz -> aritm |! log  [KONTEKST!]
+# argumenti -> argument (ZAREZ argumenti)?
+# argument -> aritm |! log  [KONTEKST!]
 
 class PseudokodParser(Parser):
     def program(self):

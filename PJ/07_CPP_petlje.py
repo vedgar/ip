@@ -136,7 +136,7 @@ class CPPParser(Parser):
         return br
 
 
-class Prekid(Exception): pass
+class Prekid(NelokalnaKontrolaToka): pass
 
 
 ## Apstraktna sintaksna stabla:
