@@ -1,97 +1,91 @@
 """Leksički i sintaksni analizator za JavaScriptove funkcije.
-Kolokvij 19. siječnja 2012. (Puljić)
-"""
+Kolokvij 19. siječnja 2012. (Puljić)"""
 
 
 from pj import *
 
 
-class JS(enum.Enum):
-    FUNCTION, VAR, NAREDBA = 'function', 'var', 'naredba'
+class T(TipoviTokena):
+    FUNCTION, VAR, NAREDBA, KOMENTAR = 'function', 'var', 'naredba', '//'
     O_OTV, O_ZATV, V_OTV, V_ZATV, KOSACRTA, ZAREZ, TOČKAZAREZ = '(){}/,;'
-    KOMENTAR = '//'
-    class IME(Token): pass
+    IME = TipTokena()
 
 
-def js_lex(string):
-    lex = Tokenizer(string)
-    for znak in iter(lex.čitaj, ''):
+def js(lex):
+    for znak in lex:
         if znak.isspace(): lex.zanemari()
-        elif znak.isalpha():
+        elif znak.isalpha() or znak == '$':
             lex.zvijezda(identifikator)
-            yield lex.literal(JS.IME)
+            yield lex.literal(T.IME)
         elif znak == '/':
-            if lex.slijedi('/'):
+            if lex >> '/':
                 lex.pročitaj_do('\n')
-                yield lex.token(JS.KOMENTAR)
-            else: yield lex.token(JS.KOSACRTA)
-        else: yield lex.literal(JS)
+                yield lex.token(T.KOMENTAR)
+            else: yield lex.token(T.KOSACRTA)
+        else: yield lex.literal(T)
 
 
 ### Beskontekstna gramatika
-# funkcija -> FUNCTION IME O_OTV argumenti O_ZATV V_OTV tijelo V_ZATV
-# argumenti -> VAR IME ZAREZ argumenti | VAR IME | ''
-# tijelo -> komentari naredbe | naredbe
-# komentari -> KOMENTAR komentari | KOMENTAR
-# naredbe -> NAREDBA separator naredbe | NAREDBA | ''
-# separator -> TOČKAZAREZ | komentari
+# start -> fun | start fun
+# fun -> FUNCTION IME O_OTV argumenti? O_ZATV V_OTV KOMENTAR* nar V_ZATV
+# argumenti -> VAR IME ZAREZ argumenti | VAR IME
+# nar -> NAREDBA TOČKAZAREZ nar | NAREDBA KOMENTAR+ nar | NAREDBA | ''
 
-class Funkcija(AST('ime argumenti tijelo')): pass
-class Program(AST('funkcije')): pass
+class P(Parser):
+    lexer = js
 
-class JSParser(Parser):
     def funkcija(self):
-        self.pročitaj(JS.FUNCTION)
-        ime = self.pročitaj(JS.IME)
-        self.pročitaj(JS.O_OTV)
-        if self >> JS.O_ZATV: argumenti = []
-        else:
+        self.pročitaj(T.FUNCTION)
+        ime = self.pročitaj(T.IME)
+        self.pročitaj(T.O_OTV)
+        argumenti = []
+        if self >= T.VAR:
             argumenti = [self.argument()]
-            while not self >> JS.O_ZATV:
-                self.pročitaj(JS.ZAREZ)
-                argumenti.append(self.argument())
+            while self >> T.ZAREZ: argumenti.append(self.argument())
+        self.pročitaj(T.O_ZATV)
         return Funkcija(ime, argumenti, self.tijelo())
 
     def tijelo(self):
-        self.pročitaj(JS.V_OTV)
-        while self >> JS.KOMENTAR: pass
+        self.pročitaj(T.V_OTV)
+        while self >> T.KOMENTAR: pass
         naredbe = []
-        while not self >> JS.V_ZATV:
+        while not self >> T.V_ZATV:
             naredbe.append(self.naredba())
-            if self >> JS.TOČKAZAREZ: pass
-            elif self >> JS.KOMENTAR:
-                while self >> JS.KOMENTAR: pass
-            elif self >> JS.V_ZATV: break
+            if self >> T.TOČKAZAREZ: pass
+            elif self >> T.KOMENTAR:
+                while self >> T.KOMENTAR: pass
+            elif self >> T.V_ZATV: break
             else: self.greška()
         return naredbe
 
     def start(self):
         funkcije = [self.funkcija()]
-        while not self >> E.KRAJ: funkcije.append(self.funkcija())
+        while not self >> KRAJ: funkcije.append(self.funkcija())
         return Program(funkcije)
 
     def argument(self):
-        self.pročitaj(JS.VAR)
-        return self.pročitaj(JS.IME)
+        self.pročitaj(T.VAR)
+        return self.pročitaj(T.IME)
 
-    def naredba(self): return self.pročitaj(JS.NAREDBA)
+    def naredba(self): return self.pročitaj(T.NAREDBA)
 
 
-if __name__ == '__main__':
-    prikaz(JSParser.parsiraj(js_lex('''\
-        function ime (var x, var y, var z) {
-            //neke naredbe odvojene s ; ili komentarima
-            naredba; naredba //kom
-            naredba
-        }
-        function ništa(){}
-        function trivijalna(var hmmm){naredba//
-        //
-        }
-    ''')), 3)
-# Program(funkcije=[
-#   Funkcija(ime=IME'ime', argumenti=[IME'x', IME'y', IME'z'], tijelo=[
-#     NAREDBA'naredba', NAREDBA'naredba', NAREDBA'naredba']),
-#   Funkcija(ime=IME'ništa', argumenti=[], tijelo=[]),
-#   Funkcija(ime=IME'trivijalna', argumenti=[IME'hmmm'], tijelo=[
-#     NAREDBA'naredba'])])
+### AST
+# Funkcija: ime:IME argumenti:[IME] tijelo:[NAREDBA]
+# Program: funkcije:[Funkcija]
+
+class Funkcija(AST('ime argumenti tijelo')): pass
+class Program(AST('funkcije')): pass
+
+
+prikaz(P('''\
+    function ime (var x, var y, var z) {
+        //neke naredbe odvojene s ; ili komentarima
+        naredba; naredba //kom 
+        naredba
+    }
+    function ništa(){}
+    function $trivijalna(var hmmm){naredba// komm/
+    //
+    }
+'''), 3)

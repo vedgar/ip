@@ -3,8 +3,7 @@ var ctx = canvas.getContext('2d');
 var x = canvas.width / 2, y = canvas.height / 2, h = 0;
 var to = ctx.lineTo;
 ctx.moveTo(x, y);
-for (var r1 = 0; r1 < 4; r1 ++)
-{
+for (var r1 = 0; r1 < 4; r1 ++) {
 h += 1.5707963267948966;
 to.apply(ctx, [x-=Math.sin(h)*150, y-=Math.cos(h)*150]);
 }

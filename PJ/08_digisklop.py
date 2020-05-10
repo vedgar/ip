@@ -1,23 +1,22 @@
 """Hardverski NAND-realizator i optimizator digitalnih sklopova.
 Zadatak s drugog kolokvija ljetnog semestra 2017. https://goo.gl/JGACGH
-"""
+Kao međuprikaz (koji se optimizira) korištene su Pythonove liste."""
 
 
 from pj import *
 
 
-class DS(enum.Enum):
+class T(TipoviTokena):
     OOTV, OZATV, UOTV, UZATV, ILI, NE = "()[]+'"
     class SLOVO(Token):
         def uNand(self): return self.sadržaj
 
 
-def ds_lex(string):
-    lex = Tokenizer(string)
-    for znak in iter(lex.čitaj, ''):
+def ds(lex):
+    for znak in lex:
         if znak.isspace(): lex.zanemari()
-        elif znak.isalpha(): yield lex.token(DS.SLOVO)
-        else: yield lex.literal(DS)
+        elif znak.isalpha(): yield lex.token(T.SLOVO)
+        else: yield lex.literal(T)
 
 
 ### Beskontekstna gramatika
@@ -26,30 +25,30 @@ def ds_lex(string):
 # faktor -> SLOVO | faktor NE | OOTV sklop OZATV | UOTV sklop UZATV
 
 
-class DSParser(Parser):
+class P(Parser):
     def sklop(self):
         disjunkti = [self.disjunkt()]
-        while self >> DS.ILI: disjunkti.append(self.disjunkt())
-        return disjunkti[0] if len(disjunkti) == 1 else Or(disjunkti)
+        while self >> T.ILI: disjunkti.append(self.disjunkt())
+        return Or.ili_samo(disjunkti)
 
     def disjunkt(self):
         konjunkti = [self.faktor()]
-        while self >= {DS.SLOVO, DS.OOTV, DS.UOTV}:
-            konjunkti.append(self.faktor())
-        return konjunkti[0] if len(konjunkti) == 1 else And(konjunkti)
+        while self >= {T.SLOVO, T.OOTV, T.UOTV}: konjunkti.append(self.faktor())
+        return And.ili_samo(konjunkti)
 
     def faktor(self):
-        if self >> DS.SLOVO: trenutni = self.zadnji
-        elif self >> DS.OOTV:
+        if self >> T.SLOVO: trenutni = self.zadnji
+        elif self >> T.OOTV:
             trenutni = self.sklop()
-            self.pročitaj(DS.OZATV)
-        elif self >> DS.UOTV:
+            self.pročitaj(T.OZATV)
+        elif self >> T.UOTV:
             trenutni = Not(self.sklop())
-            self.pročitaj(DS.UZATV)
+            self.pročitaj(T.UZATV)
         else: raise self.greška()
-        while self >> DS.NE: trenutni = Not(trenutni)
+        while self >> T.NE: trenutni = Not(trenutni)
         return trenutni
 
+    lexer = ds
     start = sklop
 
 
@@ -75,21 +74,9 @@ def optimiziraj(sklop):
 
 opis = "x([yxx']+y')"
 print(opis)
-
-tokeni = list(ds_lex(opis))
-print(*tokeni)  # SLOVO'x' OOTV'(' UOTV'[' SLOVO'y' SLOVO'x' SLOVO'x'
-                # NE"'" UZATV']' ILI'+' SLOVO'y' NE"'" OZATV')'
-
-ast = DSParser.parsiraj(tokeni)
-prikaz(ast, 4)
-# And(ulazi=[
-#   SLOVO'x',
-#   Or(ulazi=[
-#     Not(ulaz=And(ulazi=[SLOVO'y', SLOVO'x', Not(ulaz=SLOVO'x')])),
-#     Not(ulaz=SLOVO'y')
-#   ])
-# ])
+P.tokeniziraj(opis)
+ast = P(opis)
+prikaz(ast)
 nand = ast.uNand()
 print(nand)  # [['x', [[[[['y', 'x', ['x']]]]], [['y']]]]]
-opt = optimiziraj(nand)
-print(opt)  # [['x', [[['y', 'x', ['x']]], 'y']]]
+print(optimiziraj(nand))

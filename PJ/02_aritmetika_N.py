@@ -9,28 +9,27 @@ Zagrade su dozvoljene, ali često nisu nužne. Prioritet je uobičajen (^, *, +)
 Implementiran je i jednostavni optimizator, koji detektira sve nule i
 jedinice u izrazima, te pojednostavljuje izraze koji ih sadrže
 (x+0=0+x=x*1=1*x=x^1=x, x^0=1^x=1, x*0=0*x=0^x=0
-  - ovo zadnje pravilo se uvijek primjenjuje nakon x^0=1, jer 0^0=1).
-"""
+  - ovo zadnje pravilo se uvijek primjenjuje nakon x^0=1, jer 0^0=1)."""
 
 
 from pj import *
+from backend import StrojSaStogom
 
 
-class AN(enum.Enum):
+class T(TipoviTokena):
     PLUS, PUTA, NA, OTVORENA, ZATVORENA = '+*^()'
     class BROJ(Token):
         def vrijednost(self): return int(self.sadržaj)
         def optim(self): return self
-        def prevedi(self): yield 'PUSH', self.vrijednost()
+        def prevedi(self): yield ['PUSH', self.vrijednost()]
 
 
-def an_lex(izraz):
-    lex = Tokenizer(izraz)
-    for znak in iter(lex.čitaj, ''):
+def an(lex):
+    for znak in lex:
         if znak.isdigit():
             if znak != '0': lex.zvijezda(str.isdigit)
-            yield lex.token(AN.BROJ)
-        else: yield lex.literal(AN)
+            yield lex.token(T.BROJ)
+        else: yield lex.literal(T)
 
 
 ### Beskontekstna gramatika: (desno asocirani operatori)
@@ -39,17 +38,17 @@ def an_lex(izraz):
 # faktor -> baza NA faktor | baza
 # baza -> BROJ | OTVORENA izraz ZATVORENA
 
-
 ### Apstraktna sintaksna stabla
-# Zbroj: pribrojnici
-# Umnožak: faktori
-# Potencija: baza eksponent
+# izraz: BROJ: Token
+#        Zbroj: pribrojnici:[izraz] (duljine 2)
+#        Umnožak: faktori:[izraz] (duljine 2)
+#        Potencija: baza:izraz eksponent:izraz
 
 
-class ANParser(Parser):
+class P(Parser):
     def izraz(self):
         prvi = self.član()
-        if self >> AN.PLUS:
+        if self >> T.PLUS:
             drugi = self.izraz()
             return Zbroj([prvi, drugi])
         else:
@@ -57,27 +56,28 @@ class ANParser(Parser):
 
     def član(self):
         faktor = self.faktor()
-        if self >> AN.PUTA: return Umnožak([faktor, self.član()])
+        if self >> T.PUTA: return Umnožak([faktor, self.član()])
         else: return faktor
 
     def faktor(self):
         baza = self.baza()
-        if self >> AN.NA: return Potencija(baza, self.faktor())
+        if self >> T.NA: return Potencija(baza, self.faktor())
         else: return baza
 
     def baza(self):
-        if self >> AN.BROJ: return self.zadnji
-        elif self >> AN.OTVORENA:
+        if self >> T.BROJ: return self.zadnji
+        elif self >> T.OTVORENA:
             u_zagradi = self.izraz()
-            self.pročitaj(AN.ZATVORENA)
+            self.pročitaj(T.ZATVORENA)
             return u_zagradi
         else: raise self.greška()
 
+    lexer = an
     start = izraz
 
 
-nula = Token(AN.BROJ, '0')
-jedan = Token(AN.BROJ, '1')
+nula = Token(T.BROJ, '0')
+jedan = Token(T.BROJ, '1')
 
 
 class Zbroj(AST('pribrojnici')):
@@ -96,7 +96,7 @@ class Zbroj(AST('pribrojnici')):
         a, b = izraz.pribrojnici
         yield from a.prevedi()
         yield from b.prevedi()
-        yield 'ADD',
+        yield ['ADD']
 
 
 class Umnožak(AST('faktori')):
@@ -116,7 +116,7 @@ class Umnožak(AST('faktori')):
         a, b = izraz.faktori
         yield from a.prevedi()
         yield from b.prevedi()
-        yield 'MUL',
+        yield ['MUL']
 
 
 class Potencija(AST('baza eksponent')):
@@ -133,26 +133,34 @@ class Potencija(AST('baza eksponent')):
     def prevedi(izraz):
         yield from izraz.baza.prevedi()
         yield from izraz.eksponent.prevedi()
-        yield 'POW',
+        yield ['POW']
 
 
 def testiraj(izraz):
     print('-' * 60)
     print(izraz)
-    stablo = ANParser.parsiraj(an_lex(izraz))
-    prikaz(stablo, 6)
+    stablo = P(izraz)
+    prikaz(stablo)
     opt = stablo.optim()
-    prikaz(opt, 6)
+    prikaz(opt)
+
+    vm = StrojSaStogom()
+    for instrukcija in opt.prevedi(): 
+        vm.izvrši(*instrukcija)
+        print(*instrukcija, '\t'*2, vm)
+    print('rezultat:', vm.rezultat)
+
     mi = opt.vrijednost()
     Python = eval(izraz.replace('^', '**'))
     if mi == Python: print(izraz, '==', mi, 'OK')
     else: print(izraz, 'mi:', mi, 'Python:', Python)
-    for instrukcija in opt.prevedi(): print('\t', *instrukcija)
 
-if __name__ == '__main__':
-    testiraj('(2+3)*4^1')
-    testiraj('2^0^0^0^0')
-    testiraj('2+(0+1*1*2)')
-    with očekivano(LeksičkaGreška): testiraj('2 3')
-    with očekivano(SintaksnaGreška): testiraj('2+')
-    with očekivano(SintaksnaGreška): testiraj('(2+3)45')
+
+P.tokeniziraj('(2+3)*4^1')
+testiraj('(2+3)*4^1')
+testiraj('2^0^0^0^0')
+testiraj('2+(0+1*1*2)')
+testiraj('1+2*3^4+0*5^6*7+8*9')
+with očekivano(LeksičkaGreška): testiraj('2 3')
+with očekivano(SintaksnaGreška): testiraj('2+')
+with očekivano(SintaksnaGreška): testiraj('(2+3)45')

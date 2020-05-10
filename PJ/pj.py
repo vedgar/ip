@@ -3,13 +3,8 @@ import enum, types, collections, contextlib
 
 def identifikator(znak): return znak.isalnum() or znak == '_'
 
-
-# TODO: `pogledaj` preimenovati u `dohvati`
-def pogledaj(mem, token):
-    if token in mem: return mem[token]
-    elif token.sadržaj in mem: return mem[token.sadržaj]
-    else: raise token.nedeklaracija()
-
+TipoviTokena = enum.Enum
+TipTokena = enum.auto
 
 # TODO: bolji API: Greška(poruka, pozicija ili token ili AST...)
 # ali ostaviti i lex.greška() i parser.greška() for convenience
@@ -20,6 +15,7 @@ class SemantičkaGreška(Greška):"""Greška nastala prilikom semantičke analiz
 class GreškaIzvođenja(Greška): """Greška nastala prilikom izvođenja."""
 
 
+#TODO maknuti potrebu za ovim: with SintaksnaGreška:... (zahtijeva metaklase)
 @contextlib.contextmanager
 def očekivano(tip_greške):
     try: yield
@@ -30,8 +26,10 @@ def očekivano(tip_greške):
 class Tokenizer:
     def __init__(self, string):
         self.pročitani, self.buffer, self.stream = [], None, iter(string)
-        self.početak = self.i, self.j = 1, 0
+        self.i, self.j = 1, 0
+        self.početak = 1, 1
 
+    #TODO razmisliti o tome da i kreće od 0 za onelinere, a bez \ nakon '''
     @property
     def pozicija(self): return self.i, self.j
 
@@ -68,7 +66,10 @@ class Tokenizer:
 
     def slijedi(self, znak):
         """Čita sljedeći znak ako i samo ako je jednak očekivanom."""
+        assert len(znak) == 1, 'Duljina znaka {!r} mora biti 1'.format(znak)
         return self.čitaj() == znak or self.vrati()
+
+    def __rshift__(self, znak): return self.slijedi(znak)
 
     def zvijezda(self, uvjet):
         """Čita Kleene* (nula ili više) znakova koji zadovoljavaju uvjet."""
@@ -88,6 +89,7 @@ class Tokenizer:
 
     def pročitaj_do(self, znak, uključivo=True):
         """Čita sve znakove do zadanog znaka."""
+        assert len(znak) == 1, 'Duljina terminatora {} mora biti 1'.format(znak)
         self.zvijezda(lambda z: z and z != znak)
         if self.pogledaj() != znak:
             raise self.greška('{!r} nije pronađen'.format(znak))
@@ -131,6 +133,10 @@ class Tokenizer:
         self.pročitani.clear()
         self.početak = self.i, self.j + 1
 
+    def __iter__(self):
+        """Omogućuje prolazak `for znak in lex:`."""
+        return iter(self.čitaj, '')
+
 
 class E(enum.Enum):  # Everywhere
     """Često korišteni tipovi tokena, neovisno o konkretnom jeziku."""
@@ -138,6 +144,7 @@ class E(enum.Enum):  # Everywhere
     # GREŠKA = '\x00'  # Error
     # PRAZNO = ' '     # Empty
     # VIŠAK = ''       # Extra
+KRAJ = E.KRAJ
 
 
 class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
@@ -186,7 +193,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
 
     def neočekivan(self, info=''):
         """Konstruira sintaksnu grešku: neočekivani tip tokena."""
-        if self.tip == E.KRAJ: poruka = 'Neočekivani kraj ulaza'
+        if self.tip == KRAJ: poruka = 'Neočekivani kraj ulaza'
         else: poruka = self.raspon() + ': neočekivani token {!r}'
         if info: poruka += ' (' + info + ')'
         očekivano = ' ili '.join(t.name for t in self.uspoređeni if t!=self.tip)
@@ -208,22 +215,27 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         if info: poruka += ' ' + info.join('()')
         return SemantičkaGreška(poruka)
 
+    def krivi_sadržaj(self, info):
+        """Konstruira leksičku grešku: token nema dobar sadržaj."""
+        poruka = self.raspon() + ': {!r}: {}'.format(self, info)
+        return LeksičkaGreška(poruka)
+
     def iznimka(self, info):
         """Konstruira grešku izvođenja."""
         if isinstance(info, BaseException): info = info.args[0]
-        poruka = self.raspon() + ': {!r}: {}'
-        return GreškaIzvođenja(poruka.format(self, info))
+        poruka = self.raspon() + ': {!r}: {}'.format(self, info)
+        return GreškaIzvođenja(poruka)
 
     def krivi_tip(self, *tipovi):
         """Konstruira semantičku grešku."""
         poruka = self.raspon() + ': {!r}: tipovi ne odgovaraju: '
-        poruka += ', '.join(map(str, tipovi))
+        poruka += ' vs. '.join(map(str, tipovi))
         return SemantičkaGreška(poruka.format(self))
 
     @classmethod
     def kraj(cls):
         """Oznaka kraja niza tokena."""
-        t = cls(E.KRAJ, '')
+        t = cls(KRAJ, '')
         t.početak = t.kraj = 'zadnji', 'nepoznat'
         t.razriješen = False
         return t
@@ -232,9 +244,27 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
 
 
 class Parser:
-    def __init__(self, tokeni):
-        self.buffer, self.stream = None, iter(tokeni)
-        self.zadnji, self.KRAJ = None, Token.kraj()
+    def __new__(cls, ulaz):
+        cls.static_lexer = staticmethod(cls.lexer)
+        self = super().__new__(cls)
+        self.buffer = self.zadnji = None
+        self.KRAJ = Token.kraj()
+        self.stream = cls.static_lexer(Tokenizer(ulaz))
+        try: rezultat = self.start()
+        except NoneInAST as exc:
+            komponenta = exc.args[0]
+            print('None je završio u komponenti {}.'.format(komponenta))
+            print('Provjerite vraćaju li sve metode parsera vrijednost.')
+            raise
+        else:
+            self.pročitaj(KRAJ)
+            return rezultat
+
+    @classmethod
+    def tokeniziraj(cls, ulaz): 
+        cls.static_lexer = staticmethod(cls.lexer)
+        for token in cls.static_lexer(Tokenizer(ulaz)):
+            print('\t{:23}: {}'.format(token.raspon(), token))
 
     def čitaj(self):
         """Čitanje sljedećeg tokena iz buffera ili inicijalnog niza."""
@@ -275,15 +305,6 @@ class Parser:
 
     def greška(self): return self.zadnji.neočekivan()
 
-    @classmethod
-    def parsiraj(klasa, tokeni):
-        parser = klasa(tokeni)
-        try: rezultat = parser.start()
-        except NoneInAST: raise parser.greška()  # BUG: nije dovoljno precizno!
-        else:
-            parser.pročitaj(E.KRAJ)
-            return rezultat
-        
 
 elementarni = str, int, bool
 
@@ -293,17 +314,17 @@ class NoneInAST(Exception): pass
 def AST_adapt(component):
     if isinstance(component, (Token, AST0, elementarni)): return component
     elif isinstance(component, (tuple, list)):
-        if None in component: raise NoneInAST('Neobuhvaćen slučaj!')
+        if None in component: raise NoneInAST(component)
         return ListaAST(component)
     elif isinstance(component, dict):
         if None in component or None in component.values():
-            raise NoneInAST('Neobuhvaćen slučaj!')
+            raise NoneInAST(component)
         return RječnikAST(component.items())
-    elif component is None: raise NoneInAST('Neobuhvaćen slučaj!')
+    elif component is None: raise NoneInAST(component)
     else: raise TypeError('Nepoznat tip komponente {}'.format(type(component)))
 
 
-def prikaz(objekt, dubina:int, uvlaka:str='', ime:str=None):
+def prikaz(objekt, dubina:int=float('inf'), uvlaka:str='', ime:str=None):
     intro = uvlaka
     if ime is not None: intro += ime + ' = '
     if isinstance(objekt, (Token, elementarni, Nenavedeno, enum.Enum)) \
@@ -317,10 +338,18 @@ def prikaz(objekt, dubina:int, uvlaka:str='', ime:str=None):
         print(intro + type(objekt).__name__ + ':')
         for ime, vrijednost in objekt._asdict().items():
             prikaz(vrijednost, dubina-1, uvlaka+' '*2, ime)
+    elif isinstance(objekt, Memorija):
+        print(intro + type(objekt).__name__ + ':')
+        for ime, vrijednost in objekt:
+            prikaz(vrijednost, dubina-1, uvlaka+': ', repr(ime))
     elif isinstance(objekt, (RječnikAST, dict)):
         print(intro, end='{:::}:\n' if objekt else '{}\n')
         for ključ, vrijednost in dict(objekt).items():
             prikaz(vrijednost, dubina-1, uvlaka+': ', repr(ključ))
+    elif isinstance(objekt, tuple):
+        print(intro, end='(...):\n' if objekt else '()\n')
+        for vrijednost in objekt:
+            prikaz(vrijednost, dubina-1, uvlaka+', ')
     else: assert False, 'Ne znam lijepo prikazati ' + str(objekt)
 
 
@@ -367,6 +396,34 @@ def AST(atributi):
             new_kw = {k: AST_adapt(v) for k, v in kw.items()}
             return super().__new__(cls, *new_args, **new_kw)
     return AST1
+
+
+class Memorija:
+    """Simulira memoriju računala."""
+    #TODO: puno precizniji interfejs: Token > str pri stavljanju i dohvaćanju
+    def __init__(self, podaci=None, redefinicija=True):
+        self.podaci = {} if podaci is None else podaci
+        self.redefinicija = redefinicija
+
+    def dohvati(self, token):
+        if token in self.podaci: return self.podaci[token]
+        elif token.sadržaj in self.podaci: return self.podaci[token.sadržaj]
+        else: raise token.nedeklaracija()
+
+    def __getitem__(self, token): return self.dohvati(token)
+
+    def __contains__(self, token):
+        if token in self.podaci: return True
+        if isinstance(token, Token): return token.sadržaj in self.podaci
+
+    def __setitem__(self, token, vrijednost):
+        if not self.redefinicija and token in self: 
+            raise SemantičkaGreška('Redefinicija od {!r}'.format(token))
+        self.podaci[token] = vrijednost
+
+    def imena(self): return self.podaci.keys()
+
+    def __iter__(self): return iter(self.podaci.items())
 
 
 class NelokalnaKontrolaToka(Exception):

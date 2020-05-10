@@ -18,65 +18,58 @@ LOOP-program je slijed (jedne ili više) instrukcija sljedećeg oblika:
         puta koliki je broj bio u registru Rj na početku izvršavanja petlje
         (program može mijenjati Rj, ali to ne mijenja broj izvršavanja petlje).
 
-Npr. LOOP-program "R2{DECR2;} R3{INCR2;DECR3;}" premješta broj iz R3 u R2.
-"""
+Npr. LOOP-program "R2{DECR2;} R3{INCR2;DECR3;}" premješta broj iz R3 u R2."""
 
 from pj import *
 from backend import RAMStroj
 
 
-class LOOP(enum.Enum):
-    INC, DEC = 'INC', 'DEC'
-    TOČKAZ, VOTV, VZATV = ';{}'
-    
+class T(TipoviTokena):
+    TOČKAZ, VOTV, VZATV, INC, DEC = *';{}', 'inc', 'dec'
     class REG(Token):
         def broj(self): return int(self.sadržaj[1:])
 
-
-def loop_lex(prog):
-    lex = Tokenizer(prog)
-    for znak in iter(lex.čitaj, ''):
+def loop(lex):
+    for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak in 'ID':
-            lex.čitaj()  # 'N' ili 'E'
-            lex.čitaj()  # 'C'
-            yield lex.literal(LOOP)
+            lex.čitaj(), lex.čitaj()  # ('N' ili 'E'), 'C'
+            yield lex.literal(T, case=False)
         elif znak == 'R':
             lex.plus(str.isdigit)
-            yield lex.token(LOOP.REG)
-        else: yield lex.literal(LOOP)
+            yield lex.token(T.REG)
+        else: yield lex.literal(T)
 
 
 ### Beskontekstna gramatika:
 # program -> naredba | naredba program
-# naredba -> (INC | DEC) REG TOČKAZ | REG VOTV program VZATV
+# naredba -> INC REG TOČKAZ | DEC REG TOČKAZ | REG VOTV program VZATV
 
 ### Apstraktna sintaksna stabla:
-# Petlja: registar:REG, tijelo:Program
-# Inkrement: registar:REG
-# Dekrement: registar:REG
-# Program: naredbe:[Petlja|Inkrement|Dekrement]
+# naredba: Petlja: registar:REG, tijelo:Program
+#          Promjena: op:INC|DEC registar:REG
+# Program: naredbe:[naredba]
 
 
-class LOOPParser(Parser):
+class P(Parser):
     def program(self):
         naredbe = [self.naredba()]
-        while not self >= {E.KRAJ, LOOP.VZATV}: naredbe.append(self.naredba())
+        while not self >= {KRAJ, T.VZATV}: naredbe.append(self.naredba())
         return Program(naredbe)
 
     def naredba(self):
-        if self >> {LOOP.INC, LOOP.DEC}:
-            opkod = Inkrement if self.zadnji ^ LOOP.INC else Dekrement
-            reg = self.pročitaj(LOOP.REG)
-            self.pročitaj(LOOP.TOČKAZ)
-            return opkod(reg)
+        if self >> {T.INC, T.DEC}:
+            stablo = Promjena(self.zadnji, self.pročitaj(T.REG))
+            self.pročitaj(T.TOČKAZ)
+            return stablo
         else:
-            reg = self.pročitaj(LOOP.REG)
-            self.pročitaj(LOOP.VOTV)
+            reg = self.pročitaj(T.REG)
+            self.pročitaj(T.VOTV)
             tijelo = self.program()
-            self.pročitaj(LOOP.VZATV)
+            self.pročitaj(T.VZATV)
             return Petlja(reg, tijelo)
 
+    lexer = loop
     start = program
 
 
@@ -84,16 +77,17 @@ class Program(AST('naredbe')):
     def izvrši(self, stroj):
         for naredba in self.naredbe: naredba.izvrši(stroj)
 
-class Inkrement(AST('registar')):
-    def izvrši(self, stroj): stroj.inc(self.registar.broj())
+class Promjena(AST('op registar')):
+    def izvrši(self, stroj):
+        j = self.registar.broj()
+        if self.op ^ T.INC: stroj.inc(j)
+        elif self.op ^ T.DEC: stroj.dec(j)
+        else: assert False, 'Nepoznata operacija {}'.format(op)
 
-class Dekrement(AST('registar')):
-    def izvrši(self, stroj): stroj.dec(self.registar.broj())
-        
 class Petlja(AST('registar tijelo')):
     def izvrši(self, stroj):
-        for ponavljanje in range(stroj.registri[self.registar.broj()]):
-            self.tijelo.izvrši(stroj)
+        n = stroj.registri[self.registar.broj()]
+        for ponavljanje in range(n): self.tijelo.izvrši(stroj)
 
 
 def računaj(program, *ulazi):
@@ -102,20 +96,20 @@ def računaj(program, *ulazi):
     return stroj.rezultat
 
 
-if __name__ == '__main__':
-    power = LOOPParser.parsiraj(loop_lex('''\
-        INC R0;
-        R2{
-            R0{
-                R1 {INC R3;}
-                DEC R0;
-            }
-            R3{DECR3;INCR0;}
+power = P('''\
+    INC R0;
+    R2{
+        R0{
+            R1 {INC R3;}
+            DEC R0;
         }
-    '''))
-    prikaz(power, 9)
-    baza, eksponent = 3, 7
-    print(baza, '^', eksponent, '=', računaj(power, baza, eksponent))
+        R3{DECR3;INCR0;}
+    }
+''')
+prikaz(power, 9)
+baza, eksponent = 3, 7
+print(baza, '^', eksponent, '=', računaj(power, baza, eksponent))
+
 
 # DZ: napišite multiply i add (puno su jednostavniji od power)
 # DZ: Primitivno rekurzivne funkcije predstavljaju funkcijski programski jezik

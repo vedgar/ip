@@ -1,172 +1,160 @@
-"""Jednostavni SQL parser, samo za nizove CREATE i SELECT naredbi.
+"""Jednostavni parser SQLa, samo za nizove naredbi CREATE i SELECT.
 
 Ovaj fragment SQLa je zapravo regularan -- nigdje nema ugnježđivanja!
-Semantički analizator u obliku name resolvera:
-    provjerava jesu li svi selektirani stupci prisutni, te broji pristupe.
-Na dnu je lista ideja za dalji razvoj.
-"""
+Napisan je semantički analizator u obliku name resolvera:
+    provjerava jesu li svi selektirani stupci prisutni, te broji pristupe."""
 
 
 from pj import *
-from backend import PristupLog
-import pprint
 
 
-class SQL(enum.Enum):
-    class IME(Token): pass
-    class BROJ(Token): pass
+class T(TipoviTokena):
     SELECT, FROM, CREATE, TABLE = 'select', 'from', 'create', 'table'
     OTVORENA, ZATVORENA, ZVJEZDICA, ZAREZ, TOČKAZAREZ = '()*,;'
-
-
-def sql_lex(kôd):
-    lex = Tokenizer(kôd)
-    for znak in iter(lex.čitaj, ''):
-        if znak.isspace(): lex.zanemari()
-        elif znak.isdigit():
-            lex.zvijezda(str.isdigit)
-            yield lex.token(SQL.BROJ)
-        elif znak == '-':
-            lex.pročitaj('-')
-            lex.pročitaj_do('\n')
-            lex.zanemari()
-        elif znak.isalpha():
-            lex.zvijezda(str.isalnum)
-            yield lex.literal(SQL.IME, case=False)
-        else: yield lex.literal(SQL)
+    IME, BROJ = TipTokena(), TipTokena()
 
 
 ### Beskontekstna gramatika:
-# start -> naredba | naredba start
-# naredba -> ( select | create ) TOČKAZAREZ
-# select -> SELECT ( ZVJEZDICA | stupci ) FROM IME
+# start -> naredba start | naredba
+# naredba -> select TOČKAZAREZ | create TOČKAZAREZ
+# select -> SELECT ZVJEZDICA FROM IME | SELECT stupci FROM IME
 # stupci -> IME ZAREZ stupci | IME
 # create -> CREATE TABLE IME OTVORENA spec_stupci ZATVORENA
 # spec_stupci -> spec_stupac ZAREZ spec_stupci | spec_stupac
-# spec_stupac -> IME IME (OTVORENA BROJ ZATVORENA)?
+# spec_stupac -> IME IME | IME IME OTVORENA BROJ ZATVORENA
 
 ### Apstraktna sintaksna stabla:
-# Skripta: naredbe - niz SQL naredbi, svaka završava znakom ';'
-# Create: tablica, specifikacije - CREATE TABLE naredba
-# Select: tablica, stupci - SELECT naredba; stupci == nenavedeno za SELECT *
-# Stupac: ime, tip, veličina - specifikacija stupca u tablici (za Create)
+# Skripta: naredbe:[naredba]
+# naredba: Select: tablica:IME stupci:[IME]?
+#          Create: tablica:IME specifikacije:[Stupac]
+# Stupac: ime:IME tip:IME veličina:BROJ?
 
 
-class SQLParser(Parser):
+class P(Parser):
+    def lexer(lex):
+        for znak in lex:
+            if znak.isspace(): lex.zanemari()
+            elif znak.isalnum():
+                lex.zvijezda(str.isalnum)
+                if lex.sadržaj.isdigit(): yield lex.token(T.BROJ)
+                else: yield lex.literal(T.IME, case=False)
+            elif znak == '-':
+                lex.pročitaj('-'), lex.pročitaj_do('\n'), lex.zanemari()
+            else: yield lex.literal(T)
+
+    def start(self):
+        naredbe = [self.naredba()]
+        while not self >> KRAJ: naredbe.append(self.naredba())
+        return Skripta(naredbe)
+
     def select(self):
-        if self >> SQL.ZVJEZDICA: stupci = nenavedeno
-        elif self >> SQL.IME:
+        if self >> T.ZVJEZDICA: stupci = nenavedeno
+        elif self >> T.IME:
             stupci = [self.zadnji]
-            while self >> SQL.ZAREZ: stupci.append(self.pročitaj(SQL.IME))
+            while self >> T.ZAREZ: stupci.append(self.pročitaj(T.IME))
         else: raise self.greška()
-        self.pročitaj(SQL.FROM)        
-        return Select(self.pročitaj(SQL.IME), stupci)
+        self.pročitaj(T.FROM)        
+        return Select(self.pročitaj(T.IME), stupci)
 
     def spec_stupac(self):
-        ime, tip = self.pročitaj(SQL.IME), self.pročitaj(SQL.IME)
-        if self >> SQL.OTVORENA:
-            veličina = self.pročitaj(SQL.BROJ)
-            self.pročitaj(SQL.ZATVORENA)
+        ime, tip = self.pročitaj(T.IME), self.pročitaj(T.IME)
+        if self >> T.OTVORENA:
+            veličina = self.pročitaj(T.BROJ)
+            self.pročitaj(T.ZATVORENA)
         else: veličina = nenavedeno
         return Stupac(ime, tip, veličina)
 
     def create(self):
-        self.pročitaj(SQL.TABLE)
-        tablica = self.pročitaj(SQL.IME)
-        self.pročitaj(SQL.OTVORENA)
+        self.pročitaj(T.TABLE)
+        tablica = self.pročitaj(T.IME)
+        self.pročitaj(T.OTVORENA)
         stupci = [self.spec_stupac()]
-        while self >> SQL.ZAREZ: stupci.append(self.spec_stupac())
-        self.pročitaj(SQL.ZATVORENA)
+        while self >> T.ZAREZ: stupci.append(self.spec_stupac())
+        self.pročitaj(T.ZATVORENA)
         return Create(tablica, stupci)
 
     def naredba(self):
-        if self >> SQL.SELECT: rezultat = self.select()
-        elif self >> SQL.CREATE: rezultat = self.create()
+        if self >> T.SELECT: rezultat = self.select()
+        elif self >> T.CREATE: rezultat = self.create()
         else: raise self.greška()
-        self.pročitaj(SQL.TOČKAZAREZ)
+        self.pročitaj(T.TOČKAZAREZ)
         return rezultat
-
-    def start(self):
-        naredbe = [self.naredba()]
-        while not self >> E.KRAJ: naredbe.append(self.naredba())
-        return Skripta(naredbe)
 
 
 class Skripta(AST('naredbe')):
-    """Niz SQL naredbi, svaka završava znakom ';'."""
+    """Niz naredbi SQLa, svaka završava točkazarezom."""
     def razriješi(self):
-        imena = {}
+        imena = Memorija(redefinicija=False)
         for naredba in self.naredbe: naredba.razriješi(imena)
         return imena
 
 class Create(AST('tablica specifikacije')):
-    """CREATE TABLE naredba."""
+    """Naredba CREATE TABLE."""
     def razriješi(self, imena):
-        tb = imena[self.tablica.sadržaj] = {}
+        t = imena[self.tablica] = Memorija(redefinicija=True)
         for stupac in self.specifikacije:
-            tb[stupac.ime.sadržaj] = PristupLog(stupac.tip)
+            t[stupac.ime] = 0
         
 class Select(AST('tablica stupci')):
-    """SELECT naredba."""
+    """Naredba SELECT."""
     def razriješi(self, imena):
-        tn = self.tablica.sadržaj
-        if tn not in imena: raise self.tablica.nedeklaracija('nema tablice')
-        tb = imena[tn]
-        if self.stupci is nenavedeno:
-            for sl in tb.values(): sl.pristupi()
-        else:
-            for st in self.stupci:
-                sn = st.sadržaj
-                if sn not in tb:
-                    raise st.nedeklaracija('stupca nema u {}'.format(tn))
-                tb[sn].pristupi()
+        t = imena[self.tablica]
+        dohvaćeni = self.stupci
+        if dohvaćeni is nenavedeno: dohvaćeni = t.imena()
+        for stupac in dohvaćeni: t[stupac] += 1
 
 class Stupac(AST('ime tip veličina')): """Specifikacija stupca u tablici."""
 
 
-if __name__ == '__main__':
-    skripta = SQLParser.parsiraj(sql_lex('''\
-            CREATE TABLE Persons
-            (
-                PersonID int,
-                Name varchar(255),  -- neki stupci imaju zadanu veličinu
-                Birthday date,      -- a neki nemaju...
-                Married bool,
-                City varchar(9)     -- zadnji nema zarez!
-            );  -- Sada krenimo nešto selektirati
-            SELECT Name, City FROM Persons;
-            SELECT * FROM Persons;
-            CREATE TABLE Trivial (ID void(0));  -- još jedna tablica
-            SELECT*FROM Trivial;  -- između simbola i riječi ne mora ići razmak
-            SELECT Name, Married FROM Persons;
-            SELECT Name from Persons;
-    '''))
-    prikaz(skripta, 4)
-    # Skripta(naredbe=[
-    #   Create(tablica=IME'Persons', specifikacije=[
-    #     Stupac(ime=IME'PersonID', tip=IME'int', veličina=nenavedeno), 
-    #     Stupac(ime=IME'Name', tip=IME'varchar', veličina=BROJ'255'),
-    #     Stupac(ime=IME'Birthday', tip=IME'date', veličina=nenavedeno),
-    #     Stupac(ime=IME'Married', tip=IME'bool', veličina=nenavedeno),
-    #     Stupac(ime=IME'City', tip=IME'varchar', veličina=BROJ'9')
-    #   ]),
-    #   Select(tablica=IME'Persons', stupci=[IME'Name', IME'City']),
-    #   Select(tablica=IME'Persons', stupci=nenavedeno),
-    #   Create(tablica=IME'Trivial', specifikacije=
-    #     [Stupac(ime=IME'ID', tip=IME'void', veličina=BROJ'0')]),
-    #   Select(tablica=IME'Trivial', stupci=nenavedeno),
-    #   Select(tablica=IME'Persons', stupci=[IME'Name', IME'Married']),
-    #   Select(tablica=IME'Persons', stupci=[IME'Name'])
-    # ])
+def za_indeks(skripta):
+    for tablica, log in skripta.razriješi():
+        ukupni = brojač = 0
+        for stupac, pristup in log:
+            ukupni += pristup
+            brojač += 1
+        if not brojač: continue
+        prosjek = ukupni / brojač
+        for stupac, pristup in log:
+            if pristup > prosjek: yield tablica, stupac
 
-    #raise SystemExit
-    pprint.pprint(skripta.razriješi())
+
+skripta = P('''\
+    CREATE TABLE Persons
+    (
+        PersonID int,
+        Name varchar(255),  -- neki stupci imaju zadanu veličinu
+        Birthday date,      -- a neki nemaju...
+        Married bool,
+        City varchar(9)     -- zadnji nema zarez!
+    );  -- Sada krenimo nešto selektirati
+    SELECT Name, City FROM Persons;
+    SELECT * FROM Persons;
+    CREATE TABLE 2E3 (s t, s2 t);
+    SELECT*FROM 2E3; -- između simbola i riječi ne mora ići razmak
+    SELECT s FROM 2E3; -- ali između dvije riječi mora, naravno
+    SELECT Name, Married FROM Persons;
+    SELECT Name from Persons;
+''')
+prikaz(skripta, 4)
+for tablica, log in skripta.razriješi():
+    print('Tablica', tablica, '- stupci:')
+    for stupac, pristup in log: print('\t', stupac, pristup)
+i = 1
+for tablica, stupac in za_indeks(skripta):
+    t = tablica.sadržaj
+    s = stupac.sadržaj
+    print('CREATE INDEX idx{} ON {} ({});'.format(i, t, s))
+    i += 1
+
+with očekivano(SemantičkaGreška): P('SELECT * FROM nema;').razriješi()
+with očekivano(SemantičkaGreška):
+    P('CREATE TABLE mala (stupac int); SELECT drugi FROM mala;').razriješi()
+with očekivano(SintaksnaGreška): P('CREATE TABLE 2000 (s t);')
 
 # ideje za dalji razvoj:
-    # PristupLog.pristup umjesto samog broja može biti lista brojeva linija \
-    # skripte u kojima počinju SELECT naredbe koje pristupaju pojedinom stupcu
-    # za_indeks(skripta): lista natprosječno dohvaćivanih tablica/stupaca
-    # optimizacija: brisanje iz CREATE stupaca kojima nismo uopće pristupili
-    # implementirati INSERT INTO, da možemo doista nešto i raditi s podacima
-    # povratni tip za SELECT (npr. (varchar(255), bool) za predzadnji)
-    # interaktivni način rada (online - naredbu po naredbu analizirati)
+# * pristup stupcu umjesto samog broja može biti lista brojeva linija \
+#     skripte u kojima počinju SELECTovi koji pristupaju pojedinom stupcu
+# * optimizacija: brisanje iz CREATE stupaca kojima nismo uopće pristupili
+# * implementirati INSERT INTO, da možemo doista nešto i raditi s podacima
+# * povratni tip za SELECT (npr. (varchar(255), bool) za predzadnji)
+# * interaktivni način rada (online - analizirati naredbu po naredbu)

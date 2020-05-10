@@ -1,88 +1,72 @@
 """Renderer za XHTML dokumente koji sadrže samo liste.
-
-Kolokvij 2. veljače 2015. (Puljić)
-"""
+Kolokvij 2. veljače 2015. (Puljić)"""
 
 
 from pj import *
 
 
-class HTML(enum.Enum):
-    HTML, ZHTML = '<html>', '</html>'
-    HEAD, ZHEAD = '<head>', '</head>'
-    BODY, ZBODY = '<body>', '</body>'
-    OL, ZOL = '<ol>', '</ol>'
-    UL, ZUL = '<ul>', '</ul>'
-    LI, ZLI = '<li>', '</li>'
-    class TEXT(Token): pass
+class T(TipoviTokena):
+    HTML, HEAD, BODY = '<html>', '<head>', '<body>'
+    ZHTML, ZHEAD, ZBODY = '</html>', '</head>', '</body>'
+    OL,ZOL,UL,ZUL,LI,ZLI = '<ol>','</ol>','<ul>','</ul>','<li>','</li>'
+    class TEKST(Token):
+        def render(self): print(self.sadržaj, end=' ')
 
+def zatvoreni(tag): return T['Z' + tag.name]
 
-def html_lex(string):
-    lex = Tokenizer(string)
-    for znak in iter(lex.čitaj, ''):
+def html(lex):
+    for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak == '<':
             lex.pročitaj_do('>')
-            yield lex.literal(HTML)
+            yield lex.literal(T.TEKST, case=False)
         else:
             lex.zvijezda(lambda z: z and not z.isspace() and z != '<')
-            yield lex.token(HTML.TEXT)            
+            yield lex.token(T.TEKST)            
 
 
 ### Beskontekstna gramatika
-# dokument -> HTML HEAD tekst ZHEAD BODY tijelo ZBODY ZHTML
-# tekst -> TEXT | TEXT tekst
-# tijelo -> '' | element tijelo
-# element -> tekst | OL stavke ZOL | UL stavke ZUL
-# stavke -> LI element ZLI | LI element ZLI stavke
+# dokument -> HTML HEAD TEKST+ ZHEAD BODY element* ZBODY ZHTML
+# element -> TEKST | OL stavka+ ZOL | UL stavka+ ZUL
+# stavka -> LI element ZLI
 
 ### Apstraktna sintaksna stabla
-# Dokument: zaglavlje, tijelo
-# Lista: uređena:bool, stavke
-# Tekst: dijelovi
+# Dokument: zaglavlje:Tekst tijelo:[element]
+# element: Lista: vrsta:OL|UL stavke:[element]
+#          Tekst: dijelovi:[TEKST]
 
 
-class XLParser(Parser):
+class P(Parser):
+    lexer = html
+
     def start(self):
-        self.pročitaj(HTML.HTML)
-        self.pročitaj(HTML.HEAD)
+        self.pročitaj(T.HTML), self.pročitaj(T.HEAD)
         zaglavlje = self.tekst()
-        self.pročitaj(HTML.ZHEAD)
-        self.pročitaj(HTML.BODY)
-        tijelo = self.tijelo()
-        self.pročitaj(HTML.ZBODY)
-        self.pročitaj(HTML.ZHTML)
+        self.pročitaj(T.ZHEAD), self.pročitaj(T.BODY)
+        tijelo = []
+        while not self >> T.ZBODY: tijelo.append(self.element())
+        self.pročitaj(T.ZHTML)
         return Dokument(zaglavlje, tijelo)
         
     def tekst(self):
-        dijelovi = [self.pročitaj(HTML.TEXT)]
-        while self >> HTML.TEXT: dijelovi.append(self.zadnji)
+        dijelovi = [self.pročitaj(T.TEKST)]
+        while self >> T.TEKST: dijelovi.append(self.zadnji)
         return Tekst(dijelovi)
 
-    def tijelo(self):
-        sve = []
-        while not self >= HTML.ZBODY: sve.append(self.element())
-        return sve
-
     def element(self):
-        if self >> HTML.OL:
-            lista = Lista(True, self.stavke())
-            self.pročitaj(HTML.ZOL)
-            return lista
-        elif self >> HTML.UL:
-            lista = Lista(False, self.stavke())
-            self.pročitaj(HTML.ZUL)
-            return lista
-        elif self >= HTML.TEXT: return self.tekst()
+        if self >> {T.OL, T.UL}:
+            vrsta = self.zadnji
+            stavke = [self.stavka()]
+            while self >= T.LI: stavke.append(self.stavka())
+            self.pročitaj(zatvoreni(vrsta.tip))
+            return Lista(vrsta, stavke)
+        elif self >= T.TEKST: return self.tekst()
         else: raise self.greška()
 
-    def stavke(self):
-        self.pročitaj(HTML.LI)
-        rezultat = [self.element()]
-        self.pročitaj(HTML.ZLI)
-        while self >> HTML.LI:
-            rezultat.append(self.element())
-            self.pročitaj(HTML.ZLI)
+    def stavka(self):
+        self.pročitaj(T.LI)
+        rezultat = self.element()
+        self.pročitaj(T.ZLI)
         return rezultat
             
 
@@ -90,30 +74,31 @@ class Dokument(AST('zaglavlje tijelo')):
     def render(self):
         for element in self.tijelo: element.render(0, '')
     
-class Lista(AST('uređena stavke')):
+class Lista(AST('vrsta stavke')):
     def render(self, razina, prefiks):
         for i, stavka in enumerate(self.stavke, 1):
-            prefiks = '{:3}. '.format(i) if self.uređena else '  * '
+            if self.vrsta ^ T.OL: prefiks = '{:3}. '.format(i) 
+            elif self.vrsta ^ T.UL: prefiks = '  * '
             stavka.render(razina + 1, prefiks)
 
 class Tekst(AST('dijelovi')):
     def render(self, razina, prefiks):
-        if razina: print('\t' * razina, end=prefiks)
-        for dio in self.dijelovi: print(dio.sadržaj, end=' ')
+        print('\t' * razina, end=prefiks)
+        for dio in self.dijelovi: dio.render()
         print()
 
-r = XLParser.parsiraj(html_lex('''\
+r = P('''\
     <html>
         <head>
             bla   bla
         </head>
         <body>
-            12#hmm
+            &hmm;
             hm hm
             <ol>
-                <li>Ovo je prvi item.</li>
+                <li>Ovo je <a?> prvi item.</li>
                 <li>A ovo je drugi.</li>
-                <li> Ovo, pak, je   --- ne bi čovjek vjerovao --- treći.</li>
+                <li> Ovo je   --- ne bi čovjek vjerovao  --- treći.</li>
                 <li>
                     <ul>
                         <li>
@@ -126,24 +111,9 @@ r = XLParser.parsiraj(html_lex('''\
                 </li>
                 <li>nastavak...</li>
             </ol>
-            I još malo hm.<ul><li>uvučeno</li></ul>Hm.
+            I još malo<ul><li>uvučeno</li></ul>
         </body>
     </html>
-'''))
+''')
 prikaz(r, 7)
-# Dokument(zaglavlje=Tekst(dijelovi=[TEXT'bla', TEXT'bla']), tijelo=[
-#   Tekst(dijelovi=[TEXT'12#hmm', TEXT'hm', TEXT'hm']),
-#   Lista(uređena=True, stavke=[
-#     Tekst(dijelovi=[TEXT'Ovo', TEXT'je', TEXT'prvi', TEXT'item.']),
-#     Tekst(dijelovi=[TEXT'A', TEXT'ovo', TEXT'je', TEXT'drugi.']),
-#     Tekst(dijelovi=[TEXT'Ovo,', TEXT'pak,', TEXT'je', TEXT'---', TEXT'ne',
-#       TEXT'bi', TEXT'čovjek', TEXT'vjerovao', TEXT'---', TEXT'treći.']),
-#     Lista(uređena=False, stavke=[
-#       Lista(uređena=True, stavke=[
-#         Tekst(dijelovi=[TEXT'Trostruka', TEXT'dubina!'])]),
-#       Tekst(dijelovi=[TEXT'Dvostruka!'])]),
-#     Tekst(dijelovi=[TEXT'nastavak...'])]),
-#   Tekst(dijelovi=[TEXT'I', TEXT'još', TEXT'malo', TEXT'hm.']),
-#   Lista(uređena=False, stavke=[Tekst(dijelovi=[TEXT'uvučeno'])]),
-#   Tekst(dijelovi=[TEXT'Hm.'])])
 r.render()

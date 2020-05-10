@@ -7,84 +7,82 @@ Pokazuje se kako programirati jednostavne izuzetke od pravila BKG:
   konkretno, zabranjeni su izrazi poput (x+2)3, te (već leksički) 2 3.
 
 Semantički analizator je napravljen u obliku prevoditelja (kompajlera) u
-  klasu Polinom, čiji objekti podržavaju operacije prstena i lijep ispis.
-"""
+  klasu Polinom, čiji objekti podržavaju operacije prstena i lijep ispis."""
 
 
 from pj import *
 from backend import Polinom
 
 
-class AZ(enum.Enum):
+class T(TipoviTokena):
     PLUS, MINUS, PUTA, OTVORENA, ZATVORENA = '+-*()'
     class BROJ(Token):
         def vrijednost(self): return int(self.sadržaj)
         def prevedi(self): return Polinom.konstanta(self.vrijednost())
     class X(Token):
         literal = 'x'
-        def vrijednost(self):
-            raise NotImplementedError('Nepoznata vrijednost')
         def prevedi(self): return Polinom.x()
 
 
-def az_lex(izraz):
-    lex = Tokenizer(izraz)
-    for znak in iter(lex.čitaj, ''):
+def az(lex):
+    for znak in lex:
         if znak.isdigit():
             lex.zvijezda(str.isdigit)
-            yield lex.token(AZ.BROJ)
-        else: yield lex.literal(AZ)
+            yield lex.token(T.BROJ)
+        else: yield lex.literal(T)
 
 
 ### Beskontekstna gramatika:
 # izraz -> izraz PLUS član | izraz MINUS član | član
-# član -> član PUTA faktor | faktor | MINUS član | član faktor *>vidi ↓ 
-# faktor -> BROJ | X | X BROJ | OTVORENA izraz ZATVORENA
+# član -> član PUTA faktor | faktor | član faktor  *> osim: član BROJ!
+# faktor -> MINUS faktor | BROJ | X | X BROJ | OTVORENA izraz ZATVORENA
+
+### Apstraktna sintaksna stabla:
+# izraz: BROJ: Token
+#        X: Token
+#        Zbroj: lijevo:izraz desno:izraz
+#        Umnožak: lijevo:izraz desno:izraz
+#        Suprotan: od:izraz
+#        Xna: eksponent:BROJ
 
 
-class AZParser(Parser):
+class P(Parser):
     def izraz(self):
-        trenutni = self.član()
+        t = self.član()
         while True:
-            if self >> AZ.PLUS: trenutni = Zbroj(trenutni, self.član())
-            elif self >> AZ.MINUS:
-                član = self.član()
-                trenutni = Zbroj(trenutni, Suprotan(član))  # a-b:=a+(-b)
-            else: break
-        return trenutni
+            if self >> T.PLUS: t = Zbroj(t, self.član())
+            elif self >> T.MINUS: t = Zbroj(t, Suprotan(self.član()))
+            else: return t
 
     def član(self):
-        if self >> AZ.MINUS: return Suprotan(self.član())
         trenutni = self.faktor()
         while True:
-            if self>>AZ.PUTA or self>={AZ.X,AZ.OTVORENA}:  # ali ne BROJ!
-                trenutni = Umnožak(trenutni,self.faktor())
+            if self >> T.PUTA or self >= {T.X, T.OTVORENA}:  # ne BROJ!
+                trenutni = Umnožak(trenutni, self.faktor())
             else: return trenutni
 
     def faktor(self):
-        if self >> AZ.BROJ: return self.zadnji
-        elif self >> AZ.X:
-            x = self.zadnji  # spremimo x jer donji >> uništi self.zadnji
-            if self >> AZ.BROJ: return Xna(self.zadnji)
+        if self >> T.MINUS: return Suprotan(self.faktor())
+        elif self >> T.BROJ: return self.zadnji
+        elif self >> T.X:
+            x = self.zadnji  # zapamtimo ga jer ga sljedeća naredba uništi
+            if self >> T.BROJ: return Xna(self.zadnji)
             else: return x
-        elif self >> AZ.OTVORENA:
+        elif self >> T.OTVORENA:
             u_zagradi = self.izraz()
-            self.pročitaj(AZ.ZATVORENA)
+            self.pročitaj(T.ZATVORENA)
             return u_zagradi
         else: raise self.greška()
 
+    lexer = az
     start = izraz
 
 
 class Zbroj(AST('lijevo desno')):
-    def prevedi(self):
-        l, d = self.lijevo.prevedi(), self.desno.prevedi()
-        return l + d
+    def prevedi(self): return self.lijevo.prevedi() + self.desno.prevedi()
     
 class Umnožak(AST('lijevo desno')):
-    def prevedi(self):
-        l, d = self.lijevo.prevedi(), self.desno.prevedi()
-        return l * d
+    def prevedi(self): return self.lijevo.prevedi() * self.desno.prevedi()
 
 class Suprotan(AST('od')):
     def prevedi(self): return -self.od.prevedi()
@@ -93,13 +91,13 @@ class Xna(AST('eksponent')):
     def prevedi(self): return Polinom.x(self.eksponent.vrijednost())
 
 
-def izračunaj(zadatak):
-    print(zadatak, '=', AZParser.parsiraj(az_lex(zadatak)).prevedi())
+def izračunaj(zadatak): print(zadatak, '=', P(zadatak).prevedi())
 
-if __name__ == '__main__':
-    izračunaj('(5+2*8-3)(3-1)-(-4+2*19)')
-    izračunaj('x-2+5x-(7x-5)')
-    izračunaj('(((x-2)x+4)x-8)x+7')
-    izračunaj('xx-2x+3')
-    izračunaj('(x+1)' * 7)
-    izračunaj('-'.join(['(x2-2x3-(7x+5))'] * 2))
+izračunaj('(5+2*8-3)(3-1)-(-4+2*19)')
+izračunaj('x-2+5x-(7x-5)')
+izračunaj('(((x-2)x+4)x-8)x+7')
+izračunaj('xx-2x+3')
+izračunaj('(x+1)' * 7)
+izračunaj('-'.join(['(x2-2x3-(7x+5))'] * 2))
+with očekivano(SintaksnaGreška): izračunaj('(x)x+(x)3')
+with očekivano(LeksičkaGreška): izračunaj('x x')
