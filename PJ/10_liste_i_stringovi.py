@@ -96,7 +96,7 @@ if __name__ == '__main__':
     prikaz(ast, 4)
     print(ast.vrijednost())
 
-# DZ: sve više jezika dopušta "zarez na kraju" stil pisanja listi
-#     (npr. [2,3,] je isto što i [2,3]) -- omogućite to!
+# DZ: sve više jezika dopušta stil pisanja listi s opcionalnim zarezom na kraju
+#     ([2,3,] je isto što i [2,3]) -- omogućite to (u gramatici gore već jest)!
 # DZ: omogućite razne druge \-escape sekvence (npr. \u za znakove Unikoda)
 # DZ: omogućite izraze umjesto literala: polimorfni + za zbrajanje/konkatenaciju
