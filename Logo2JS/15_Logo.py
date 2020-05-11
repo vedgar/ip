@@ -20,8 +20,8 @@ alias = {'fd': T.FORWARD, 'fw': T.FORWARD,
 def logo(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
-        elif znak.isdigit():
-            lex.zvijezda(str.isdigit)
+        elif znak.isdecimal():
+            lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
         elif znak.isalpha():
             lex.zvijezda(str.isalpha)
@@ -121,8 +121,8 @@ def nacrtaj_sve():
         nacrtaj(crtež)
         time.sleep(8)
 
-# nacrtaj('Hi')
-nacrtaj_sve()
+nacrtaj('pisanje')
+# nacrtaj_sve()
 
 # DZ: pogledati http://www.mathcats.com/gallery/15wordcontest.html
 #     i implementirati neke od tih crteža (za mnoge trebaju varijable!)

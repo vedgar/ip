@@ -26,8 +26,8 @@ class T(TipoviTokena):
 
 def an(lex):
     for znak in lex:
-        if znak.isdigit():
-            if znak != '0': lex.zvijezda(str.isdigit)
+        if znak.isdecimal():
+            lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
         else: yield lex.literal(T)
 
@@ -93,9 +93,7 @@ class Zbroj(AST('pribrojnici')):
         else: return Zbroj([a, b])
 
     def prevedi(izraz):
-        a, b = izraz.pribrojnici
-        yield from a.prevedi()
-        yield from b.prevedi()
+        for pribrojnik in izraz.pribrojnici: yield from pribrojnik.prevedi()
         yield ['ADD']
 
 
@@ -113,9 +111,7 @@ class Umnožak(AST('faktori')):
         else: return Umnožak([a, b])
 
     def prevedi(izraz):
-        a, b = izraz.faktori
-        yield from a.prevedi()
-        yield from b.prevedi()
+        for faktor in izraz.faktori: yield from faktor.prevedi()
         yield ['MUL']
 
 
@@ -164,3 +160,4 @@ testiraj('1+2*3^4+0*5^6*7+8*9')
 with očekivano(LeksičkaGreška): testiraj('2 3')
 with očekivano(SintaksnaGreška): testiraj('2+')
 with očekivano(SintaksnaGreška): testiraj('(2+3)45')
+with očekivano(LeksičkaGreška): testiraj('3+02')

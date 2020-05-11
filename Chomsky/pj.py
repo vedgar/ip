@@ -38,7 +38,7 @@ class Tokenizer:
 
     def čitaj(self):
         """Čita sljedeći znak iz buffera ili stringa."""
-        znak = self.buffer or next(self.stream, '')
+        znak = next(self.stream, '') if self.buffer is None else self.buffer
         self.pročitani.append(znak)
         self.buffer = None
         if znak == '\n':
@@ -50,7 +50,7 @@ class Tokenizer:
 
     def vrati(self):
         """Poništava čitanje zadnjeg pročitanog znaka."""
-        assert not self.buffer, 'Buffer je pun'
+        assert self.buffer is None, 'Buffer je pun'
         self.buffer = self.pročitani.pop()
         if self.j: self.j -= 1
         else:
@@ -87,17 +87,18 @@ class Tokenizer:
         if znak != self.čitaj():
             raise self.greška('očekivano {!r}'.format(znak))
 
-    def pročitaj_do(self, znak, uključivo=True):
+    def pročitaj_do(self, znak, *, uključivo=True, više_redova=False):
         """Čita sve znakove do zadanog znaka."""
         assert len(znak) == 1, 'Duljina terminatora {} mora biti 1'.format(znak)
-        self.zvijezda(lambda z: z and z != znak)
+        if više_redova: self.zvijezda(uvjet = lambda z: z and z != znak)
+        else: self.zvijezda(lambda z: z and z != '\n' and z != znak)
         if self.pogledaj() != znak:
             raise self.greška('{!r} nije pronađen'.format(znak))
         if uključivo: self.pročitaj(znak)
 
     def greška(self, info=''):
         """Konstruira leksičku grešku."""
-        if self.buffer: self.čitaj()
+        if self.buffer is not None: self.čitaj()
         if self.j: pozicija = self.i, self.j
         else: pozicija = self.i - 1, self.gornji_j + 1
         poruka = 'Redak {}, stupac {}: '.format(*pozicija)
@@ -137,8 +138,26 @@ class Tokenizer:
         """Omogućuje prolazak `for znak in lex:`."""
         return iter(self.čitaj, '')
 
+    def prirodni_broj(self, početak='', *, nula=True):
+        """Čita prirodni broj bez vodećih nula, ili (ako je dozvoljena) nulu."""
+        if not početak: početak = self.čitaj()
+        if početak.isdecimal():
+            if int(početak):
+                pročitano = [početak]
+                while True:
+                    znak = self.čitaj()
+                    if znak.isdecimal(): pročitano.append(znak)
+                    else: break
+                self.vrati()
+                return int(''.join(pročitano))
+            elif nula:
+                if not self.pogledaj().isdecimal(): return 0
+                else: raise self.greška('vodeće nule nisu dozvoljene')
+            else: raise self.greška('nula nije dozvoljena ovdje')
+        else: raise self.greška('očekivan prirodni broj')
 
-class E(enum.Enum):  # Everywhere
+
+class E(TipoviTokena):  # Everywhere
     """Često korišteni tipovi tokena, neovisno o konkretnom jeziku."""
     KRAJ = None        # End
     # GREŠKA = '\x00'  # Error
@@ -279,7 +298,7 @@ class Parser:
 
     def vrati(self):
         """Poništavanje čitanja zadnjeg pročitanog tokena."""
-        assert not self.buffer, 'Buffer je pun'
+        assert self.buffer is None, 'Buffer je pun'
         self.buffer = self.zadnji
 
     pogledaj = Tokenizer.pogledaj
@@ -320,6 +339,7 @@ def AST_adapt(component):
         if None in component or None in component.values():
             raise NoneInAST(component)
         return RječnikAST(component.items())
+    elif isinstance(component, Memorija): return AST_adapt(component.podaci)
     elif component is None: raise NoneInAST(component)
     else: raise TypeError('Nepoznat tip komponente {}'.format(type(component)))
 

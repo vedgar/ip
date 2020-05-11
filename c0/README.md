@@ -9,3 +9,5 @@ struct, typedef, operator . , operator ->, #use
 
 ## Što jesmo implementirali...
 Sve ostalo. Testni primjeri su u main.py i moguće je dodati nove appendanjem novog stringa u listu programi.
+
+                                        Lena Kamenjaš i Vedran Vinković

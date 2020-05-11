@@ -1,65 +1,58 @@
-﻿# Tipovi tokena #
-#################
-
-class TT(enum.Enum):
-	OPERATOR1, OPERATOR2, OPERATOR3 = '+-*'
-	OPERATOR4, OPERATOR5 = '&&', '<=>'
-	KLJUČNARIJEČ = 'ključnariječ'
-	class TIPTOKENA(Token): ...listovi AST metoda...
-
-(E.GREŠKA, E.PRAZNO, E.KRAJ, E.VIŠAK već postoje)
-
-# Leksička analiza #
+﻿# Leksička analiza #
 ####################
 
-lex = Tokenizer(string)
+class T(TipoviTokena):
+        OPERATOR1, OPERATOR2, OPERATOR3 = '+-*'
+        OPERATOR4, OPERATOR5 = '&&', '<=>'
+        KLJUČNARIJEČ = 'ključnariječ'
+        JOŠNEKITIP = TipTokena()
+        class TIPTOKENA(Token): ...listovi AST metoda...
 
-Low level API:
-	znak = lex.čitaj()
-	lex.vrati()
-	pročitano = lex.sadržaj
-	yield lex.token(tip_tokena)
-	raise LeksičkaGreška(...)
-	lex.i, lex.j
-High level API:
-	lex.zvijezda(str.is...), lex.plus(...)
-	for znak in iter(lex.čitaj, ''):
-	lex.pročitaj(znak)
-	lex.pročitaj_do(znak, uključivo=True ili False)
-	if lex.slijedi(znak):
-	raise lex.greška()
-	yield lex.literal(TT ili TT.DEFAULT, case=True ili False)
+def mojlexer(lex):
+    for znak in lex:
+        if znak ...
+
+Low level API:              High level API:
+--------------              ---------------
+znak = lex.čitaj()          lex.zvijezda(str.is...), lex.plus(...)
+lex.vrati()                 lex.pročitaj(znak)
+pročitano = lex.sadržaj     lex.pročitaj_do(znak, uključivo:bool)
+yield lex.token(T.TIP)      if lex >> znak:  # sljedeće je pročitan znak
+raise LeksičkaGreška(…)     raise lex.greška(info:str)
+lex.i                       yield lex.literal(T ili T.DEFAULT, case:bool)
+lex.j                       lex.prirodni_broj(početak, nula:bool)
 
 # Sintaksna analiza (Parsiranje) #
 ##################################
 
 Za izraze: * popišemo sve operatore
-	   * rasporedimo ih u hijerarhiju razina po prioritetima
-	   * svakoj razini pridijelimo asociranost
+           * rasporedimo ih u hijerarhiju razina po prioritetima
+           * svakoj razini pridijelimo asociranost
 Napomene: * asociranost nema veze s asocijativnošću!
-	  * prioritet nema veze s redoslijedom izvođenja!
+          * prioritet nema veze s redoslijedom izvođenja!
 
-* napišemo beskontekstnu gramatiku! (ne preskakati ovaj korak!:)
+* napišemo beskontekstnu gramatiku! (ne preskakati ovaj korak!)
 * svakoj varijabli (otprilike) odgovara jedna metoda parsera
+. postfiksni, i infiksni lijevo asocirani, operatori: iteracija (petlja)
+. prefiksni, i infiksni desno asocirani, operatori, te zagrade: rekurzija
 
-postfiksni, i infiksni lijevo asocirani, operatori: iteracija (petlja)
-prefiksni, i infiksni desno asocirani, operatori, te zagrade: rekurzija
+    class P(Parser):
+        def v1(self):
+            if self >> PRVITIP: ...  # sljedeći je PRVITIP (pročitan)
+                elif self >> {DRUGITIP, TREĆITIP}: ...  # jedan od tipova
+                else:
+                    self.pročitaj(MORABITIOVAJTIP)
+                    # self.zadnji: zadnji pročitani token
+                    return NekoApstraktnoStablo(tokeni...)
+                ili else: raise self.greška()
+        def v2(self):
+            if self >= PRVITIP: ...  # sljedeći je PRVITIP (nepročitan)
 
-class MojParser(Parser):
-	def v1(self):
-		if self >> PRVITIP: ...  # sljedeći je PRVITIP (pročitan)
-		elif self >> {DRUGITIP, TREĆITIP}: ...  # jedan od tipova
-		else:
-			self.pročitaj(MORABITIOVAJTIP)
-			return NekoApstraktnoStablo(tokeni...)
-			self.zadnji: zadnji pročitani token
-		ili else: raise self.greška()
-	def v2(self):
-		if self >= PRVITIP: ...  # sljedeći je PRVITIP (nepročitan)
+        lexer = mojlexer  # ili koji već
+        start = v1        # ili koja već
 
-	start = v1 (ili koja već)
-
-stablo = MojParser.parsiraj(moj_lex(string))
+P.tokeniziraj(string)  # inkrementalno, korisno samo za debug
+stablo = P(string)
 
 # Semantička analiza #
 ######################
@@ -70,29 +63,38 @@ class DrugoApstraktnoStablo(AST('atribut1 atribut2')): ...
 
 * te klase imaju metode koje rade dalju semantičku analizu
   (ili je možemo raditi u globalnoj funkciji pomoću operatora ^)
-- metode su najčešće rekurzivne, i baza je zadana na tipovima tokena
+- metode su najčešće rekurzivne, s bazom zadanom na tipovima tokena
 - često primaju parametar (mem), koji predstavlja stanje memorije:
-  preslikavanje (dict) stringova (imena varijabli) u vrijednosti
-  . pomoćna funkcija pogledaj(mem, token): kao mem[token.sadržaj],
-    ali javlja grešku nedeklariranih varijabli ako ih nema u mem
-- pretvaranje u nativne (Pythonove) tipove: tip(token.sadržaj...)
+  preslikavanje (Memory) tokena ili stringova (varijabli) u vrijednosti
+- pretvaranje u nativne (Pythonove) tipove: Python_tip(token.sadržaj...)
 
 * primjeri: def vrijednost(self, mem): ... # vraća neki nativni objekt
             def izvrši(self, mem): ... # ne vraća ništa, mijenja mem
             def optimiziraj(self): ... # vraća novo (ili isto) AST
 
-Izvođenje: preslikavanjem na Pythonove alate (slijed, grananje, petlje)
-class Grananje(AST('uvjet onda inače')):
-	def izvrši(self, mem):
-		if self.uvjet.vrijednost(mem): self.onda.izvrši(mem)
-		else: self.inače.izvrši(mem)
+* Typechecking: Preslikavanje symtab -- kao mem, samo što ne preslikava
+  imena varijabli u njihove vrijednosti nego u njihove statičke tipove
+
+# Izvođenje #
+#############
+
+Uglavnom preslikavanjem na Pythonove alate (slijed, grananje, petlje).
+    npr. class Grananje(AST('uvjet onda inače')):
+            def izvrši(self, mem):
+               if self.uvjet.vrijednost(mem): self.onda.izvrši(mem)
+               else: self.inače.izvrši(mem)
+
 * Nelokalna kontrola toka (break, continue, return, throw, goto): izuzeci
-. class Prekid(Exception): diže ga Break.izvrši, hvata ga Petlja.izvrši
-. class Povratak(Exception): diže ga Return.izvrši, hvata ga Poziv.izvrši
+  . class Prekid(NelokalnaKontrolaToka):
+        u Break.izvrši... raise Prekid
+        u Petlja.izvrši... except Prekid: break
+  . class Povratak(NelokalnaKontrolaToka): 
+        u Return.izvrši... raise Povratak(povratnavrijednost)
+        u Poziv.izvrši... except Povratak as ex: return ex.preneseno
 
 * Kod funkcijskih poziva, iskonstruiramo novi lokalni mem (scope) koji
-  preslikava parametre deklaracije funkcije u argumente funkcijskog poziva
-  i u njemu izvršimo tijelo funkcije
+  preslikava parametre deklaracije funkcije u argumente poziva funkcije
+  (ili u njihove vrijednosti) i u njemu izvršimo tijelo funkcije
 
-Typechecking: Preslikavanje symtab - kao mem, samo ne preslikava
-imena varijabli u njihove vrijednosti nego u njihove statičke tipove
+* raise token.izuzetak(ex:Exception ili info:str): prijava grešaka
+  izvođenja vezanih uz token (i time uz lokaciju u kodu -- debug symbols)

@@ -1,3 +1,6 @@
+"""Stara verzija frameworka PJ, služi samo za podršku interpretera C0.
+Ne koristiti u novijim programima!"""
+
 import enum, types, collections, contextlib
 
 

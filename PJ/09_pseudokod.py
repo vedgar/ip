@@ -62,8 +62,8 @@ def pseudokod_lexer(lex):
         elif znak.isupper():
             lex.zvijezda(str.isalnum)
             yield lex.literal(T.LIME)
-        elif znak.isdigit():
-            lex.zvijezda(str.isdigit)
+        elif znak.isdecimal():
+            lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
         elif znak == '#':
             lex.pročitaj_do('\n')
@@ -309,6 +309,7 @@ with očekivano(SemantičkaGreška): P('f(x)=() f(x)=()')
 with očekivano(SintaksnaGreška):
     P('f(x) = vrati 7    program() = vrati f(Laž)')
 with očekivano(SintaksnaGreška): izvrši(P('program() = vrati2'))
+with očekivano(LeksičkaGreška): P('program() = vrati 007')
 
 modul = '''\
 Negacija(V) = ako je V vrati Laž inače vrati Istina

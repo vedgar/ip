@@ -1,9 +1,10 @@
 r"""Interpreter za programski "jezik" koji reprezentira liste.
 Liste se pišu kao [x1,x2,...,xk], svaki xi može biti broj, string ili lista.
+Neprazne liste mogu imati "viseći zarez" prije zatvorene uglate zagrade.
 Brojevi su samo prirodni (veći od 0).
 Stringovi se pišu kao "...", gdje unutar ... ne smije biti znak ".
 Stringovi se mogu pisati i kao '...', gdje unutar ... nema znaka '.
-Zapravo, "..."-stringovi smiju sadržavati i ", ali escape-ane znakom \.
+Zapravo, "..."-stringovi smiju sadržavati i ", ali uvedene znakom \.
 Dakle, \" označava ". \n označava novi red. \\ označava \.
 Unutar '...'-stringova \ nema nikakvo posebno značenje."""
 
@@ -37,8 +38,8 @@ class T(TipoviTokena):
 def listlexer(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
-        elif znak.isdigit() and znak != '0':
-            lex.zvijezda(str.isdigit)
+        elif znak.isdecimal():
+            lex.prirodni_broj(znak, nula=False)
             yield lex.token(T.BROJ)
         elif znak == N1:
             lex.pročitaj_do(N1)
@@ -46,12 +47,13 @@ def listlexer(lex):
         elif znak == N2:
             while True:
                 z = lex.čitaj()
-                if not z: raise lex.greška('Nezavršeni string!')
+                if not z or z == NOVIRED:
+                    raise lex.greška('nezavršeni string do kraja retka!')
                 elif z == BKSL: lex.čitaj()
-                elif z == N2:
-                    yield lex.token(T.STRING2)
-                    break
+                elif z == N2: break
+            yield lex.token(T.STRING2)
         else: yield lex.literal(T)
+
 
 ## Beskontekstna gramatika
 # element -> BROJ | STRING1 | STRING2 | lista
@@ -64,22 +66,15 @@ def listlexer(lex):
 #          STRING1: Token
 #          STRING2: Token
 
-class P(Parser):
-    def lista(self):
-        self.pročitaj(T.UOTV)
-        el = self.elementi()
-        self.pročitaj(T.UZATV)
-        return Lista(el)
-        
-    def elementi(self):
-        rezultat = []
-        if not self >= T.UZATV:
-            rezultat.append(self.element())
-            while self >> T.ZAREZ: rezultat.append(self.element())
-        return rezultat
 
+class P(Parser):
     def element(self):
-        if self >= T.UOTV: return self.lista()
+        if self >> T.UOTV:
+            if self >> T.UZATV: return Lista([])
+            el = [self.element()]
+            while self>>T.ZAREZ and not self>=T.UZATV: el.append(self.element())
+            self.pročitaj(T.UZATV)
+            return Lista(el)
         else: return self.pročitaj(T.BROJ, T.STRING1, T.STRING2)
     
     lexer = listlexer 
@@ -90,10 +85,10 @@ class Lista(AST('elementi')):
     def vrijednost(self): return [el.vrijednost() for el in self.elementi]
 
 
-lista = r'''
-    [23, "ab\"c]", 'a[]', [2, 3], 523,
-    '"', '\', "\e", "\\"]
-'''
+lista = r"""
+    [23, "ab\"c]", 'a[]', [2, 3, ], 523, [1,2,2,3],
+    '"', '\', "\e", "\\", '']
+"""
 print(lista)
 P.tokeniziraj(lista)
 ast = P(lista)
@@ -101,7 +96,5 @@ prikaz(ast, 2)
 print(ast.vrijednost())
 
 
-# DZ: sve više jezika dopušta "zarez na kraju" stil pisanja listi
-#     (npr. [2,3,] je isto što i [2,3]) -- omogućite to!
 # DZ: omogućite razne druge \-escape sekvence (npr. \u za znakove Unikoda)
 # DZ: omogućite izraze umjesto literala: polimorfni + za zbrajanje/konkatenaciju

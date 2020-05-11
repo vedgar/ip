@@ -38,15 +38,8 @@ def cpp(lex):
         elif znak.isalpha():
             lex.zvijezda(identifikator)
             yield lex.literal(T.IME)
-        elif znak == '0':
-            sljedeći = lex.pogledaj()
-            if sljedeći.isdigit(): baza = 8
-            elif sljedeći.casefold() == 'x': baza = 16
-            else: baza = 10
-            if baza == 10: yield lex.token(T.BROJ)
-            else: raise lex.greška('baza {} nije podržana'.format(baza))
-        elif znak.isdigit():
-            lex.zvijezda(str.isdigit)
+        elif znak.isdecimal():
+            lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
         else: yield lex.literal(T)
 

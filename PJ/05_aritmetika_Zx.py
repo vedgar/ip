@@ -26,16 +26,17 @@ class T(TipoviTokena):
 
 def az(lex):
     for znak in lex:
-        if znak.isdigit():
-            lex.zvijezda(str.isdigit)
+        if znak.isdecimal():
+            lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
         else: yield lex.literal(T)
 
 
 ### Beskontekstna gramatika:
 # izraz -> izraz PLUS član | izraz MINUS član | član
-# član -> član PUTA faktor | faktor | član faktor  *> osim: član BROJ!
-# faktor -> MINUS faktor | BROJ | X | X BROJ | OTVORENA izraz ZATVORENA
+# član -> član PUTA faktor | faktor | član faktorxz
+# faktorxz -> X | X BROJ | OTVORENA izraz ZATVORENA
+# faktor -> MINUS faktor | BROJ | faktorxz
 
 ### Apstraktna sintaksna stabla:
 # izraz: BROJ: Token
@@ -56,10 +57,9 @@ class P(Parser):
 
     def član(self):
         trenutni = self.faktor()
-        while True:
-            if self >> T.PUTA or self >= {T.X, T.OTVORENA}:  # ne BROJ!
-                trenutni = Umnožak(trenutni, self.faktor())
-            else: return trenutni
+        while self >> T.PUTA or self >= {T.X, T.OTVORENA}:
+            trenutni = Umnožak(trenutni, self.faktor())
+        return trenutni
 
     def faktor(self):
         if self >> T.MINUS: return Suprotan(self.faktor())
@@ -99,5 +99,6 @@ izračunaj('(((x-2)x+4)x-8)x+7')
 izračunaj('xx-2x+3')
 izračunaj('(x+1)' * 7)
 izračunaj('-'.join(['(x2-2x3-(7x+5))'] * 2))
+izračunaj('x0+x0')
 with očekivano(SintaksnaGreška): izračunaj('(x)x+(x)3')
 with očekivano(LeksičkaGreška): izračunaj('x x')

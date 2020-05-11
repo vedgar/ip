@@ -1,6 +1,6 @@
 pu  fd  100
 
-repeat 5 [
+repeat 9 [
 pu  fd 80  pd  bk 80  rt 90  fd 50
 pu   fd 6
 

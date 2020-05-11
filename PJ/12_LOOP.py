@@ -32,11 +32,11 @@ class T(TipoviTokena):
 def loop(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
-        elif znak in 'ID':
+        elif znak.casefold() in 'id':
             lex.čitaj(), lex.čitaj()  # ('N' ili 'E'), 'C'
             yield lex.literal(T, case=False)
         elif znak == 'R':
-            lex.plus(str.isdigit)
+            lex.prirodni_broj()
             yield lex.token(T.REG)
         else: yield lex.literal(T)
 
@@ -96,6 +96,7 @@ def računaj(program, *ulazi):
     return stroj.rezultat
 
 
+with očekivano(LeksičkaGreška): P.tokeniziraj('inc R00')
 power = P('''\
     INC R0;
     R2{
@@ -111,11 +112,11 @@ baza, eksponent = 3, 7
 print(baza, '^', eksponent, '=', računaj(power, baza, eksponent))
 
 
-# DZ: napišite multiply i add (puno su jednostavniji od power)
+# DZ: napišite multiply i add (mnogo su jednostavniji od power)
 # DZ: Primitivno rekurzivne funkcije predstavljaju funkcijski programski jezik
 # **  u kojem postoje inicijalne funkcije [nul Z(x)=0, sljedbenik Sc(x)=x+1, te
 #     koordinatne projekcije Ink(x1,...,xk)=xn za sve prirodne 1 <= n <= k].
-#     Također postoji operator kompozicije [f(xs)=h(g1(xs),...,gl(xs))]
+#     Također postoje operatori kompozicije [f(xs)=h(g1(xs),...,gl(xs))]
 #     i primitivne rekurzije [f(xs,0)=g(xs); f(xs,y+1)=h(xs,y,f(xs,y))].
 #     Napišite kompajler jezika primitivno rekurzivnih funkcija u LOOP.
 #     (Uputa: prvo položite, ili barem odslušajte, Izračunljivost!;)

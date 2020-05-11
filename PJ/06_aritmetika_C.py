@@ -29,10 +29,10 @@ def ac(lex):
         if znak.isspace(): lex.zanemari()
         elif znak == '-': yield lex.token(T.STRELICA if lex >> '>' else T.MINUS)
         elif znak == '*': yield lex.token(T.NA if lex >> '*' else T.PUTA)
-        elif znak.isdigit():
-            lex.zvijezda(str.isdigit)
-            if lex >> '.': lex.zvijezda(str.isdigit)
-            if lex >> 'e': lex >> '-', lex.plus(str.isdigit)
+        elif znak.isdecimal():
+            lex.zvijezda(str.isdecimal)
+            if lex >> '.': lex.zvijezda(str.isdecimal)
+            if lex >> 'e': lex >> '-', lex.plus(str.isdecimal)
             yield lex.token(T.BROJ)
         elif znak.isalpha():
             lex.zvijezda(str.isalnum)

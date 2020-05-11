@@ -109,7 +109,8 @@ prikaz(F)
 print(istinitost(F, P0=False, P3=True, P5=False))  # True
 
 for krivo in 'P00', 'P1\nP2', 'P34<>P56':
-    with očekivano(LeksičkaGreška): print(P.tokeni(krivo))
+    with očekivano(LeksičkaGreška): print(P.tokeniziraj(krivo))
+
 
 # DZ: implementirajte još neke optimizacije: npr. F|!G u G->F.
 # DZ: Napravite totalnu optimizaciju negacije: svaka formula s najviše jednim !

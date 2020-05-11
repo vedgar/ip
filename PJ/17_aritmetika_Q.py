@@ -13,8 +13,8 @@ class T(TipoviTokena):
 
 def aq(lex):
     for znak in lex:
-        if znak.isdigit():
-            lex.zvijezda(str.isdigit)
+        if znak.isdecimal():
+            lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
         elif identifikator(znak):
             lex.zvijezda(identifikator)
@@ -31,7 +31,10 @@ def aq(lex):
 # faktor -> MINUS faktor | BROJ | IME | OTV izraz ZATV
 
 ### AST
-# Pridruži: ime:IME što:izraz
+# Program: pridruživanja:[(IME,izraz)]
+# izraz: BROJ: Token
+#        IME: Token
+#        Op: op:PLUS|MINUS|PUTA|KROZ lijevo:izraz? desno:izraz
 
 
 class P(Parser):

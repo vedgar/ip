@@ -16,8 +16,8 @@ class T(TipoviTokena):
 def an(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
-        elif znak.isdigit():
-            if znak != '0': lex.zvijezda(str.isdigit)
+        elif znak.isdecimal():
+            lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
         else: yield lex.literal(T)
 
@@ -104,3 +104,6 @@ testiraj('(1+1) (0+2+0) (0+1) (3+4)')
 with očekivano(SintaksnaGreška): testiraj('(2+3)4')
 with očekivano(SintaksnaGreška): testiraj('2\n37')
 with očekivano(LeksičkaGreška): testiraj('2^3')
+with očekivano(LeksičkaGreška): testiraj('3+00')
+with očekivano(SintaksnaGreška): testiraj('+1')
+with očekivano(LeksičkaGreška): testiraj('-1')

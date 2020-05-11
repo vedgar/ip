@@ -21,16 +21,18 @@ def list_lexer(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak == 'L':
-            if '1' <= lex.čitaj() <= '9': yield lex.token(T.ID)
-            else: raise lex.greška('očekivana znamenka između 1 i 9')
+            n = lex.prirodni_broj()
+            tok = lex.token(T.ID)
+            if 1 <= n <= 9: yield tok
+            else: raise tok.krivi_sadržaj('očekivan broj liste između 1 i 9')
         elif znak.isalpha():
             lex.zvijezda(str.isalpha)
             yield lex.literal(T, case=False)
-        elif znak.isdigit():
-            lex.zvijezda(str.isdigit)
+        elif znak.isdecimal():
+            lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
         elif znak == '-':
-            lex.plus(str.isdigit)
+            lex.prirodni_broj(nula=False)
             yield lex.token(T.MINUSBROJ)
         else: raise lex.greška()
 
@@ -113,7 +115,7 @@ class Ubaci(AST('lista element indeks')):
         else: raise self.indeks.iznimka('Prevelik indeks')
 
 
-P.tokeniziraj('lista L172prazna ubaci-2345izbaci L9 dohvati 3 koliko')
+P.tokeniziraj('lista L1 prazna ubaci-2345izbaci L9 dohvati 3 koliko')
 source = '''lista L1  lista L3
     ubaci L3 45 0  dohvati L3 0
     koliko L1  koliko L3
@@ -124,4 +126,5 @@ source = '''lista L1  lista L3
 P(source).izvrši()
 with očekivano(LeksičkaGreška): P.tokeniziraj('L0')
 with očekivano(SintaksnaGreška): P('ubaci L5 6 -2')
-with očekivano(SemantičkaGreška): P('ubaci L5 5 0').izvrši()
+with očekivano(SemantičkaGreška): P('ubaci L7 5 0').izvrši()
+with očekivano(LeksičkaGreška): P.tokeniziraj('ubaci L3 5 -0')
