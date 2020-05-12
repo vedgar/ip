@@ -1,4 +1,4 @@
-import enum, types, collections, contextlib
+import enum, types, collections, contextlib, itertools
 
 
 def identifikator(znak): return znak.isalnum() or znak == '_'
@@ -111,8 +111,8 @@ class Tokenizer:
     def token(self, tip):
         """Odašilje token."""
         t = Token(tip, self.sadržaj)
-        t.početak = self.početak
-        t.kraj = self.pozicija
+        t._početak = self.početak
+        t._kraj = self.pozicija
         self.zanemari()
         return t
 
@@ -199,21 +199,10 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
             self.razriješen = True
             return self
 
-    def raspon(self):
-        if hasattr(self, 'početak'):
-            ip, jp = self.početak
-            ik, jk = self.kraj
-            if ip == ik:
-                if jp == jk: return 'Redak {}, stupac {}'.format(ip, jp)
-                else: return 'Redak {}, stupci {}–{}'.format(ip, jp, jk)
-            else: return 'Redak {}, stupac {} – redak {}, stupac {}'.format(
-                ip, jp, ik, jk)
-        else: return 'Nepoznata pozicija'
-
     def neočekivan(self, info=''):
         """Konstruira sintaksnu grešku: neočekivani tip tokena."""
         if self.tip == KRAJ: poruka = 'Neočekivani kraj ulaza'
-        else: poruka = self.raspon() + ': neočekivani token {!r}'
+        else: poruka = raspon(self) + ': neočekivani token {!r}'
         if info: poruka += ' (' + info + ')'
         očekivano = ' ili '.join(t.name for t in self.uspoređeni if t!=self.tip)
         if očekivano: poruka += '\n  Očekivano: ' + očekivano
@@ -222,32 +211,32 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
     if False:
       def redeklaracija(self, prvi=None):
         """Konstruira semantičku grešku redeklaracije."""
-        poruka = self.raspon() + ': redeklaracija {!r}'.format(self)
+        poruka = raspon(self) + ': redeklaracija {!r}'.format(self)
         if prvi is not None:
-            info = 'Prva deklaracija je bila ovdje: ' + prvi.raspon().lower()
-            poruka += '\n' + info.format(*prvi.početak)
+            info = 'Prva deklaracija je bila ovdje: ' + raspon(prvi).lower()
+            poruka += '\n' + info
         return SemantičkaGreška(poruka)
 
     def nedeklaracija(self, info=''):
         """Konstruira semantičku grešku nedeklariranog simbola."""
-        poruka = self.raspon() + ': nedeklarirano {!r}'.format(self)
+        poruka = raspon(self) + ': nedeklarirano {!r}'.format(self)
         if info: poruka += ' ' + info.join('()')
         return SemantičkaGreška(poruka)
 
     def krivi_sadržaj(self, info):
         """Konstruira leksičku grešku: token nema dobar sadržaj."""
-        poruka = self.raspon() + ': {!r}: {}'.format(self, info)
+        poruka = raspon(self) + ': {!r}: {}'.format(self, info)
         return LeksičkaGreška(poruka)
 
     def iznimka(self, info):
         """Konstruira grešku izvođenja."""
         if isinstance(info, BaseException): info = info.args[0]
-        poruka = self.raspon() + ': {!r}: {}'.format(self, info)
+        poruka = raspon(self) + ': {!r}: {}'.format(self, info)
         return GreškaIzvođenja(poruka)
 
     def krivi_tip(self, *tipovi):
         """Konstruira semantičku grešku."""
-        poruka = self.raspon() + ': {!r}: tipovi ne odgovaraju: '
+        poruka = raspon(self) + ': {!r}: tipovi ne odgovaraju: '
         poruka += ' vs. '.join(map(str, tipovi))
         return SemantičkaGreška(poruka.format(self))
 
@@ -255,7 +244,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
     def kraj(cls):
         """Oznaka kraja niza tokena."""
         t = cls(KRAJ, '')
-        t.početak = t.kraj = 'zadnji', 'nepoznat'
+        t._početak = t._kraj = 'zadnji', 'nepoznat'
         t.razriješen = False
         return t
 
@@ -283,7 +272,7 @@ class Parser:
     def tokeniziraj(cls, ulaz): 
         cls.static_lexer = staticmethod(cls.lexer)
         for token in cls.static_lexer(Tokenizer(ulaz)):
-            print('\t{:23}: {}'.format(token.raspon(), token))
+            print('\t{:23}: {}'.format(raspon(token), token))
 
     def čitaj(self):
         """Čitanje sljedećeg tokena iz buffera ili inicijalnog niza."""
@@ -355,7 +344,7 @@ def prikaz(objekt, dubina:int=float('inf'), uvlaka:str='', ime:str=None):
         for vrijednost in objekt:
             prikaz(vrijednost, dubina-1, uvlaka+'. ')
     elif isinstance(objekt, AST0):
-        print(intro + type(objekt).__name__ + ':')
+        print(intro + type(objekt).__name__ + ':')  # + '  ' + raspon(objekt))
         for ime, vrijednost in objekt._asdict().items():
             prikaz(vrijednost, dubina-1, uvlaka+' '*2, ime)
     elif isinstance(objekt, Memorija):
@@ -371,6 +360,18 @@ def prikaz(objekt, dubina:int=float('inf'), uvlaka:str='', ime:str=None):
         for vrijednost in objekt:
             prikaz(vrijednost, dubina-1, uvlaka+', ')
     else: assert False, 'Ne znam lijepo prikazati ' + str(objekt)
+
+
+def raspon(ast):
+    if hasattr(ast, '_početak'):
+        ip, jp = ast._početak
+        ik, jk = ast._kraj
+        if ip == ik:
+            if jp == jk: return 'Redak {}, stupac {}'.format(ip, jp)
+            else: return 'Redak {}, stupci {}–{}'.format(ip, jp, jk)
+        else: return 'Redak {}, stupac {} – redak {}, stupac {}'.format(
+            ip, jp, ik, jk)
+    else: return 'Nepoznata pozicija'
 
 
 class AST0:
@@ -391,10 +392,17 @@ class Atom(Token, AST0): """Atomarni token kao apstraktno stablo."""
 
 
 class ListaAST(tuple):
+    def __init__(self, component):
+        raspon = obuhvati(component)
+        if raspon: self._početak, self._kraj = raspon
     def __repr__(self): return repr(list(self))
 
 
 class RječnikAST(tuple):
+    def __init__(self, component):
+        raspon = obuhvati(itertools.chain(
+            dict(component).keys(), dict(component).values()))
+        if raspon: self._početak, self._kraj = raspon
     def __repr__(self): return repr(dict(self))
 
 
@@ -406,6 +414,12 @@ class Nenavedeno(AST0):
 nenavedeno = Nenavedeno()
 
 
+def obuhvati(dijelovi):
+    """Raspon koji obuhvaća sve dijelove koji imaju raspon."""
+    d = [p for p in dijelovi if hasattr(p, '_početak') and hasattr(p, '_kraj')]
+    if d: return min(p._početak for p in d), max(p._kraj for p in d)
+
+
 def AST(atributi):
     AST2 = collections.namedtuple('AST2', atributi)
     # AST2.__new__.__defaults__ = tuple(nenavedeno for field in AST2._fields)
@@ -414,7 +428,10 @@ def AST(atributi):
         def __new__(cls, *args, **kw):
             new_args = [AST_adapt(arg) for arg in args]
             new_kw = {k: AST_adapt(v) for k, v in kw.items()}
-            return super().__new__(cls, *new_args, **new_kw)
+            self = super().__new__(cls, *new_args, **new_kw)
+            raspon = obuhvati(itertools.chain(args, kw.values()))
+            if raspon: self._početak, self._kraj = raspon
+            return self
     return AST1
 
 
