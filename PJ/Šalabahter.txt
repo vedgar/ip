@@ -81,7 +81,15 @@ class DrugoApstraktnoStablo(AST('atribut1 atribut2')): ...
             def izvrši(self, mem): ... # ne vraća ništa, mijenja mem
             def optimiziraj(self): ... # vraća novo (ili isto) AST
 
-Izvođenje: preslikavanjem na Pythonove alate (slijed, grananje, petlje)
+Pomoćna funkcija: prikaz(ast, dubina): prikazuje neko AST vertikalno do
+zadane dubine (ispod te dubine i dalje u jednoj liniji kao print(ast))
+* podASTovi su uvedeni kao Ime:, atributi pišu uvučeno ispod
+* liste su uvedene kao [...], elementi pišu uvučeno s točkicama ispod
+
+# Izvođenje #
+#############
+
+preslikavanjem na Pythonove alate (slijed, grananje, petlje)
 class Grananje(AST('uvjet onda inače')):
 	def izvrši(self, mem):
 		if self.uvjet.vrijednost(mem): self.onda.izvrši(mem)
