@@ -62,7 +62,7 @@ class JSParser(Parser):
             elif self >> JS.KOMENTAR:
                 while self >> JS.KOMENTAR: pass
             elif self >> JS.V_ZATV: break
-            else: self.greška()
+            else: raise self.greška()
         return naredbe
 
     def start(self):
