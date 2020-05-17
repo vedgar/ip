@@ -25,7 +25,9 @@ def lj_lex(string):
         if znak.isspace(): lex.zanemari()
         elif znak == 'L':
             if '1' <= lex.čitaj() <= '9': yield lex.token(LJ.ID)
-            else: raise lex.greška('očekivana znamenka između 1 i 9')
+            else: 
+                lex.zvijezda(str.isalpha)
+                yield lex.literal(LJ, case=False)
         elif znak.isalpha():
             lex.zvijezda(str.isalpha)
             yield lex.literal(LJ, case=False)
