@@ -21,10 +21,15 @@ def list_lexer(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak == 'L':
-            n = lex.prirodni_broj()
-            tok = lex.token(T.ID)
-            if 1 <= n <= 9: yield tok
-            else: raise tok.krivi_sadržaj('očekivan broj liste između 1 i 9')
+            nakonL = lex.čitaj()
+            if nakonL.isdecimal():
+                n = lex.prirodni_broj(nakonL)
+                tok = lex.token(T.ID)
+                if 1 <= n <= 9: yield tok
+                else: raise tok.krivi_sadržaj('očekivan broj liste između 1 i 9')
+            else:
+                lex.zvijezda(str.isalpha)
+                yield lex.literal(T, case=False)
         elif znak.isalpha():
             lex.zvijezda(str.isalpha)
             yield lex.literal(T, case=False)
@@ -120,7 +125,7 @@ source = '''lista L1  lista L3
     ubaci L3 45 0  dohvati L3 0
     koliko L1  koliko L3
     prazna L1  prazna L3
-    lista L5  ubaci L5 6 0  ubaci L5 -7 1  ubaci L5 8 1  ubaci L5 9 0
+    Lista L5  ubaci L5 6 0  ubaci L5 -7 1  ubaci L5 8 1  ubaci L5 9 0
     dohvati L5 0  dohvati L5 1  dohvati L5 2  dohvati L5 3  koliko L5
     izbaci L5 1  dohvati L5 0 dohvati L5 1 dohvati L5 2  koliko L5'''
 P(source).izvrši()
