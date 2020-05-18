@@ -2,7 +2,7 @@
 Za više detalja pogledati Šalabahter.txt."""
 
 
-import enum, types, collections, contextlib, itertools
+import enum, types, collections, contextlib, itertools, functools
 
 
 def identifikator(znak):
@@ -510,6 +510,9 @@ class Memorija:
     def __iter__(self):
         """Imena i vrijednosti trenutno prisutni u memoriji."""
         return iter(self.podaci.items())
+
+
+cache = functools.lru_cache(maxsize=None)
 
 
 class NelokalnaKontrolaToka(Exception):
