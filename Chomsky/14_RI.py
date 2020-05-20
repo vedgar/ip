@@ -75,13 +75,7 @@ class P(Parser):
     start = rx
 
 
-P.tokeniziraj('? )a/1|/(')
-print(*P('/1|a(/(c?)*').početak())
-print(repr(P('/1|a|bc*')))
-# Unija:
-#   lijevo = Epsilon()
-#   desno = Unija:
-#     lijevo = Elementaran(znak='a')
-#     desno = Konkatenacija:
-#       lijevo = Elementaran(znak='b')
-#       desno = Zvijezda(ispod=Elementaran(znak='c'))
+ri = '(a(/*c?)+)?'
+P.tokeniziraj(ri)
+prikaz(P(ri))
+print(*P(ri).početak(20))

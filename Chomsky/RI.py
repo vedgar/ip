@@ -62,7 +62,7 @@ class RegularniIzraz(types.SimpleNamespace, abc.ABC):
     def abeceda(self):
         """Skup korištenih znakova, pod uvjetom da je neprazan."""
         znakovi = self.korišteni_znakovi()
-        assert znakovi
+        assert znakovi  # abeceda ne smije biti prazna
         return znakovi
 
 
@@ -73,7 +73,7 @@ class Inicijalan(RegularniIzraz, abc.ABC):
 
 
 class Prazan(Inicijalan):
-    """Prazan jezik: ne sadrži nijednu riječ."""
+    """Prazni jezik: ne sadrži nijednu riječ."""
 
     def __str__(self): return '∅'
 
@@ -90,7 +90,7 @@ class Prazan(Inicijalan):
 
 
 class Epsilon(Inicijalan):
-    """ε jezik: sadrži točno jednu riječ, i to praznu."""
+    """Jezik ε: sadrži točno jednu riječ, i to praznu."""
 
     def __str__(self): return 'ε'
 
@@ -107,12 +107,10 @@ class Epsilon(Inicijalan):
 
 
 class Elementaran(Inicijalan):
-    """Elementaran(α) je jezik od samo 1 riječi, koja ima samo 1 znak α."""
+    """Elementaran(α) je jezik od točno 1 riječi, koja ima točno 1 znak α."""
 
     def __init__(self, znak):
-        assert isinstance(znak, str)
-        assert len(znak) == 1
-        # assert znak.isalnum()
+        assert isinstance(znak, str) and len(znak) == 1
         self.znak = znak
 
     def __str__(self): return self.znak
@@ -130,13 +128,9 @@ class Elementaran(Inicijalan):
     def enumerator(self): yield self.znak
 
 
-prazan = Prazan()
-epsilon = Epsilon()
-a = Elementaran('a')
-b = Elementaran('b')
-c = Elementaran('c')
-nula = Elementaran('0')
-jedan = Elementaran('1')
+prazan, epsilon = Prazan(), Epsilon()
+a, b, c = Elementaran('a'), Elementaran('b'), Elementaran('c')
+nula, jedan = Elementaran('0'), Elementaran('1')
 
 
 class Binaran(RegularniIzraz, abc.ABC):
@@ -187,13 +181,11 @@ class Konkatenacija(Binaran):
     def prazan(self): return self.lijevo.prazan() or self.desno.prazan()
 
     def konačan(self):
-        if self.prazan():
-            return True
+        if self.prazan(): return True
         return self.lijevo.konačan() and self.desno.konačan()
 
     def NKA(self, Σ=None):
-        if Σ is None:
-            Σ = self.korišteni_znakovi()
+        if Σ is None: Σ = self.korišteni_znakovi()
         return self.lijevo.NKA(Σ).konkatenacija(self.desno.NKA(Σ))
 
     def enumerator(self):
@@ -232,7 +224,7 @@ class Zvijezda(RegularniIzraz):
         if Σ is None: Σ = self.korišteni_znakovi()
         return self.ispod.NKA(Σ).zvijezda()
 
-    def enumerator(self): yield from Unija(epsilon, Plus(self.ispod))
+    def enumerator(self): yield from Upitnik(Plus(self.ispod))
 
 
 def Plus(ri): return Konkatenacija(Zvijezda(ri), ri)
