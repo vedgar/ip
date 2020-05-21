@@ -388,6 +388,10 @@ def prikaz(objekt, dubina:int=float('inf'), uvlaka:str='', ime:str=None):
         print(intro, end='(...):\n' if objekt else '()\n')
         for vrijednost in objekt:
             prikaz(vrijednost, dubina-1, uvlaka+', ')
+    elif isinstance(objekt, types.SimpleNamespace):
+        print(intro + type(objekt).__name__ + ':'*bool(vars(objekt)))
+        for ime, vrijednost in vars(objekt).items():
+            prikaz(vrijednost, dubina-1, uvlaka+'  ', ime)
     else: assert False, 'Ne znam lijepo prikazati ' + str(objekt)
 
 
