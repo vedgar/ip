@@ -312,6 +312,10 @@ def prikaz(objekt, dubina:int, uvlaka:str='', ime:str=None):
         print(intro + '{...}:')
         for ključ, vrijednost in objekt.items():
             prikaz(vrijednost, dubina-1, uvlaka+': ', repr(ključ))
+    elif isinstance(objekt, types.SimpleNamespace):
+        print(intro + type(objekt).__name__ + ':'*bool(vars(objekt)))
+        for ime, vrijednost in vars(objekt).items():
+            prikaz(vrijednost, dubina-1, uvlaka+'  ', ime)
     else: assert False, 'Ne znam lijepo prikazati ' + str(objekt)
 
 

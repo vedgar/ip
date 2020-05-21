@@ -78,4 +78,4 @@ class RIParser(Parser):
 if __name__ == '__main__':
     print(*ri_lex('? )a/1|/('), sep=', ')
     print(RIParser.parsiraj(ri_lex('/1|a(/(c?)*')).početak())
-    print(repr(RIParser.parsiraj(ri_lex('/1|a|bc*'))))
+    prikaz(RIParser.parsiraj(ri_lex('/1|a|bc*')), 7)
