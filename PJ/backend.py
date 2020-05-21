@@ -82,3 +82,10 @@ class PristupLog(types.SimpleNamespace):
 
     def pristupi(self): self.pristup += 1
 
+
+def logiran(niz, tag=None):
+    logging.getLogger().setLevel(logging.DEBUG)
+    if tag is None: tag = niz.__name__
+    for element in niz:
+        logging.debug('%s %r', tag, element)
+        yield element
