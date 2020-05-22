@@ -73,8 +73,7 @@ class XLParser(Parser):
             lista = Lista(False, self.stavke())
             self.pročitaj(HTML.ZUL)
             return lista
-        elif self >= HTML.TEXT: return self.tekst()
-        else: raise self.greška()
+        else: return self.tekst()
 
     def stavke(self):
         self.pročitaj(HTML.LI)
