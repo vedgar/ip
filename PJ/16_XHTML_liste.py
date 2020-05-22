@@ -19,7 +19,9 @@ def html(lex):
         if znak.isspace(): lex.zanemari()
         elif znak == '<':
             lex.pročitaj_do('>')
-            yield lex.literal(T.TEKST, case=False)
+            token = lex.literal(T.TEKST, case=False)
+            if token ^ T.TEKST: lex.zanemari()
+            else: yield token
         else:
             lex.zvijezda(lambda z: z and not z.isspace() and z != '<')
             yield lex.token(T.TEKST)            
@@ -60,8 +62,7 @@ class P(Parser):
             while self >= T.LI: stavke.append(self.stavka())
             self.pročitaj(zatvoreni(vrsta.tip))
             return Lista(vrsta, stavke)
-        elif self >= T.TEKST: return self.tekst()
-        else: raise self.greška()
+        else: return self.tekst()
 
     def stavka(self):
         self.pročitaj(T.LI)
