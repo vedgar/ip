@@ -88,6 +88,28 @@ class Tekst(AST('dijelovi')):
         for dio in self.dijelovi: dio.render()
         print()
 
+
+class Dokument(AST('zaglavlje tijelo')):
+    def render(self):
+        for element in self.tijelo: element.render([''])
+        print()
+
+class Lista(AST('vrsta stavke')):
+    def render(self, prefiks):
+        prethodni, zadnji = prefiks[:-1], prefiks[-1]
+        for i, stavka in enumerate(self.stavke, 1):
+            if i > 1 and zadnji.endswith('\t'): zadnji = '\t'
+            if self.vrsta ^ T.OL: marker = str(i) + '.'
+            elif self.vrsta ^ T.UL: marker = '*#@o-.,_ '[len(prethodni)] + ' '
+            novi = '{:>7}\t'.format(marker)
+            stavka.render(prethodni + [zadnji, novi])
+
+class Tekst(AST('dijelovi')):
+    def render(self, prefiks):
+        print('\n', *prefiks, sep='', end='')
+        for dio in self.dijelovi: dio.render()
+
+
 r = P('''\
     <html>
         <head>
@@ -115,6 +137,45 @@ r = P('''\
             I još malo<ul><li>uvučeno</li></ul>
         </body>
     </html>
+''')
+
+n = P('''\
+    <html>
+        <head>_</head>
+        <body><ol>
+                <li><ol>
+                    <li>tekst a</li>
+                    <li><ol>
+                        <li>tekst b</li>
+                        <li>tekst c</li>
+                        <li>tekst d</li>
+                    </ol></li>
+                    <li><ul>
+                        <li>tekst e</li>
+                        <li>tekst f</li>
+                    </ul></li>
+                    <li>tekst g</li>
+                    <li><ol>
+                        <li>tekst h</li>
+                    </ol></li>
+                    <li>tekst i</li>
+                </ol></li>
+            </ol>
+            I još malo<ul><li>uvučeno</li></ul>
+        </body>
+    </html>
+''')
+
+v = P('''\
+        <html>
+        <head>_</head>
+        <body>
+        <ol>
+        <li>jedan</li>
+        <li>dva</li>
+        </ol>
+        </body>
+        </html>
 ''')
 prikaz(r, 7)
 r.render()
