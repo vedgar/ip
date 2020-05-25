@@ -151,7 +151,7 @@ class BinOp(AST('operator lijevo desno')):
 
 ast = AQParser.parsiraj(aq_lex('''\
     rat a = 6 / 2
-    rat a = a + 4
+    a = a + 4
     nat b = 8 + 1
     int c = 6 ^ 2
     rat d = 6
