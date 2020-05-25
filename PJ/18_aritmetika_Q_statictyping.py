@@ -60,7 +60,7 @@ class AQParser(Parser):
                     pogledaj(self.symtab, n.varijabla)
                 elif n.varijabla.sadržaj in self.symtab:
                     if Tip(n.tip) is self.symtab[n.varijabla.sadržaj]:
-                        raise SemantičkaGreška('redeklaracija' + str(n))
+                        raise SemantičkaGreška('redeklaracija {} varijable {}'.format(Tip(n.tip), n.varijabla.sadržaj))
                     else:
                         raise n.varijabla.krivi_tip(Tip(n.tip),
                                 self.symtab[n.varijabla.sadržaj])
@@ -151,7 +151,7 @@ class BinOp(AST('operator lijevo desno')):
 
 ast = AQParser.parsiraj(aq_lex('''\
     rat a = 6 / 2
-    a = a + 4
+    rat a = a + 4
     nat b = 8 + 1
     int c = 6 ^ 2
     rat d = 6
