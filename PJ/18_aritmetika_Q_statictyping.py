@@ -29,9 +29,9 @@ def aq_lex(niz):
 
 
 class Tip(enum.Enum):
-    N = AQ.NAT
-    Z = AQ.INT
-    Q = AQ.RAT
+    N = Token(AQ.NAT)
+    Z = Token(AQ.INT)
+    Q = Token(AQ.RAT)
 
     def __lt__(manji, veći): return (manji, veći) in {
         (Tip.N, Tip.Z), (Tip.N, Tip.Q), (Tip.Z, Tip.Q)}
@@ -56,13 +56,15 @@ class AQParser(Parser):
         while not self >> E.KRAJ:
             n = self.naredba()
             if n ^ Pridruživanje:
-                # print(n, self.symtab)
                 if n.tip is nenavedeno:
                     pogledaj(self.symtab, n.varijabla)
                 elif n.varijabla.sadržaj in self.symtab:
-                    raise n.varijabla.krivi_tip(Tip(n.tip.tip),
-                        self.symtab[n.varijabla.sadržaj])
-                else: self.symtab[n.varijabla.sadržaj] = Tip(n.tip.tip)
+                    if Tip(n.tip) is self.symtabl[n.varijabla.sadržaj]:
+                        raise SemantičkaGreška('redeklaracija' + str(n))
+                    else:
+                        raise n.varijabla.krivi_tip(Tip(n.tip),
+                                self.symtab[n.varijabla.sadržaj])
+                else: self.symtab[n.varijabla.sadržaj] = Tip(n.tip)
             naredbe.append(n)
             self.pročitaj(AQ.NOVIRED, E.KRAJ)
         return Program(naredbe, self.symtab)
