@@ -59,7 +59,7 @@ class AQParser(Parser):
                 if n.tip is nenavedeno:
                     pogledaj(self.symtab, n.varijabla)
                 elif n.varijabla.sadržaj in self.symtab:
-                    if Tip(n.tip) is self.symtabl[n.varijabla.sadržaj]:
+                    if Tip(n.tip) is self.symtab[n.varijabla.sadržaj]:
                         raise SemantičkaGreška('redeklaracija' + str(n))
                     else:
                         raise n.varijabla.krivi_tip(Tip(n.tip),
