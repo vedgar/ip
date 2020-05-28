@@ -37,20 +37,20 @@ class T(TipoviTokena):
     OTV, ZATV, ZAREZ, JEDNAKO, MANJE, PLUS, MINUS, ZVJEZDICA = '(),=<+-*'
 
     class AIME(Token):
-        def vrijednost(self, mem): return mem[self]
+        def vrijednost(self, mem, unutar): return mem[self]
 
     class LIME(AIME): pass
 
     class BROJ(Token):
-        def vrijednost(self, _): return int(self.sadržaj)
+        def vrijednost(self, mem, unutar): return int(self.sadržaj)
 
     class ISTINA(Token):
         literal = 'Istina'
-        def vrijednost(self, _): return True
+        def vrijednost(self, mem, unutar): return True
 
     class LAŽ(Token):
         literal = 'Laž'
-        def vrijednost(self, _): return False
+        def vrijednost(self, mem, unutar): return False
 
 
 def pseudokod_lexer(lex):
@@ -143,9 +143,9 @@ class P(Parser):
 
     def funkcija(self):
         self.imef = self.ime()
-        parametri = self.parametri()
+        self.parametrif = self.parametri()
         self.pročitaj(T.JEDNAKO)
-        return Funkcija(self.imef, parametri, self.naredba())
+        return Funkcija(self.imef, self.parametrif, self.naredba())
 
     def parametri(self):
         self.pročitaj(T.OTV)
@@ -174,6 +174,9 @@ class P(Parser):
         if ime in self.funkcije:
             funkcija = self.funkcije[ime]
             return Poziv(funkcija, self.argumenti(funkcija.parametri))
+        elif ime == self.imef:
+            funkcija = nenavedeno
+            return Poziv(funkcija, self.argumenti(self.parametrif))
         else: return ime
 
     def argumenti(self, parametri):
@@ -236,66 +239,75 @@ def izvrši(funkcije, *argv):
 class Funkcija(AST('ime parametri naredba')):
     def pozovi(self, argumenti):
         lokalni = Memorija(dict(zip(self.parametri, argumenti)))
-        try: self.naredba.izvrši(lokalni)
+        try: self.naredba.izvrši(lokalni, self)
         except Povratak as exc: return exc.preneseno
         else: raise GreškaIzvođenja('{} nije ništa vratila'.format(self.ime))
 
 class Poziv(AST('funkcija argumenti')):
-    def vrijednost(self, mem):
-        argumenti = [argument.vrijednost(mem) for argument in self.argumenti]
-        return self.funkcija.pozovi(argumenti)
+    def vrijednost(self, mem, unutar):
+        argumenti = [argument.vrijednost(mem, unutar)
+                     for argument in self.argumenti]
+        pozvana = self.funkcija
+        if pozvana is nenavedeno: pozvana = unutar
+        return pozvana.pozovi(argumenti)
 
     def _asdict(self):  # samo za ispis, da se ne ispiše čitava funkcija
-        return {'*ime': self.funkcija.ime, 'argumenti': self.argumenti}
+        za_ispis = {'argumenti': self.argumenti}
+        if self.funkcija is nenavedeno: za_ispis['*rekurzivni'] = True
+        else: za_ispis['*ime'] = self.funkcija.ime
+        return za_ispis
 
-def ispunjen(ast, mem):
+def ispunjen(ast, mem, unutar):
     if ast.istinitost ^ T.JE: traženo = True
     elif ast.istinitost ^ T.NIJE: traženo = False
     else: assert False, 'Nema trećeg.'
-    return ast.uvjet.vrijednost(mem) == traženo
+    return ast.uvjet.vrijednost(mem, unutar) == traženo
 
 class Grananje(AST('istinitost uvjet onda inače')):
-    def izvrši(self, mem):
-        if ispunjen(self, mem): self.onda.izvrši(mem)
-        else: self.inače.izvrši(mem)
+    def izvrši(self, mem, unutar):
+        if ispunjen(self, mem, unutar): self.onda.izvrši(mem, unutar)
+        else: self.inače.izvrši(mem, unutar)
 
 class Petlja(AST('istinitost uvjet tijelo')):
-    def izvrši(self, mem):
-        while ispunjen(self, mem): self.tijelo.izvrši(mem)
+    def izvrši(self, mem, unutar):
+        while ispunjen(self, mem, unutar): self.tijelo.izvrši(mem, unutar)
 
 class Blok(AST('naredbe')):
-    def izvrši(self, mem):
-        for naredba in self.naredbe: naredba.izvrši(mem)
+    def izvrši(self, mem, unutar):
+        for naredba in self.naredbe: naredba.izvrši(mem, unutar)
 
 class Pridruživanje(AST('ime pridruženo')):
-    def izvrši(self, mem):
-        mem[self.ime] = self.pridruženo.vrijednost(mem)
+    def izvrši(self, mem, unutar):
+        mem[self.ime] = self.pridruženo.vrijednost(mem, unutar)
 
 class Vrati(AST('što')):
-    def izvrši(self, mem): raise Povratak(self.što.vrijednost(mem))
+    def izvrši(self, mem, unutar):
+        raise Povratak(self.što.vrijednost(mem, unutar))
 
 class Disjunkcija(AST('disjunkti')):
-    def vrijednost(self, mem):
-        return any(disjunkt.vrijednost(mem) for disjunkt in self.disjunkti)
+    def vrijednost(self, mem, unutar):
+        return any(disjunkt.vrijednost(mem, unutar)
+                for disjunkt in self.disjunkti)
     
 class Usporedba(AST('lijevo relacija desno')):
-    def vrijednost(self, mem):
-        l, d = self.lijevo.vrijednost(mem), self.desno.vrijednost(mem)
+    def vrijednost(self, mem, unutar):
+        l = self.lijevo.vrijednost(mem, unutar)
+        d = self.desno.vrijednost(mem, unutar)
         if self.relacija ^ T.JEDNAKO: return l == d
         elif self.relacija ^ T.MANJE: return l < d
         else: assert False, 'Nepoznata relacija {}'.format(self.relacija)
 
 class Zbroj(AST('pribrojnici')):
-    def vrijednost(self, mem):
-        return sum(p.vrijednost(mem) for p in self.pribrojnici)
+    def vrijednost(self, mem, unutar):
+        return sum(p.vrijednost(mem, unutar) for p in self.pribrojnici)
     
 class Suprotan(AST('od')):
-    def vrijednost(self, mem): return -self.od.vrijednost(mem)
+    def vrijednost(self, mem, unutar): return -self.od.vrijednost(mem, unutar)
     
 class Umnožak(AST('faktori')):
-    def vrijednost(self, mem):
+    def vrijednost(self, mem, unutar):
         p = 1
-        for faktor in self.faktori: p *= faktor.vrijednost(mem)
+        for faktor in self.faktori: p *= faktor.vrijednost(mem, unutar)
         return p
 
 class Povratak(NelokalnaKontrolaToka): """Signal koji šalje naredba vrati."""
@@ -380,6 +392,14 @@ program(m) = (
 print()
 prikaz(tablice_istinitosti)
 izvrši(tablice_istinitosti, 3)  # poziv iz komandne linije, prijenos m=3
+
+rekurzivna = P('''\
+fakt(n) = ako je n = 0 vrati 1 inače vrati n*fakt(n-1)
+program() = vrati fakt(7)
+''')
+prikaz(rekurzivna)
+izvrši(rekurzivna)
+
 
 # DZ: dodajte određenu petlju: za ime = izraz .. izraz naredba
 # DZ*: dodajte late binding, da se modul i program mogu zasebno kompajlirati
