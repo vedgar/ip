@@ -42,8 +42,7 @@ class P(Parser):
 
     def start(self):
         pridruživanja = []
-        while self >> T.IME:
-            ime = self.zadnji
+        while ime := self >> T.IME:
             self.pročitaj(T.JEDNAKO)
             što = self.izraz()
             self.pročitaj(T.NOVIRED)
@@ -59,17 +58,17 @@ class P(Parser):
 
     def izraz(self):
         t = self.član()
-        while self >> {T.PLUS, T.MINUS}: t = Op(self.zadnji, t, self.član())
+        while op := self >> {T.PLUS, T.MINUS}: t = Op(op, t, self.član())
         return t
 
     def član(self):
         t = self.faktor()
-        while self >> {T.PUTA, T.KROZ}: t = Op(self.zadnji, t, self.faktor())
+        while op := self >> {T.PUTA, T.KROZ}: t = Op(op, t, self.faktor())
         return t
 
     def faktor(self):
-        if self >> T.MINUS: return Op(self.zadnji, nenavedeno, self.faktor())
-        if self >> {T.IME, T.BROJ}: return self.zadnji
+        if op := self >> T.MINUS: return Op(op, nenavedeno, self.faktor())
+        if elementarni := self >> {T.IME, T.BROJ}: return elementarni
         self.pročitaj(T.OTV)
         u_zagradi = self.izraz()
         self.pročitaj(T.ZATV)

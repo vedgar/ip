@@ -61,27 +61,26 @@ class P(Parser):
 
     def izraz(self):
         t = self.član()
-        while self >> {T.PLUS, T.MINUS}: t = Binarna(self.zadnji,t,self.član())
+        while op := self >> {T.PLUS, T.MINUS}: t = Binarna(op, t, self.član())
         return t
 
     def član(self):
         t = self.faktor()
-        while self >> {T.PUTA, T.KROZ}: t = Binarna(self.zadnji,t,self.faktor())
+        while op := self >> {T.PUTA, T.KROZ}: t = Binarna(op, t, self.faktor())
         return t
 
     def faktor(self):
-        if self >> T.MINUS: return Unarna(self.zadnji, self.faktor())
+        if op := self >> T.MINUS: return Unarna(op, self.faktor())
         baza = self.baza()
-        if self >> T.NA: return Binarna(self.zadnji, baza, self.faktor())
+        if op := self >> T.NA: return Binarna(op, baza, self.faktor())
         else: return baza
 
     def baza(self):
-        if self >> {T.BROJ, T.IME, T.I}: trenutni = self.zadnji
-        elif self >> T.OTV:
+        if self >> T.OTV:
             trenutni = self.izraz()
             self.pročitaj(T.ZATV)
-        else: raise self.greška()
-        while self >> T.KONJ: trenutni = Unarna(self.zadnji, trenutni)
+        else: trenutni = self.pročitaj(T.BROJ, T.IME, T.I)
+        while op := self >> T.KONJ: trenutni = Unarna(op, trenutni)
         return trenutni
 
 ### Apstraktna sintaksna stabla
@@ -116,7 +115,7 @@ class Unarna(AST('op ispod')):
         o, z = self.op, self.ispod.vrijednost(env)
         if o ^ T.MINUS: return -z
         elif o ^ T.KONJ: return z.conjugate()
-        else: assert False, 'nepokriveni slučaj unarnog operatora' + str(o)
+        else: assert False, 'nepokriveni slučaj unarnog operatora ' + str(o)
 
 
 def izračunaj(string): 

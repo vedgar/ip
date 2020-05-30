@@ -1,4 +1,6 @@
-import tokenize, io, keyword, parser, ast, dis
+import tokenize, io, keyword, ast, dis, warnings
+warnings.simplefilter('ignore')
+import parser
 
 def tokeni(string):
     lex = tokenize.tokenize(io.BytesIO(string.encode('utf8')).readline)

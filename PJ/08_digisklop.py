@@ -37,14 +37,13 @@ class P(Parser):
         return And.ili_samo(konjunkti)
 
     def faktor(self):
-        if self >> T.SLOVO: trenutni = self.zadnji
-        elif self >> T.OOTV:
+        if self >> T.OOTV:
             trenutni = self.sklop()
             self.pročitaj(T.OZATV)
         elif self >> T.UOTV:
             trenutni = Not(self.sklop())
             self.pročitaj(T.UZATV)
-        else: raise self.greška()
+        else: trenutni = self.pročitaj(T.SLOVO)
         while self >> T.NE: trenutni = Not(trenutni)
         return trenutni
 

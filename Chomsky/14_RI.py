@@ -64,7 +64,7 @@ class P(Parser):
     def element(self):
         if self >> T.PRAZAN: return RI.prazan
         elif self >> T.EPSILON: return RI.epsilon
-        elif self >> T.ZNAK: return RI.Elementaran(self.zadnji.sadržaj)
+        elif znak := self >> T.ZNAK: return RI.Elementaran(znak.sadržaj)
         else:
             self.pročitaj(T.OTV)
             u_zagradi = self.rx()

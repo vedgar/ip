@@ -63,10 +63,9 @@ class P(Parser):
 
     def faktor(self):
         if self >> T.MINUS: return Suprotan(self.faktor())
-        elif self >> T.BROJ: return self.zadnji
-        elif self >> T.X:
-            x = self.zadnji  # zapamtimo ga jer ga sljedeća naredba uništi
-            if self >> T.BROJ: return Xna(self.zadnji)
+        elif broj := self >> T.BROJ: return broj
+        elif x := self >> T.X:
+            if eksponent := self >> T.BROJ: return Xna(eksponent)
             else: return x
         elif self >> T.OTVORENA:
             u_zagradi = self.izraz()

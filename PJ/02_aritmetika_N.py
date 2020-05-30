@@ -65,7 +65,7 @@ class P(Parser):
         else: return baza
 
     def baza(self):
-        if self >> T.BROJ: return self.zadnji
+        if broj := self >> T.BROJ: return broj
         elif self >> T.OTVORENA:
             u_zagradi = self.izraz()
             self.pročitaj(T.ZATVORENA)

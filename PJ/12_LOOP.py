@@ -58,8 +58,8 @@ class P(Parser):
         return Program(naredbe)
 
     def naredba(self):
-        if self >> {T.INC, T.DEC}:
-            stablo = Promjena(self.zadnji, self.pročitaj(T.REG))
+        if smjer := self >> {T.INC, T.DEC}:
+            stablo = Promjena(smjer, self.pročitaj(T.REG))
             self.pročitaj(T.TOČKAZ)
             return stablo
         else:

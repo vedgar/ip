@@ -49,8 +49,8 @@ class P(Parser):
 
     def select(self):
         if self >> T.ZVJEZDICA: stupci = nenavedeno
-        elif self >> T.IME:
-            stupci = [self.zadnji]
+        elif stupac := self >> T.IME:
+            stupci = [stupac]
             while self >> T.ZAREZ: stupci.append(self.pročitaj(T.IME))
         else: raise self.greška()
         self.pročitaj(T.FROM)        

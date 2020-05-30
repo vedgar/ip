@@ -73,8 +73,10 @@ class P(Parser):
         if self >> T.FOR: return self.petlja()
         elif self >> T.COUT: return self.ispis()
         elif self >> T.IF: return self.grananje()
-        elif self >> T.BREAK: return self.prekid()
-        else: raise self.greška()
+        else:
+            br = self.pročitaj(T.BREAK)
+            self.pročitaj(T.TOČKAZ)
+            return br
 
     def petlja(self):
         self.pročitaj(T.OOTV)
@@ -106,11 +108,10 @@ class P(Parser):
         varijable = []
         novired = nenavedeno
         while self >> T.MMANJE:
-            if self >> T.IME: varijable.append(self.zadnji)
-            elif self >> T.ENDL:
-                novired = self.zadnji
+            if varijabla := self >> T.IME: varijable.append(varijabla)
+            else:
+                novired = self.pročitaj(T.ENDL)
                 break
-            else: raise self.greška()
         self.pročitaj(T.TOČKAZ)
         return Ispis(varijable, novired)
 
@@ -122,11 +123,6 @@ class P(Parser):
         self.pročitaj(T.OZATV)
         naredba = self.naredba()
         return Grananje(lijevo, desno, naredba)
-
-    def prekid(self):
-        br = self.zadnji
-        self.pročitaj(T.TOČKAZ)
-        return br
 
 
 class Prekid(NelokalnaKontrolaToka): """Signal koji šalje naredba break."""

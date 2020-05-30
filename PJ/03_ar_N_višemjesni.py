@@ -42,7 +42,7 @@ class P(Parser):
         return Umnožak.ili_samo(trenutni)
 
     def faktor(self):
-        if self >> T.BROJ: return self.zadnji
+        if broj := self >> T.BROJ: return broj
         elif self >> T.OTVORENA:
             u_zagradi = self.izraz()
             self.pročitaj(T.ZATVORENA)

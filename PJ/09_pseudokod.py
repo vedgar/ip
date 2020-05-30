@@ -162,21 +162,20 @@ class P(Parser):
         return Disjunkcija.ili_samo(disjunkti)
 
     def disjunkt(self):
-        if self >> {T.ISTINA, T.LAŽ, T.LIME}: return self.možda_poziv()
+        if log := self >> {T.ISTINA, T.LAŽ, T.LIME}:
+            return self.možda_poziv(log)
         else:
             lijevo = self.aritm()
             relacija = self.pročitaj(T.JEDNAKO, T.MANJE)
             desno = self.aritm()
             return Usporedba(lijevo, relacija, desno)
 
-    def možda_poziv(self):
-        ime = self.zadnji
+    def možda_poziv(self, ime):
         if ime in self.funkcije:
             funkcija = self.funkcije[ime]
             return Poziv(funkcija, self.argumenti(funkcija.parametri))
         elif ime == self.imef:
-            funkcija = nenavedeno
-            return Poziv(funkcija, self.argumenti(self.parametrif))
+            return Poziv(nenavedeno, self.argumenti(self.parametrif))
         else: return ime
 
     def argumenti(self, parametri):
@@ -207,7 +206,7 @@ class P(Parser):
 
     def faktor(self):
         if self >> T.MINUS: return Suprotan(self.faktor())
-        elif self >> T.AIME: return self.možda_poziv()
+        elif aritm := self >> T.AIME: return self.možda_poziv(aritm)
         elif self >> T.OTV:
             u_zagradi = self.aritm()
             self.pročitaj(T.ZATV)

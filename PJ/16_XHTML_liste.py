@@ -52,12 +52,11 @@ class P(Parser):
         
     def tekst(self):
         dijelovi = [self.pročitaj(T.TEKST)]
-        while self >> T.TEKST: dijelovi.append(self.zadnji)
+        while tekst := self >> T.TEKST: dijelovi.append(tekst)
         return Tekst(dijelovi)
 
     def element(self):
-        if self >> {T.OL, T.UL}:
-            vrsta = self.zadnji
+        if vrsta := self >> {T.OL, T.UL}:
             stavke = [self.stavka()]
             while self >= T.LI: stavke.append(self.stavka())
             self.pročitaj(zatvoreni(vrsta.tip))

@@ -52,11 +52,12 @@ class P(Parser):
         return Program(naredbe)
 
     def naredba(self):
-        if self >> {T.FORWARD, T.BACKWARD}:
-            return Pomak(self.zadnji, self.pročitaj(T.BROJ))
-        elif self >> {T.LEFT, T.RIGHT}:
-            return Okret(self.zadnji, self.pročitaj(T.BROJ))
-        elif self >> {T.PENUP, T.PENDOWN}: return Olovka(self.zadnji)
+        if smjer := self >> {T.FORWARD, T.BACKWARD}:
+            return Pomak(smjer, self.pročitaj(T.BROJ))
+        elif smjer := self >> {T.LEFT, T.RIGHT}:
+            return Okret(smjer, self.pročitaj(T.BROJ))
+        elif položaj := self >> {T.PENUP, T.PENDOWN}:
+            return Olovka(položaj)
         elif self >> T.REPEAT:
             koliko = self.pročitaj(T.BROJ)
             self.pročitaj(T.OTV)

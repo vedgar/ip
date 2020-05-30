@@ -53,7 +53,7 @@ def ls(lex):
 
 class P(Parser):
     def formula(self):
-        if self >> T.PVAR: return self.zadnji
+        if varijabla := self >> T.PVAR: return varijabla
         elif self >> T.NEG: 
             ispod = self.formula()
             return Negacija(ispod)

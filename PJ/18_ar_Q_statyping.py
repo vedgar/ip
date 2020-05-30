@@ -61,8 +61,7 @@ class P(Parser):
 
     def naredba(self):
         if self >> T.UPIT: return self.izraz()
-        if self >> {T.NAT, T.INT, T.RAT}: tip = self.zadnji
-        else: tip = nenavedeno
+        tip = self >> {T.NAT, T.INT, T.RAT} or nenavedeno
         varijabla = self.pročitaj(T.IME)
         ažuriraj(varijabla, tip, self.symtab)
         self.pročitaj(T.JEDNAKO)
@@ -71,32 +70,31 @@ class P(Parser):
 
     def izraz(self):
         t = self.član()
-        while self >> {T.PLUS, T.MINUS}: t = Op(self.zadnji, t, self.član())
+        while op := self >> {T.PLUS, T.MINUS}: t = Op(op, t, self.član())
         return t
 
     def član(self):
         trenutni = self.faktor()
-        while self >> {T.PUTA, T.KROZ, T.DIV, T.MOD}:
-            trenutni = Op(self.zadnji, trenutni, self.faktor())
+        while operator := self >> {T.PUTA, T.KROZ, T.DIV, T.MOD}:
+            trenutni = Op(operator, trenutni, self.faktor())
         return trenutni
 
     def faktor(self):
-        if self >> T.MINUS: return Op(self.zadnji, nenavedeno, self.faktor())
+        if op := self >> T.MINUS: return Op(op, nenavedeno, self.faktor())
         baza = self.baza()
-        if self >> T.NA: return Op(self.zadnji, baza, self.faktor())
+        if op := self >> T.NA: return Op(op, baza, self.faktor())
         else: return baza
 
     def baza(self):
-        if self >> T.BROJ: return self.zadnji
-        elif self >> T.IME:
-            varijabla = self.zadnji
+        if broj := self >> T.BROJ: return broj
+        elif varijabla := self >> T.IME:
             self.symtab[varijabla]
             return varijabla
-        elif self >> T.OTV:
+        else:
+            self.pročitaj(T.OTV)
             u_zagradi = self.izraz()
             self.pročitaj(T.ZATV)
             return u_zagradi
-        else: raise self.greška()
 
 
 ### Apstraktna sintaksna stabla
