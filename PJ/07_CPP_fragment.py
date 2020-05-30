@@ -48,8 +48,8 @@ def cpp(lex):
 # start -> naredba naredbe
 # naredbe -> '' | naredba naredbe
 # naredba -> petlja | grananje | ispis TOČKAZ | BREAK TOČKAZ
-# for -> FOR OOTV IME JEDNAKO BROJ TOČKAZ IME MANJE BROJ TOČKAZ
-# 	     IME inkrement OZATV
+# for -> FOR OOTV IME# JEDNAKO BROJ TOČKAZ IME# MANJE BROJ TOČKAZ
+# 	     IME# inkrement OZATV
 # petlja -> for naredba | for VOTV naredbe VZATV
 # inkrement -> PLUSP | PLUSJ BROJ
 # ispis -> COUT varijable | COUT varijable MMANJE ENDL
