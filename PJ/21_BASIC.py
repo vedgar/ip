@@ -163,7 +163,7 @@ class BASICParser(Parser):
 ### AST
 # Program: naredbe:[naredba]
 # naredba: Unos: varijabla:BVAR|TVAR
-#          Ispis: što:broj|tekst
+#          Ispis: što:broj|tekst|SLJEDEĆI
 #          Pridruživanje: varijabla:BVAR|!TVAR što:broj|!tekst
 #          Petlja: varijabla:BVAR početak:broj kraj:broj tijelo:[naredba]
 #          Grananje: uvjet:broj onda:[naredba] inače:[naredba]
