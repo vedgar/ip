@@ -3,6 +3,7 @@ Uz implicitno množenje ako desni faktor počinje zagradom (npr. 2(3+1)=8).
 Implementiran je i optimizator, baš kao u originalnom aritmetika_N.py."""
 
 from pj import *
+import warnings
 
 
 class AN(enum.Enum):
@@ -90,8 +91,10 @@ def testiraj(izraz):
     opt = stablo.optim()
     prikaz(opt, 6)
     mi = opt.vrijednost()
+
+    warnings.simplefilter('error')
     try: Python = eval(izraz)
-    except (SyntaxError, TypeError):
+    except (SyntaxError, TypeError, SyntaxWarning):
         print('Python ne zna ovo izračunati!', izraz, '==', mi)
     else:
         if mi == Python: print(izraz, '==', mi, 'OK')
