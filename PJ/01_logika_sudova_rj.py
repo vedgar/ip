@@ -10,7 +10,7 @@ Interpretaciju zadajemo imenovanim argumentima: vrijednost(F, P2=True, P7=False)
 Optimizacija piše svaku formulu u obliku G ili !G, gdje u G nema negacije."""
 
 
-from pj import *
+from vepar import *
 
 
 subskript = str.maketrans('0123456789', '₀₁₂₃₄₅₆₇₈₉')
@@ -26,7 +26,7 @@ class T(TipoviTokena):
 def ls(lex):
     for znak in lex:
         if znak == 'P':
-            lex.prirodni_broj()
+            lex.prirodni_broj('')
             yield lex.token(T.PVAR)
         elif znak == '-':
             lex.pročitaj('>')
@@ -53,21 +53,20 @@ def ls(lex):
 
 class P(Parser):
     def formula(self):
-        if varijabla := self >> T.PVAR: return varijabla
-        elif self >> T.NEG: 
+        if varijabla := self >= T.PVAR: return varijabla
+        elif self >= T.NEG: 
             ispod = self.formula()
             return Negacija(ispod)
         elif self >> T.OTV:
             l, klasa, d = self.formula(), self.binvez(), self.formula()
-            self.pročitaj(T.ZATV)
+            self >> T.ZATV
             return klasa(l, d)
-        else: raise self.greška()
 
     def binvez(self):
-        if self >> T.KONJ: return Konjunkcija
-        elif self >> T.DISJ: return Disjunkcija
-        elif self >> T.KOND: return Kondicional
-        elif self >> T.BIKOND: return Bikondicional
+        if self >= T.KONJ: return Konjunkcija
+        elif self >= T.DISJ: return Disjunkcija
+        elif self >= T.KOND: return Kondicional
+        elif self >= T.BIKOND: return Bikondicional
         else: raise self.greška()
 
     lexer = ls

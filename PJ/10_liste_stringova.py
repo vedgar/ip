@@ -9,7 +9,7 @@ Dakle, \" označava ". \n označava novi red. \\ označava \.
 Unutar '...'-stringova \ nema nikakvo posebno značenje."""
 
 
-from pj import *
+from vepar import *
 
 
 BKSL, N1, N2, NOVIRED = '\\', "'", '"', '\n'
@@ -69,13 +69,13 @@ def listlexer(lex):
 
 class P(Parser):
     def element(self):
-        if self >> T.UOTV:
-            if self >> T.UZATV: return Lista([])
+        if self >= T.UOTV:
+            if self >= T.UZATV: return Lista([])
             el = [self.element()]
-            while self>>T.ZAREZ and not self>=T.UZATV: el.append(self.element())
-            self.pročitaj(T.UZATV)
+            while self>=T.ZAREZ and not self>T.UZATV: el.append(self.element())
+            self >> T.UZATV
             return Lista(el)
-        else: return self.pročitaj(T.BROJ, T.STRING1, T.STRING2)
+        else: return self >> {T.BROJ, T.STRING1, T.STRING2}
     
     lexer = listlexer 
     start = element
@@ -85,10 +85,10 @@ class Lista(AST('elementi')):
     def vrijednost(self): return [el.vrijednost() for el in self.elementi]
 
 
-lista = r"""
+lista = r'''
     [23, "ab\"c]", 'a[]', [2, 3, ], 523, [1,2,2,3],
     '"', '\', "\e", "\\", '']
-"""
+'''
 print(lista)
 P.tokeniziraj(lista)
 ast = P(lista)

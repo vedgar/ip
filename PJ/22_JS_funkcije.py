@@ -2,7 +2,7 @@
 Kolokvij 19. siječnja 2012. (Puljić)"""
 
 
-from pj import *
+from vepar import *
 
 
 class T(TipoviTokena):
@@ -35,39 +35,38 @@ class P(Parser):
     lexer = js
 
     def funkcija(self):
-        self.pročitaj(T.FUNCTION)
-        ime = self.pročitaj(T.IME)
-        self.pročitaj(T.O_OTV)
+        self >> T.FUNCTION
+        ime = self >> T.IME
+        self >> T.O_OTV
         argumenti = []
-        if self >= T.VAR:
+        if self > T.VAR:
             argumenti = [self.argument()]
-            while self >> T.ZAREZ: argumenti.append(self.argument())
-        self.pročitaj(T.O_ZATV)
+            while self >= T.ZAREZ: argumenti.append(self.argument())
+        self >> T.O_ZATV
         return Funkcija(ime, argumenti, self.tijelo())
 
     def tijelo(self):
-        self.pročitaj(T.V_OTV)
-        while self >> T.KOMENTAR: pass
+        self >> T.V_OTV
+        while self >= T.KOMENTAR: pass
         naredbe = []
-        while not self >> T.V_ZATV:
+        while not self >= T.V_ZATV:
             naredbe.append(self.naredba())
-            if self >> T.TOČKAZAREZ: pass
-            elif self >> T.KOMENTAR:
-                while self >> T.KOMENTAR: pass
+            if self >= T.TOČKAZAREZ: pass
+            elif self > T.KOMENTAR:
+                while self >= T.KOMENTAR: pass
             elif self >> T.V_ZATV: break
-            else: self.greška()
         return naredbe
 
     def start(self):
         funkcije = [self.funkcija()]
-        while not self >> KRAJ: funkcije.append(self.funkcija())
+        while not self > KRAJ: funkcije.append(self.funkcija())
         return Program(funkcije)
 
     def argument(self):
-        self.pročitaj(T.VAR)
-        return self.pročitaj(T.IME)
+        self >> T.VAR
+        return self >> T.IME
 
-    def naredba(self): return self.pročitaj(T.NAREDBA)
+    def naredba(self): return self >> T.NAREDBA
 
 
 ### AST

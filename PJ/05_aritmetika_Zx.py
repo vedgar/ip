@@ -10,7 +10,7 @@ Semantički analizator je napravljen u obliku prevoditelja (kompajlera) u
   klasu Polinom, čiji objekti podržavaju operacije prstena i lijep ispis."""
 
 
-from pj import *
+from vepar import *
 from backend import Polinom
 
 
@@ -51,27 +51,26 @@ class P(Parser):
     def izraz(self):
         t = self.član()
         while True:
-            if self >> T.PLUS: t = Zbroj(t, self.član())
-            elif self >> T.MINUS: t = Zbroj(t, Suprotan(self.član()))
+            if self >= T.PLUS: t = Zbroj(t, self.član())
+            elif self >= T.MINUS: t = Zbroj(t, Suprotan(self.član()))
             else: return t
 
     def član(self):
         trenutni = self.faktor()
-        while self >> T.PUTA or self >= {T.X, T.OTVORENA}:
+        while self >= T.PUTA or self > {T.X, T.OTVORENA}:
             trenutni = Umnožak(trenutni, self.faktor())
         return trenutni
 
     def faktor(self):
-        if self >> T.MINUS: return Suprotan(self.faktor())
-        elif broj := self >> T.BROJ: return broj
-        elif x := self >> T.X:
-            if eksponent := self >> T.BROJ: return Xna(eksponent)
+        if self >= T.MINUS: return Suprotan(self.faktor())
+        elif broj := self >= T.BROJ: return broj
+        elif x := self >= T.X:
+            if eksponent := self >= T.BROJ: return Xna(eksponent)
             else: return x
         elif self >> T.OTVORENA:
             u_zagradi = self.izraz()
-            self.pročitaj(T.ZATVORENA)
+            self >> T.ZATVORENA
             return u_zagradi
-        else: raise self.greška()
 
     lexer = az
     start = izraz

@@ -1,4 +1,4 @@
-from pj import *
+from vepar import *
 import fractions  # kao backend
 
 
@@ -42,37 +42,29 @@ class P(Parser):
 
     def start(self):
         pridruživanja = []
-        while ime := self >> T.IME:
-            self.pročitaj(T.JEDNAKO)
-            što = self.izraz()
-            self.pročitaj(T.NOVIRED)
-            pridruživanja.append((ime, što))
+        while ime := self >= T.IME:
+            self >> T.JEDNAKO
+            pridruživanja.append((ime, self.izraz()))
+            self >> T.NOVIRED
         return Program(pridruživanja)
-
-    def naredba(self):
-        ime = self.pročitaj(T.IME)
-        self.pročitaj(T.JEDNAKO)
-        pridruženo = self.izraz()
-        self.pročitaj(T.NOVIRED)
-        return ime, pridruženo
 
     def izraz(self):
         t = self.član()
-        while op := self >> {T.PLUS, T.MINUS}: t = Op(op, t, self.član())
+        while op := self >= {T.PLUS, T.MINUS}: t = Op(op, t, self.član())
         return t
 
     def član(self):
         t = self.faktor()
-        while op := self >> {T.PUTA, T.KROZ}: t = Op(op, t, self.faktor())
+        while op := self >= {T.PUTA, T.KROZ}: t = Op(op, t, self.faktor())
         return t
 
     def faktor(self):
-        if op := self >> T.MINUS: return Op(op, nenavedeno, self.faktor())
-        if elementarni := self >> {T.IME, T.BROJ}: return elementarni
-        self.pročitaj(T.OTV)
-        u_zagradi = self.izraz()
-        self.pročitaj(T.ZATV)
-        return u_zagradi
+        if op := self >= T.MINUS: return Op(op, nenavedeno, self.faktor())
+        if elementarni := self >= {T.IME, T.BROJ}: return elementarni
+        elif self >> T.OTV:
+            u_zagradi = self.izraz()
+            self >> T.ZATV
+            return u_zagradi
 
 
 class Program(AST('pridruživanja')):

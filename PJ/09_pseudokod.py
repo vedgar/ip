@@ -28,7 +28,7 @@ Minimalni kontekst je potreban da bismo zapamtili jesmo li trenutno u definiciji
 """
 
 
-from pj import *
+from vepar import *
 
 
 class T(TipoviTokena):
@@ -95,80 +95,64 @@ def pseudokod_lexer(lex):
 class P(Parser):
     def program(self):
         self.funkcije = Memorija(redefinicija=False)
-        while not self >> KRAJ:
+        while not self > KRAJ:
             funkcija = self.funkcija()
             self.funkcije[funkcija.ime] = funkcija
         return self.funkcije
 
-    def ime(self): return self.pročitaj(T.AIME, T.LIME)
+    def ime(self): return self >> {T.AIME, T.LIME}
 
     def naredba(self):
-        if self >= T.AKO: return self.grananje()
-        elif self >= T.DOK: return self.petlja()
-        elif self >= T.OTV: return self.blok()
-        elif self >> T.VRATI: 
-            vrijednost = self.tipa(self.imef)
-            return Vrati(vrijednost)
+        if self > T.AKO: return self.grananje()
+        elif self > T.DOK: return self.petlja()
+        elif self > T.OTV: return self.blok()
+        elif self >= T.VRATI: return Vrati(self.tipa(self.imef))
         else:
             ime = self.ime()
-            self.pročitaj(T.JEDNAKO)
-            vrijednost = self.tipa(ime)
-            return Pridruživanje(ime, vrijednost)
+            self >> T.JEDNAKO
+            return Pridruživanje(ime, self.tipa(ime))
 
     def blok(self):
-        self.pročitaj(T.OTV)
-        if self >> T.ZATV: return Blok([])
-        else:
-            naredbe = [self.naredba()]
-            while self >> T.ZAREZ and not self >= T.ZATV:
-                naredbe.append(self.naredba())
-            self.pročitaj(T.ZATV)
-            return Blok.ili_samo(naredbe)
+        self >> T.OTV
+        if self >= T.ZATV: return Blok([])
+        n = [self.naredba()]
+        while self >= T.ZAREZ and not self > T.ZATV: n.append(self.naredba())
+        self >> T.ZATV
+        return Blok.ili_samo(n)
 
     def petlja(self):
-        self.pročitaj(T.DOK)
-        istinitost = self.pročitaj(T.JE, T.NIJE)
-        uvjet = self.log()
-        naredba = self.naredba()
-        return Petlja(istinitost, uvjet, naredba)
+        self >> T.DOK
+        return Petlja(self >> {T.JE, T.NIJE}, self.log(), self.naredba())
 
     def grananje(self):
-        self.pročitaj(T.AKO)
-        istinitost = self.pročitaj(T.JE, T.NIJE)
-        uvjet = self.log()
-        naredba = self.naredba()
-        if istinitost ^ T.JE and self >> T.INAČE: inače = self.naredba()
+        self >> T.AKO
+        je = self > T.JE
+        atributi = self >> {T.JE, T.NIJE}, self.log(), self.naredba()
+        if je and self >= T.INAČE: inače = self.naredba()
         else: inače = Blok([])
-        return Grananje(istinitost, uvjet, naredba, inače)
+        return Grananje(*atributi, inače)
 
     def funkcija(self):
-        self.imef = self.ime()
-        self.parametrif = self.parametri()
-        self.pročitaj(T.JEDNAKO)
-        return Funkcija(self.imef, self.parametrif, self.naredba())
+        atributi = self.imef, self.parametrif = self.ime(), self.parametri()
+        self >> T.JEDNAKO
+        return Funkcija(*atributi, self.naredba())
 
     def parametri(self):
-        self.pročitaj(T.OTV)
-        if self >> T.ZATV: return []
-        else:
-            param = [self.ime()]
-            while self >> T.ZAREZ: param.append(self.ime())
-            self.pročitaj(T.ZATV)
-            return param
+        self >> T.OTV
+        if self >= T.ZATV: return []
+        param = [self.ime()]
+        while self >= T.ZAREZ: param.append(self.ime())
+        self >> T.ZATV
+        return param
 
     def log(self):
         disjunkti = [self.disjunkt()]
-        while self >> T.ILI: disjunkti.append(self.disjunkt())
+        while self >= T.ILI: disjunkti.append(self.disjunkt())
         return Disjunkcija.ili_samo(disjunkti)
 
     def disjunkt(self):
-        if log := self >> {T.ISTINA, T.LAŽ, T.LIME}:
-            return self.možda_poziv(log)
-        else:
-            lijevo = self.aritm()
-            relacija = self.pročitaj(T.JEDNAKO, T.MANJE)
-            desno = self.aritm()
-            return Usporedba(lijevo, relacija, desno)
+        if log := self >= {T.ISTINA,T.LAŽ,T.LIME}: return self.možda_poziv(log)
+        return Usporedba(self.aritm(), self>>{T.JEDNAKO,T.MANJE}, self.aritm())
 
     def možda_poziv(self, ime):
         if ime in self.funkcije:
@@ -180,11 +164,11 @@ class P(Parser):
 
     def argumenti(self, parametri):
         arg = []
-        self.pročitaj(T.OTV)
+        self >> T.OTV
         for i, parametar in enumerate(parametri):
-            if i: self.pročitaj(T.ZAREZ)
+            if i: self >> T.ZAREZ
             arg.append(self.tipa(parametar))
-        self.pročitaj(T.ZATV)
+        self >> T.ZATV
         return arg
     
     def tipa(self, ime):
@@ -195,23 +179,23 @@ class P(Parser):
     def aritm(self):
         članovi = [self.član()]
         while True:
-            if self >> T.PLUS: članovi.append(self.član())
-            elif self >> T.MINUS: članovi.append(Suprotan(self.član()))
+            if self >= T.PLUS: članovi.append(self.član())
+            elif self >= T.MINUS: članovi.append(Suprotan(self.član()))
             else: return Zbroj.ili_samo(članovi)
 
     def član(self):
         faktori = [self.faktor()]
-        while self >> T.ZVJEZDICA: faktori.append(self.faktor())
+        while self >= T.ZVJEZDICA: faktori.append(self.faktor())
         return Umnožak.ili_samo(faktori)
 
     def faktor(self):
-        if self >> T.MINUS: return Suprotan(self.faktor())
-        elif aritm := self >> T.AIME: return self.možda_poziv(aritm)
-        elif self >> T.OTV:
+        if self >= T.MINUS: return Suprotan(self.faktor())
+        elif aritm := self >= T.AIME: return self.možda_poziv(aritm)
+        elif self >= T.OTV:
             u_zagradi = self.aritm()
-            self.pročitaj(T.ZATV)
+            self >> T.ZATV
             return u_zagradi
-        else: return self.pročitaj(T.BROJ)
+        else: return self >> T.BROJ
 
     start = program
     lexer = pseudokod_lexer
@@ -391,6 +375,7 @@ program(m) = (
 print()
 prikaz(tablice_istinitosti)
 izvrši(tablice_istinitosti, 3)  # poziv iz komandne linije, prijenos m=3
+print()
 
 rekurzivna = P('''\
 fakt(n) = ako je n = 0 vrati 1 inače vrati n*fakt(n-1)

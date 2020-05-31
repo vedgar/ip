@@ -120,7 +120,7 @@ class Tokenizer:
         zadnji = self.pročitani.pop()
         opis = 'znak {!r}'.format(zadnji) if zadnji else 'kraj ulaza'
         poruka += 'neočekivani {}'.format(opis)
-        if info: poruka += ' (' + info + ')'
+        if info: poruka += '\n\t(' + info + ')'
         return LeksičkaGreška(poruka)
 
     def token(self, tip):
@@ -153,7 +153,7 @@ class Tokenizer:
         """Omogućuje prolazak `for znak in lex:`."""
         return iter(self.čitaj, '')
 
-    def prirodni_broj(self, početak='', *, nula=True):
+    def prirodni_broj(self, početak, *, nula=True):
         """Čita prirodni broj bez vodećih nula, ili nulu ako je dozvoljena."""
         if not početak: početak = self.čitaj()
         if početak.isdecimal():
@@ -204,15 +204,16 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         return ime
 
     def __xor__(self, tip):
-        """Vraća sebe (istina) ako je zadanog tipa, inače None (laž)."""
+        """Vraća sebe (istina) ako je zadanog tipa, inače nenavedeno (laž)."""
         if not isinstance(tip, set): tip = {tip}
         self.uspoređeni |= tip
         if self.tip in tip:
             self.razriješen = True
             return self
 
-    def je(self, *tipovi):
-        """Vraća sebe (istina) ako je zadanog tipa, inače None (laž)."""
+    if False:
+      def je(self, *tipovi):
+        """Vraća sebe (istina) ako je zadanog tipa, inače nenavedeno (laž)."""
         self.uspoređeni.update(tipovi)
         if self.tip in tipovi:
             self.razriješen = True
@@ -227,8 +228,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         if očekivano: poruka += '\n  Očekivano: ' + očekivano
         return SintaksnaGreška(poruka.format(self))
 
-    if False:
-      def redeklaracija(self, prvi=None):
+    def redeklaracija(self, prvi=None):
         """Konstruira semantičku grešku redeklariranog simbola."""
         poruka = raspon(self) + ': redeklaracija {!r}'.format(self)
         if prvi is not None:
@@ -285,7 +285,7 @@ class Parser:
             print('Provjerite vraćaju li sve metode parsera vrijednost.')
             raise
         else:
-            self.pročitaj(KRAJ)
+            self >> KRAJ
             return rezultat
 
     @classmethod
@@ -310,29 +310,40 @@ class Parser:
         """Poništavanje čitanja zadnjeg pročitanog tokena."""
         assert self.buffer is None, 'Buffer je pun'
         self.buffer = self.zadnji
+        return nenavedeno
 
     pogledaj = Tokenizer.pogledaj
 
-    def pročitaj(self, *tipovi):
+    if False:
+      def pročitaj(self, *tipovi):
         """Čita jedan od dozvoljenih simbola, ili javlja sintaksnu grešku."""
         token = self.čitaj()
         if token ^ set(tipovi): return token
         self.vrati()
         raise self.greška()
 
-    def slijedi(self, *tipovi):
+    def __rshift__(self, tipovi):
+        """Čita jedan od dozvoljenih simbola, ili javlja sintaksnu grešku."""
+        token = self.čitaj()
+        if token ^ tipovi: return token
+        self.vrati()
+        raise self.greška()
+
+    if False:
+      def slijedi(self, *tipovi):
         """Čita sljedeći token samo ako je odgovarajućeg tipa."""
         return self.zadnji if self.čitaj().je(*tipovi) else self.vrati()
 
-    def __rshift__(self, tip):
+    def __ge__(self, tip):
         """Čita sljedeći token samo ako je odgovarajućeg tipa."""
         return self.zadnji if self.čitaj() ^ tip else self.vrati()
 
-    def vidi(self, *tipovi):
+    if False:
+      def vidi(self, *tipovi):
         """Je li sljedeći token ('bez' čitanja) navedenog tipa ili tipova?"""
         return self.pogledaj().je(*tipovi)
 
-    def __ge__(self, tip):
+    def __gt__(self, tip):
         """Je li sljedeći token ('bez' čitanja) navedenog tipa ili tipova?"""
         return self.pogledaj() ^ tip
 
@@ -411,12 +422,14 @@ def raspon(ast):
 class AST0:
     """Bazna klasa za sva apstraktna sintaksna stabla."""
     def __xor__(self, tip):
-        """Vraća sebe (istina) ako je zadanog tipa, inače None (laž)."""
+        """Vraća sebe (istina) ako je zadanog tipa, inače nenavedeno (laž)."""
         if isinstance(tip, type) and isinstance(self, tip): return self
 
-    def je(self, *tipovi): 
-        """Vraća sebe (istina) ako je zadanog tipa, inače None (laž)."""
+    if False:
+      def je(self, *tipovi): 
+        """Vraća sebe (istina) ako je zadanog tipa, inače nenavedeno (laž)."""
         if isinstance(tip, type) and isinstance(self, tip): return self
+        else: return nenavedeno
 
     @classmethod
     def ili_samo(cls, lista):

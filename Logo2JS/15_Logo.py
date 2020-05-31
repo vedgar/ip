@@ -1,4 +1,4 @@
-﻿from pj import *
+﻿from vepar import *
 import itertools, math, pathlib, webbrowser, time, logging
 
 
@@ -48,23 +48,23 @@ class P(Parser):
 
     def start(self):
         naredbe = [self.naredba()]
-        while not self >> KRAJ: naredbe.append(self.naredba())
+        while not self > KRAJ: naredbe.append(self.naredba())
         return Program(naredbe)
 
     def naredba(self):
-        if smjer := self >> {T.FORWARD, T.BACKWARD}:
-            return Pomak(smjer, self.pročitaj(T.BROJ))
-        elif smjer := self >> {T.LEFT, T.RIGHT}:
-            return Okret(smjer, self.pročitaj(T.BROJ))
-        elif položaj := self >> {T.PENUP, T.PENDOWN}:
+        if smjer := self >= {T.FORWARD, T.BACKWARD}:
+            return Pomak(smjer, self >> T.BROJ)
+        elif smjer := self >= {T.LEFT, T.RIGHT}:
+            return Okret(smjer, self >> T.BROJ)
+        elif položaj := self >= {T.PENUP, T.PENDOWN}:
             return Olovka(položaj)
         elif self >> T.REPEAT:
-            koliko = self.pročitaj(T.BROJ)
-            self.pročitaj(T.OTV)
+            koliko = self >> T.BROJ
+            self >> T.OTV
             tijelo = [self.naredba()]
-            while not self >> T.ZATV: tijelo.append(self.naredba())
+            while not self >= T.ZATV: tijelo.append(self.naredba())
             return Ponavljanje(koliko, tijelo)
-        else: raise self.greška()
+
 
 class Program(AST('naredbe')):
     def js(self):
@@ -81,25 +81,23 @@ class Program(AST('naredbe')):
 
 class Pomak(AST('smjer pikseli')):
     def js(self, _):
-        t = 'to.apply(ctx, [x-=Math.sin(h)*{d}, y-=Math.cos(h)*{d}]);'
-        yield t.format(d=self.smjer.predznak*self.pikseli.vrijednost())
+        d = self.smjer.predznak * self.pikseli.vrijednost()
+        yield f'to.apply(ctx, [x-=Math.sin(h)*{d}, y-=Math.cos(h)*{d}]);'
 
 class Okret(AST('smjer stupnjevi')):
     def js(self, _):
-        if self.smjer ^ T.LEFT: predznak = +1
-        elif self.smjer ^ T.RIGHT: predznak = -1
-        φ = math.radians(self.smjer.predznak*self.stupnjevi.vrijednost())
-        yield 'h += {kut};'.format(kut=φ)
+        φ = self.smjer.predznak * self.stupnjevi.vrijednost()
+        yield f'h += {math.radians(φ)};'
 
 class Ponavljanje(AST('koliko naredbe')):
     def js(self, repeat_br):
-        t = 'for (var r{i} = 0; r{i} < {n}; r{i} ++) {{'
-        yield t.format(i=next(repeat_br), n=self.koliko.vrijednost())
+        i, n = next(repeat_br), self.koliko.vrijednost()
+        yield f'for (var r{i} = 0; r{i} < {n}; r{i} ++) ' + '{'
         for naredba in self.naredbe: yield from naredba.js(repeat_br)
         yield '}'
 
 class Olovka(AST('položaj')):
-    def js(self, _): yield 'to = ctx.{što}To'.format(što=self.položaj.opkod)
+    def js(self, _): yield f'to = ctx.{self.položaj.opkod}To'
 
 
 def prevedi_string(kôd): return '\n'.join(P(kôd).js())

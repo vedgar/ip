@@ -11,7 +11,7 @@ Optimizacija (formula.optim()) zamjenjuje potformule oblika !!F sa F.
 """
 
 
-from pj import *
+from vepar import *
 
 
 class T(TipoviTokena):
@@ -51,17 +51,16 @@ def ls(lex):
 
 class P(Parser):
     def formula(self):
-        if varijabla := self >> T.PVAR: return varijabla
-        elif self >> T.NEG: 
+        if varijabla := self >= T.PVAR: return varijabla
+        elif self >= T.NEG: 
             ispod = self.formula()
             return Negacija(ispod)
         elif self >> T.OTV:
             lijevo = self.formula()
-            veznik = self.pročitaj(T.KONJ, T.DISJ, T.KOND, T.BIKOND)
+            veznik = self >> {T.KONJ, T.DISJ, T.KOND, T.BIKOND}
             desno = self.formula()
-            self.pročitaj(T.ZATV)
+            self >> T.ZATV
             return Binarna(veznik, lijevo, desno)
-        else: raise self.greška()
 
     lexer = ls
     start = formula

@@ -38,15 +38,13 @@ Napomene: * asociranost nema veze s asocijativnošću!
 
     class P(Parser):
         def v1(self):
-            if self >> PRVITIP: ...  # sljedeći je PRVITIP (pročitan)
-                elif self >> {DRUGITIP, TREĆITIP}: ...  # jedan od tipova
-                else:
-                    self.pročitaj(MORABITIOVAJTIP)
-                    # self.zadnji: zadnji pročitani token
-                    return NekoApstraktnoStablo(tokeni...)
-                ili else: raise self.greška()
+            if tk := self >= PRVITIP: ...  # sljedeći je tk tipa PRVITIP
+                elif self >= {DRUGITIP, TREĆITIP}: ...  # jedan od tipova
+                elif self >> MORABITIOVAJTIP: ...
+                    return NekoApstraktnoStablo(tokeni, manji astovi,...)
+                [ili] else: raise self.greška()
         def v2(self):
-            if self >= PRVITIP: ...  # sljedeći je PRVITIP (nepročitan)
+            if self > PRVITIP: ...  # sljedeći je PRVITIP (još nepojeden)
 
         lexer = mojlexer  # ili koji već
         start = v1        # ili koja već

@@ -1,4 +1,4 @@
-from pj import *
+from vepar import *
 
 class T(TipoviTokena):
     NAT, INT, RAT, DIV, MOD = 'nat', 'int', 'rat', 'div', 'mod'
@@ -24,17 +24,13 @@ def aq(lex):
 
 
 class Tip(enum.Enum):
-    N = T.NAT
-    Z = T.INT
-    Q = T.RAT
+    N = Token(T.NAT)
+    Z = Token(T.INT)
+    Q = Token(T.RAT)
 
-    @classmethod
-    def iz_tokena(cls, token): return cls(token.tip)
-
-    def __le__(prvi, drugi):
-        return prvi is Tip.N or drugi is Tip.Q or prvi is drugi
-
-    def __lt__(prvi, drugi): return prvi <= drugi and prvi is not drugi
+    def __le__(t1, t2): return t1 is Tip.N or t2 is Tip.Q or t1 is t2
+    
+    def __lt__(t1, t2): return t1 <= t2 and t1 is not t2
 
 
 ### Beskontekstna gramatika
@@ -51,49 +47,46 @@ class P(Parser):
     lexer = aq
 
     def start(self):
-        self >> T.NOVIRED
+        self >= T.NOVIRED
         self.symtab, naredbe = Memorija(), []
-        while not self >> KRAJ:
+        while not self > KRAJ:
             naredbe.append(self.naredba())
-            self.pročitaj(T.NOVIRED, KRAJ)
+            self >> {T.NOVIRED, KRAJ}
         return Program(naredbe, self.symtab)
 
-
     def naredba(self):
-        if self >> T.UPIT: return self.izraz()
-        tip = self >> {T.NAT, T.INT, T.RAT} or nenavedeno
-        varijabla = self.pročitaj(T.IME)
+        if self >= T.UPIT: return self.izraz()
+        tip = self >= {T.NAT, T.INT, T.RAT}
+        varijabla = self >> T.IME
         ažuriraj(varijabla, tip, self.symtab)
-        self.pročitaj(T.JEDNAKO)
-        inicijalizacija = self.izraz()
-        return Pridruživanje(varijabla, tip, inicijalizacija)
+        self >> T.JEDNAKO
+        return Pridruživanje(varijabla, tip, self.izraz())
 
     def izraz(self):
         t = self.član()
-        while op := self >> {T.PLUS, T.MINUS}: t = Op(op, t, self.član())
+        while op := self >= {T.PLUS, T.MINUS}: t = Op(op, t, self.član())
         return t
 
     def član(self):
         trenutni = self.faktor()
-        while operator := self >> {T.PUTA, T.KROZ, T.DIV, T.MOD}:
+        while operator := self >= {T.PUTA, T.KROZ, T.DIV, T.MOD}:
             trenutni = Op(operator, trenutni, self.faktor())
         return trenutni
 
     def faktor(self):
-        if op := self >> T.MINUS: return Op(op, nenavedeno, self.faktor())
+        if op := self >= T.MINUS: return Op(op, nenavedeno, self.faktor())
         baza = self.baza()
-        if op := self >> T.NA: return Op(op, baza, self.faktor())
+        if op := self >= T.NA: return Op(op, baza, self.faktor())
         else: return baza
 
     def baza(self):
-        if broj := self >> T.BROJ: return broj
-        elif varijabla := self >> T.IME:
+        if broj := self >= T.BROJ: return broj
+        elif varijabla := self >= T.IME:
             self.symtab[varijabla]
             return varijabla
-        else:
-            self.pročitaj(T.OTV)
+        elif self >> T.OTV:
             u_zagradi = self.izraz()
-            self.pročitaj(T.ZATV)
+            self >> T.ZATV
             return u_zagradi
 
 
@@ -106,8 +99,10 @@ class P(Parser):
 
 def ažuriraj(var, tip, symtab):
     if tip is not nenavedeno:
-        tip = Tip.iz_tokena(tip)
-        if var in symtab: raise var.krivi_tip(tip, symtab[var])
+        tip = Tip(tip)
+        if var in symtab:
+            if tip == symtab[var]: raise var.redeklaracija()
+            else: raise var.krivi_tip(tip, symtab[var])
         symtab[var] = tip
     return symtab[var]
 

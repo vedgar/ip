@@ -10,7 +10,7 @@ Podržana je i naredba break za izlaz iz unutarnje petlje:
 """
 
 
-from pj import *
+from vepar import *
 
 
 class T(TipoviTokena):
@@ -57,8 +57,6 @@ def cpp(lex):
 # grananje -> IF OOTV IME JJEDNAKO BROJ OZATV naredba
 
  
-kriva_varijabla = SemantičkaGreška(
-    'Sva tri dijela for-petlje moraju imati istu varijablu.')
 
 
 class P(Parser):
@@ -66,63 +64,60 @@ class P(Parser):
 
     def start(self):
         naredbe = [self.naredba()]
-        while not self >> KRAJ: naredbe.append(self.naredba())
+        while not self > KRAJ: naredbe.append(self.naredba())
         return Program(naredbe)
 
     def naredba(self):
-        if self >> T.FOR: return self.petlja()
-        elif self >> T.COUT: return self.ispis()
-        elif self >> T.IF: return self.grananje()
-        else:
-            br = self.pročitaj(T.BREAK)
-            self.pročitaj(T.TOČKAZ)
+        if self > T.FOR: return self.petlja()
+        elif self > T.COUT: return self.ispis()
+        elif self > T.IF: return self.grananje()
+        elif br := self >> T.BREAK:
+            self >> T.TOČKAZ
             return br
 
     def petlja(self):
-        self.pročitaj(T.OOTV)
-        i = self.pročitaj(T.IME)
-        self.pročitaj(T.JEDNAKO)
-        početak = self.pročitaj(T.BROJ)
-        self.pročitaj(T.TOČKAZ)
+        kriva_varijabla = SemantičkaGreška(
+            'Sva tri dijela for-petlje moraju imati istu varijablu.')
+        self >> T.FOR, self >> T.OOTV
+        i = self >> T.IME
+        self >> T.JEDNAKO
+        početak = self >> T.BROJ
+        self >> T.TOČKAZ
 
-        i2 = self.pročitaj(T.IME)
-        if i != i2: raise kriva_varijabla
-        self.pročitaj(T.MANJE)
-        granica = self.pročitaj(T.BROJ)
-        self.pročitaj(T.TOČKAZ)
+        if (self >> T.IME) != i: raise kriva_varijabla
+        self >> T.MANJE
+        granica = self >> T.BROJ
+        self >> T.TOČKAZ
 
-        i3 = self.pročitaj(T.IME)
-        if i != i3: raise kriva_varijabla
-        if self >> T.PLUSP: inkrement = nenavedeno
-        elif self >> T.PLUSJ: inkrement = self.pročitaj(T.BROJ)
-        else: raise self.greška()
-        self.pročitaj(T.OZATV)
+        if (self >> T.IME) != i: raise kriva_varijabla
+        if self >= T.PLUSP: inkrement = nenavedeno
+        elif self >> T.PLUSJ: inkrement = self >> T.BROJ
+        self >> T.OZATV
 
-        if self >> T.VOTV:
+        if self >= T.VOTV:
             blok = []
-            while not self >> T.VZATV: blok.append(self.naredba())
+            while not self >= T.VZATV: blok.append(self.naredba())
         else: blok = [self.naredba()]
         return Petlja(i, početak, granica, inkrement, blok)
         
     def ispis(self):
-        varijable = []
-        novired = nenavedeno
-        while self >> T.MMANJE:
-            if varijabla := self >> T.IME: varijable.append(varijabla)
+        self >> T.COUT
+        varijable, novired = [], nenavedeno
+        while self >= T.MMANJE:
+            if varijabla := self >= T.IME: varijable.append(varijabla)
             else:
-                novired = self.pročitaj(T.ENDL)
+                novired = self >> T.ENDL
                 break
-        self.pročitaj(T.TOČKAZ)
+        self >> T.TOČKAZ
         return Ispis(varijable, novired)
 
     def grananje(self):
-        self.pročitaj(T.OOTV)
-        lijevo = self.pročitaj(T.IME)
-        self.pročitaj(T.JJEDNAKO)
-        desno = self.pročitaj(T.BROJ)
-        self.pročitaj(T.OZATV)
-        naredba = self.naredba()
-        return Grananje(lijevo, desno, naredba)
+        self >> T.IF, self >> T.OOTV
+        lijevo = self >> T.IME
+        self >> T.JJEDNAKO
+        desno = self >> T.BROJ
+        self >> T.OZATV
+        return Grananje(lijevo, desno, self.naredba())
 
 
 class Prekid(NelokalnaKontrolaToka): """Signal koji šalje naredba break."""

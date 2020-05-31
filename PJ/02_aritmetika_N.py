@@ -12,8 +12,8 @@ jedinice u izrazima, te pojednostavljuje izraze koji ih sadrže
   - ovo zadnje pravilo se uvijek primjenjuje nakon x^0=1, jer 0^0=1)."""
 
 
-from pj import *
-from backend import StrojSaStogom
+from vepar import *
+from backend import StrojSaStogom, Python_eval
 
 
 class T(TipoviTokena):
@@ -48,7 +48,7 @@ def an(lex):
 class P(Parser):
     def izraz(self):
         prvi = self.član()
-        if self >> T.PLUS:
+        if self >= T.PLUS:
             drugi = self.izraz()
             return Zbroj([prvi, drugi])
         else:
@@ -56,21 +56,20 @@ class P(Parser):
 
     def član(self):
         faktor = self.faktor()
-        if self >> T.PUTA: return Umnožak([faktor, self.član()])
+        if self >= T.PUTA: return Umnožak([faktor, self.član()])
         else: return faktor
 
     def faktor(self):
         baza = self.baza()
-        if self >> T.NA: return Potencija(baza, self.faktor())
+        if self >= T.NA: return Potencija(baza, self.faktor())
         else: return baza
 
     def baza(self):
-        if broj := self >> T.BROJ: return broj
+        if broj := self >= T.BROJ: return broj
         elif self >> T.OTVORENA:
             u_zagradi = self.izraz()
-            self.pročitaj(T.ZATVORENA)
+            self >> T.ZATVORENA
             return u_zagradi
-        else: raise self.greška()
 
     lexer = an
     start = izraz
@@ -147,7 +146,7 @@ def testiraj(izraz):
     print('rezultat:', vm.rezultat)
 
     mi = opt.vrijednost()
-    Python = eval(izraz.replace('^', '**'))
+    Python = Python_eval(izraz.replace('^', '**'))
     if mi == Python: print(izraz, '==', mi, 'OK')
     else: print(izraz, 'mi:', mi, 'Python:', Python)
 

@@ -5,7 +5,7 @@ Napisan je semantički analizator u obliku name resolvera:
     provjerava jesu li svi selektirani stupci prisutni, te broji pristupe."""
 
 
-from pj import *
+from vepar import *
 
 
 class T(TipoviTokena):
@@ -44,40 +44,40 @@ class P(Parser):
 
     def start(self):
         naredbe = [self.naredba()]
-        while not self >> KRAJ: naredbe.append(self.naredba())
+        while not self > KRAJ: naredbe.append(self.naredba())
         return Skripta(naredbe)
 
     def select(self):
-        if self >> T.ZVJEZDICA: stupci = nenavedeno
+        self >> T.SELECT
+        if self >= T.ZVJEZDICA: stupci = nenavedeno
         elif stupac := self >> T.IME:
             stupci = [stupac]
-            while self >> T.ZAREZ: stupci.append(self.pročitaj(T.IME))
-        else: raise self.greška()
-        self.pročitaj(T.FROM)        
-        return Select(self.pročitaj(T.IME), stupci)
+            while self >= T.ZAREZ: stupci.append(self >> T.IME)
+        self >> T.FROM
+        return Select(self >> T.IME, stupci)
 
     def spec_stupac(self):
-        ime, tip = self.pročitaj(T.IME), self.pročitaj(T.IME)
-        if self >> T.OTVORENA:
-            veličina = self.pročitaj(T.BROJ)
-            self.pročitaj(T.ZATVORENA)
+        ime, tip = self >> T.IME, self >> T.IME
+        if self >= T.OTVORENA:
+            veličina = self >> T.BROJ
+            self >> T.ZATVORENA
         else: veličina = nenavedeno
         return Stupac(ime, tip, veličina)
 
     def create(self):
-        self.pročitaj(T.TABLE)
-        tablica = self.pročitaj(T.IME)
-        self.pročitaj(T.OTVORENA)
+        self >> T.CREATE, self >> T.TABLE
+        tablica = self >> T.IME
+        self >> T.OTVORENA
         stupci = [self.spec_stupac()]
-        while self >> T.ZAREZ: stupci.append(self.spec_stupac())
-        self.pročitaj(T.ZATVORENA)
+        while self >= T.ZAREZ: stupci.append(self.spec_stupac())
+        self >> T.ZATVORENA
         return Create(tablica, stupci)
 
     def naredba(self):
-        if self >> T.SELECT: rezultat = self.select()
-        elif self >> T.CREATE: rezultat = self.create()
+        if self > T.SELECT: rezultat = self.select()
+        elif self > T.CREATE: rezultat = self.create()
         else: raise self.greška()
-        self.pročitaj(T.TOČKAZAREZ)
+        self >> T.TOČKAZAREZ
         return rezultat
 
 

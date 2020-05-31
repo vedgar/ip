@@ -1,4 +1,4 @@
-from pj import *
+from vepar import *
 import RI  # kao backend
 
 
@@ -44,31 +44,30 @@ def ri(lex):
 class P(Parser):
     def rx(self):
         disjunkt = self.disjunkt()
-        if self >> T.ILI: return RI.Unija(disjunkt, self.rx())
+        if self >= T.ILI: return RI.Unija(disjunkt, self.rx())
         else: return disjunkt
 
     def disjunkt(self):
         faktor = self.faktor()
-        if self >= {T.PRAZAN, T.EPSILON, T.ZNAK, T.OTV}:
+        if self > {T.PRAZAN, T.EPSILON, T.ZNAK, T.OTV}:
             return RI.Konkatenacija(faktor, self.disjunkt())
         else: return faktor
 
     def faktor(self):
         trenutni = self.element()
         while True:
-            if self >> T.ZVIJEZDA: trenutni = RI.Zvijezda(trenutni)
-            elif self >> T.PLUS: trenutni = RI.Plus(trenutni)
-            elif self >> T.UPITNIK: trenutni = RI.Upitnik(trenutni)
+            if self >= T.ZVIJEZDA: trenutni = RI.Zvijezda(trenutni)
+            elif self >= T.PLUS: trenutni = RI.Plus(trenutni)
+            elif self >= T.UPITNIK: trenutni = RI.Upitnik(trenutni)
             else: return trenutni
 
     def element(self):
-        if self >> T.PRAZAN: return RI.prazan
-        elif self >> T.EPSILON: return RI.epsilon
-        elif znak := self >> T.ZNAK: return RI.Elementaran(znak.sadržaj)
-        else:
-            self.pročitaj(T.OTV)
+        if self >= T.PRAZAN: return RI.prazan
+        elif self >= T.EPSILON: return RI.epsilon
+        elif znak := self >= T.ZNAK: return RI.Elementaran(znak.sadržaj)
+        elif self >> T.OTV:
             u_zagradi = self.rx()
-            self.pročitaj(T.ZATV)
+            self >> T.ZATV
             return u_zagradi
 
     lexer = ri

@@ -3,7 +3,8 @@ Uz implicitno množenje ako desni faktor počinje zagradom (npr. 2(3+1)=8).
 Implementiran je i optimizator, baš kao u originalnom aritmetika_N.py."""
 
 
-from pj import *
+from vepar import *
+from backend import Python_eval
 
 
 class T(TipoviTokena):
@@ -32,22 +33,21 @@ def an(lex):
 class P(Parser):
     def izraz(self):
         trenutni = [self.član()]
-        while self >> T.PLUS: trenutni.append(self.član())
+        while self >= T.PLUS: trenutni.append(self.član())
         return Zbroj.ili_samo(trenutni)
 
     def član(self):
         trenutni = [self.faktor()]
-        while self >> T.PUTA or self >= T.OTVORENA:
+        while self >= T.PUTA or self > T.OTVORENA:
             trenutni.append(self.faktor())
         return Umnožak.ili_samo(trenutni)
 
     def faktor(self):
-        if broj := self >> T.BROJ: return broj
+        if broj := self >= T.BROJ: return broj
         elif self >> T.OTVORENA:
             u_zagradi = self.izraz()
-            self.pročitaj(T.ZATVORENA)
+            self >> T.ZATVORENA
             return u_zagradi
-        else: raise self.greška()
 
     lexer = an
     start = izraz
@@ -89,8 +89,8 @@ def testiraj(izraz):
     opt = stablo.optim()
     prikaz(opt, 2)
     mi = opt.vrijednost()
-    try: Python = eval(izraz)
-    except (SyntaxError, TypeError):
+    try: Python = Python_eval(izraz)
+    except SyntaxError:
         print('Python ne zna ovo izračunati!', izraz, '==', mi)
     else:
         if mi == Python: print(izraz, '==', mi, 'OK')

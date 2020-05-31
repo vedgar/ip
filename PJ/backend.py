@@ -1,4 +1,4 @@
-import collections, types
+import collections, types, warnings
 
 
 class Polinom(collections.Counter):
@@ -101,3 +101,10 @@ Ac=227.0278, Th=232.0381, Pa=231.0359, U=238.029, Np=237.0482, Pu=(242),
 Am=(243), Cm=(247), Bk=(247), Cf=(251), Es=(252), Fm=(257), Md=(258), No=(250),
 Lr=(260), Rf=(261), Db=(262), Sg=(263), Bh=(262), Hs=(255), Mt=(256), Ds=(269),
 Rg=(272), Cn=(285), Nh=(286), Fl=(289), Mc=(290), Lv=(293), Ts=(294), Og=(294))
+
+
+def Python_eval(izraz):
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        try: return eval(izraz)
+        except TypeError: raise SyntaxError

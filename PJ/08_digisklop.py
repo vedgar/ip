@@ -3,7 +3,7 @@ Zadatak s drugog kolokvija ljetnog semestra 2017. https://goo.gl/JGACGH
 Kao međuprikaz (koji se optimizira) korištene su Pythonove liste."""
 
 
-from pj import *
+from vepar import *
 
 
 class T(TipoviTokena):
@@ -28,23 +28,23 @@ def ds(lex):
 class P(Parser):
     def sklop(self):
         disjunkti = [self.disjunkt()]
-        while self >> T.ILI: disjunkti.append(self.disjunkt())
+        while self >= T.ILI: disjunkti.append(self.disjunkt())
         return Or.ili_samo(disjunkti)
 
     def disjunkt(self):
         konjunkti = [self.faktor()]
-        while self >= {T.SLOVO, T.OOTV, T.UOTV}: konjunkti.append(self.faktor())
+        while self > {T.SLOVO, T.OOTV, T.UOTV}: konjunkti.append(self.faktor())
         return And.ili_samo(konjunkti)
 
     def faktor(self):
-        if self >> T.OOTV:
+        if self >= T.OOTV:
             trenutni = self.sklop()
-            self.pročitaj(T.OZATV)
-        elif self >> T.UOTV:
+            self >> T.OZATV
+        elif self >= T.UOTV:
             trenutni = Not(self.sklop())
-            self.pročitaj(T.UZATV)
-        else: trenutni = self.pročitaj(T.SLOVO)
-        while self >> T.NE: trenutni = Not(trenutni)
+            self >> T.UZATV
+        else: trenutni = self >> T.SLOVO
+        while self >= T.NE: trenutni = Not(trenutni)
         return trenutni
 
     lexer = ds

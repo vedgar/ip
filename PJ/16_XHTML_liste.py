@@ -2,7 +2,7 @@
 Kolokvij 2. veljače 2015. (Puljić)"""
 
 
-from pj import *
+from vepar import *
 
 
 class T(TipoviTokena):
@@ -42,51 +42,33 @@ class P(Parser):
     lexer = html
 
     def start(self):
-        self.pročitaj(T.HTML), self.pročitaj(T.HEAD)
+        self >> T.HTML, self >> T.HEAD
         zaglavlje = self.tekst()
-        self.pročitaj(T.ZHEAD), self.pročitaj(T.BODY)
+        self >> T.ZHEAD, self >> T.BODY
         tijelo = []
-        while not self >> T.ZBODY: tijelo.append(self.element())
-        self.pročitaj(T.ZHTML)
+        while not self >= T.ZBODY: tijelo.append(self.element())
+        self >> T.ZHTML
         return Dokument(zaglavlje, tijelo)
         
     def tekst(self):
-        dijelovi = [self.pročitaj(T.TEKST)]
-        while tekst := self >> T.TEKST: dijelovi.append(tekst)
+        dijelovi = [self >> T.TEKST]
+        while tekst := self >= T.TEKST: dijelovi.append(tekst)
         return Tekst(dijelovi)
 
     def element(self):
-        if vrsta := self >> {T.OL, T.UL}:
+        if vrsta := self >= {T.OL, T.UL}:
             stavke = [self.stavka()]
-            while self >= T.LI: stavke.append(self.stavka())
-            self.pročitaj(zatvoreni(vrsta.tip))
+            while self > T.LI: stavke.append(self.stavka())
+            self >> zatvoreni(vrsta.tip)
             return Lista(vrsta, stavke)
         else: return self.tekst()
 
     def stavka(self):
-        self.pročitaj(T.LI)
+        self >> T.LI
         rezultat = self.element()
-        self.pročitaj(T.ZLI)
+        self >> T.ZLI
         return rezultat
             
-
-class Dokument(AST('zaglavlje tijelo')):
-    def render(self):
-        for element in self.tijelo: element.render(0, '')
-    
-class Lista(AST('vrsta stavke')):
-    def render(self, razina, prefiks):
-        for i, stavka in enumerate(self.stavke, 1):
-            if self.vrsta ^ T.OL: prefiks = '{:3}. '.format(i) 
-            elif self.vrsta ^ T.UL: prefiks = '  * '
-            stavka.render(razina + 1, prefiks)
-
-class Tekst(AST('dijelovi')):
-    def render(self, razina, prefiks):
-        print('\t' * razina, end=prefiks)
-        for dio in self.dijelovi: dio.render()
-        print()
-
 
 class Dokument(AST('zaglavlje tijelo')):
     def render(self):

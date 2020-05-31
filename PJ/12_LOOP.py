@@ -20,7 +20,7 @@ LOOP-program je slijed (jedne ili više) instrukcija sljedećeg oblika:
 
 Npr. LOOP-program "R2{DECR2;} R3{INCR2;DECR3;}" premješta broj iz R3 u R2."""
 
-from pj import *
+from vepar import *
 from backend import RAMStroj
 
 
@@ -36,7 +36,7 @@ def loop(lex):
             lex.čitaj(), lex.čitaj()  # ('N' ili 'E'), 'C'
             yield lex.literal(T, case=False)
         elif znak == 'R':
-            lex.prirodni_broj()
+            lex.prirodni_broj('')
             yield lex.token(T.REG)
         else: yield lex.literal(T)
 
@@ -54,19 +54,18 @@ def loop(lex):
 class P(Parser):
     def program(self):
         naredbe = [self.naredba()]
-        while not self >= {KRAJ, T.VZATV}: naredbe.append(self.naredba())
+        while not self > {KRAJ, T.VZATV}: naredbe.append(self.naredba())
         return Program(naredbe)
 
     def naredba(self):
-        if smjer := self >> {T.INC, T.DEC}:
-            stablo = Promjena(smjer, self.pročitaj(T.REG))
-            self.pročitaj(T.TOČKAZ)
+        if smjer := self >= {T.INC, T.DEC}:
+            stablo = Promjena(smjer, self >> T.REG)
+            self >> T.TOČKAZ
             return stablo
-        else:
-            reg = self.pročitaj(T.REG)
-            self.pročitaj(T.VOTV)
+        elif reg := self >> T.REG:
+            self >> T.VOTV
             tijelo = self.program()
-            self.pročitaj(T.VZATV)
+            self >> T.VZATV
             return Petlja(reg, tijelo)
 
     lexer = loop

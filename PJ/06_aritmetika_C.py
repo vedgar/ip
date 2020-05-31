@@ -8,7 +8,7 @@ Prikazano je čitanje decimalnih brojeva, aliasi, postfiksni operatori, ...
 """
 
 
-from pj import *
+from vepar import *
 from math import pi
 
 
@@ -54,34 +54,35 @@ class P(Parser):
     def start(self):
         okolina = []
         izraz = self.izraz()
-        while self >> T.STRELICA:
-            okolina.append((self.pročitaj(T.IME), izraz))
+        while self >= T.STRELICA:
+            okolina.append((self >> T.IME, izraz))
             izraz = self.izraz()
         return Program(okolina, izraz)
 
     def izraz(self):
         t = self.član()
-        while op := self >> {T.PLUS, T.MINUS}: t = Binarna(op, t, self.član())
+        while op := self >= {T.PLUS, T.MINUS}: t = Binarna(op, t, self.član())
         return t
 
     def član(self):
         t = self.faktor()
-        while op := self >> {T.PUTA, T.KROZ}: t = Binarna(op, t, self.faktor())
+        while op := self >= {T.PUTA, T.KROZ}: t = Binarna(op, t, self.faktor())
         return t
 
     def faktor(self):
-        if op := self >> T.MINUS: return Unarna(op, self.faktor())
+        if op := self >= T.MINUS: return Unarna(op, self.faktor())
         baza = self.baza()
-        if op := self >> T.NA: return Binarna(op, baza, self.faktor())
+        if op := self >= T.NA: return Binarna(op, baza, self.faktor())
         else: return baza
 
     def baza(self):
-        if self >> T.OTV:
+        if self >= T.OTV:
             trenutni = self.izraz()
-            self.pročitaj(T.ZATV)
-        else: trenutni = self.pročitaj(T.BROJ, T.IME, T.I)
-        while op := self >> T.KONJ: trenutni = Unarna(op, trenutni)
+            self >> T.ZATV
+        else: trenutni = self >> {T.BROJ, T.IME, T.I}
+        while op := self >= T.KONJ: trenutni = Unarna(op, trenutni)
         return trenutni
+
 
 ### Apstraktna sintaksna stabla
 # Program: okolina:[(izraz,IME)] izraz:izraz

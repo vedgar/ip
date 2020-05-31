@@ -1,4 +1,4 @@
-from pj import *
+from vepar import *
 
 class T(TipoviTokena):
     ZAREZ, OTV, ZATV, KOMPOZICIJA, JEDNAKO = ',()o='
@@ -33,13 +33,14 @@ def pr(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak == 'I':
-            n, k = divmod(lex.prirodni_broj(), 10)
+            n, k = divmod(lex.prirodni_broj(''), 10)
             if 1 <= n <= k: yield lex.token(T.KPROJEKCIJA)
             else: raise lex.greška('krivo formirani token Ink')
         elif znak.isalpha():
             lex.zvijezda(str.isalnum)
             yield lex.literal(T.FIME)
         else: yield lex.literal(T)
+
 
 ### BKG
 # program -> definicija | definicija program
@@ -51,12 +52,13 @@ def pr(lex):
 # osnovna -> FIME | NULFUNKCIJA | SLJEDBENIK | KPROJEKCIJA
 # funkcije -> funkcija | funkcija ZAREZ funkcije
 
+
 class P(Parser):
     def program(self):
         symtab = Memorija(redefinicija=False)
-        while not self >> KRAJ:
-            imef = self.pročitaj(T.FIME)
-            self.pročitaj(T.JEDNAKO)
+        while not self > KRAJ:
+            imef = self >> T.FIME
+            self >> T.JEDNAKO
             f = self.funkcija()
             symtab[imef] = (f.mjesnost(symtab), f)
         if not symtab.imena(): raise SemantičkaGreška('Prazan program')
@@ -64,25 +66,25 @@ class P(Parser):
 
     def funkcija(self):
         baza = self.komponenta()
-        if self >> T.PR: return PRekurzija(baza, self.komponenta())
+        if self >= T.PR: return PRekurzija(baza, self.komponenta())
         else: return baza
 
     def osnovna(self):
-        return self.pročitaj(T.FIME, T.NULFUNKCIJA, T.SLJEDBENIK, T.KPROJEKCIJA)
+        return self >> {T.FIME, T.NULFUNKCIJA, T.SLJEDBENIK, T.KPROJEKCIJA}
 
     def komponenta(self):
-        if self >> T.OTV:
+        if self >= T.OTV:
             t = self.funkcija()
-            self.pročitaj(T.ZATV)
+            self >> T.ZATV
         else: t = self.osnovna()
-        while self >> T.KOMPOZICIJA: t = Kompozicija(t, self.desno())
+        while self >= T.KOMPOZICIJA: t = Kompozicija(t, self.desno())
         return t
 
     def desno(self):
-        if self >> T.OTV:
+        if self >= T.OTV:
             rezultat = [self.funkcija()]
-            while self >> T.ZAREZ: rezultat.append(self.funkcija())
-            self.pročitaj(T.ZATV)
+            while self >= T.ZAREZ: rezultat.append(self.funkcija())
+            self >> T.ZATV
             return rezultat
         else: return [self.osnovna()]
 
@@ -146,4 +148,4 @@ proba = P('''\
         pow = C11 PR mul2 o (I13, I33)
 ''')
 prikaz(proba)
-print(izračunaj(proba, 'pow', 3, 7))
+print(3, '^', 7, '=', izračunaj(proba, 'pow', 3, 7))

@@ -1,4 +1,4 @@
-from pj import *
+from vepar import *
 import fractions
 
 class T(TipoviTokena):
@@ -57,62 +57,60 @@ class P(Parser):
     def naredbe(self):
         lista = []
         while True:
-            if self >= {T.BVAR, T.TVAR}: lista.append(self.pridruživanje())
-            elif self >= T.ZA: lista.append(self.petlja())
-            elif self >= T.UNOS: lista.append(self.unos())
-            elif self >= T.ISPIS: lista.append(self.ispis())
-            elif self >= T.AKO: lista.append(self.grananje())
-            else: break
-        return lista
+            if self > {T.BVAR, T.TVAR}: lista.append(self.pridruživanje())
+            elif self > T.ZA: lista.append(self.petlja())
+            elif self > T.UNOS: lista.append(self.unos())
+            elif self > T.ISPIS: lista.append(self.ispis())
+            elif self > T.AKO: lista.append(self.grananje())
+            else: return lista
 
     def pridruživanje(self):
-        varijabla = self.pročitaj(T.BVAR, T.TVAR)
-        self.pročitaj(T.JEDNAKO)
+        varijabla = self >> {T.BVAR, T.TVAR}
+        self >> T.JEDNAKO
         if varijabla ^ T.BVAR: pridruženo = self.broj()
         elif varijabla ^ T.TVAR: pridruženo = self.tekst()
         return Pridruživanje(varijabla, pridruženo)
 
     def petlja(self):
-        self.pročitaj(T.ZA)
-        varijabla = self.pročitaj(T.BVAR)
-        self.pročitaj(T.JEDNAKO)
+        self >> T.ZA
+        varijabla = self >> T.BVAR
+        self >> T.JEDNAKO
         početak = self.broj()
-        self.pročitaj(T.DO)
+        self >> T.DO
         kraj = self.broj()
         tijelo = self.naredbe()
-        self.pročitaj(T.SLJEDEĆI)
-        varijabla2 = self.pročitaj(T.BVAR)
-        if varijabla != varijabla2:
+        self >> T.SLJEDEĆI
+        if varijabla != (self >> T.BVAR):
             raise SemantičkaGreška('Varijable u petlji se ne podudaraju')
         return Petlja(varijabla, početak, kraj, tijelo)
 
     def unos(self):
-        self.pročitaj(T.UNOS)
-        return Unos(self.pročitaj(T.BVAR, T.TVAR))
+        self >> T.UNOS
+        return Unos(self >> {T.BVAR, T.TVAR})
 
     def ispis(self):
-        self.pročitaj(T.ISPIS)
-        if self >= {T.BROJ, T.BVAR, T.OTV, T.UBROJ}: što = self.broj()
-        elif self >= {T.TEKST, T.TVAR, T.UTEKST}: što = self.tekst()
-        else: što = self.pročitaj(T.SLJEDEĆI)
+        self >> T.ISPIS
+        if self > {T.BROJ, T.BVAR, T.OTV, T.UBROJ}: što = self.broj()
+        elif self > {T.TEKST, T.TVAR, T.UTEKST}: što = self.tekst()
+        else: što = self >> T.SLJEDEĆI
         return Ispis(što)
     
     def grananje(self):
-        self.pročitaj(T.AKO)
+        self >> T.AKO
         uvjet = self.broj()
         onda = self.naredbe()
         inače = []
-        if self >> T.INAČE: inače = self.naredbe()
-        self.pročitaj(T.NADALJE, KRAJ)
+        if self >= T.INAČE: inače = self.naredbe()
+        self >> {T.NADALJE, KRAJ}
         return Grananje(uvjet, onda, inače)
 
     def broj(self):
-        if self >= {T.BROJ, T.BVAR, T.OTV, T.UBROJ}:
+        if self > {T.BROJ, T.BVAR, T.OTV, T.UBROJ}:
             prvi = self.račun()
             usporedba = {T.MANJE, T.VEĆE, T.JEDNAKO}
             manje = veće = jednako = nenavedeno
-            if self >= usporedba:
-                while u := self >> usporedba:
+            if self > usporedba:
+                while u := self >= usporedba:
                     if u ^ T.MANJE: manje = u
                     elif u ^ T.VEĆE: veće = u
                     elif u ^ T.JEDNAKO: jednako = u
@@ -120,40 +118,41 @@ class P(Parser):
             else: return prvi
         else:
             prvi = self.tekst()
-            self.pročitaj(T.JEDNAKO)
+            self >> T.JEDNAKO
             drugi = self.tekst()
             return JednakTekst(prvi, drugi)
 
     def račun(self):
         t = self.član()
-        while op := self >> {T.PLUS, T.MINUS}: t = Osnovna(op, t, self.član())
+        while op := self >= {T.PLUS, T.MINUS}: t = Osnovna(op, t, self.član())
         return t
 
     def član(self):
         t = self.faktor()
-        while op := self >> {T.PUTA, T.KROZ}: t = Osnovna(op, t, self.faktor())
+        while op := self >= {T.PUTA, T.KROZ}: t = Osnovna(op, t, self.faktor())
         return t
 
     def faktor(self):
-        if self >> T.OTV:
+        if self >= T.OTV:
             u_zagradi = self.broj()
-            self.pročitaj(T.ZATV)
+            self >> T.ZATV
             return u_zagradi
-        elif self >> T.UBROJ:
-            self.pročitaj(T.OTV)
+        elif self >= T.UBROJ:
+            self >> T.OTV
             argument = self.tekst()
-            self.pročitaj(T.ZATV)
+            self >> T.ZATV
             return TekstUBroj(argument)
-        else: return self.pročitaj(T.BROJ, T.BVAR)
+        else: return self >> {T.BROJ, T.BVAR}
 
     def tekst(self):
-        if self >> T.UTEKST:
-            self.pročitaj(T.OTV)
+        if self >= T.UTEKST:
+            self >> T.OTV
             trenutni = BrojUTekst(self.broj())
-            self.pročitaj(T.ZATV)
-        else: trenutni = self.pročitaj(T.TEKST, T.TVAR)
-        if self >> T.PLUS: return Konkatenacija(trenutni, self.tekst())
+            self >> T.ZATV
+        else: trenutni = self >> {T.TEKST, T.TVAR}
+        if self >= T.PLUS: return Konkatenacija(trenutni, self.tekst())
         else: return trenutni
+
 
 ### AST
 # Program: naredbe:[naredba]

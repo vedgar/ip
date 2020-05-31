@@ -5,7 +5,7 @@
   3 upita (duljina i praznost liste, dohvaćanje elementa po indeksu)."""
 
 
-from pj import *
+from vepar import *
 
 
 class T(TipoviTokena):
@@ -37,7 +37,7 @@ def list_lexer(lex):
             lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
         elif znak == '-':
-            lex.prirodni_broj(nula=False)
+            lex.prirodni_broj('', nula=False)
             yield lex.token(T.MINUSBROJ)
         else: raise lex.greška()
 
@@ -61,23 +61,24 @@ def list_lexer(lex):
 #          Dohvati: lista:ID indeks:BROJ
 #          Duljina: lista:ID
 
+
 class P(Parser):
     lexer = list_lexer
 
     def start(self):
         naredbe = []
-        while not self >> KRAJ: naredbe.append(self.naredba())
+        while not self > KRAJ: naredbe.append(self.naredba())
         return Program(naredbe)
 
     def naredba(self):
-        p = self.pročitaj
-        if self>>T.UBACI: return Ubaci(p(T.ID),p(T.BROJ,T.MINUSBROJ),p(T.BROJ))
-        elif self >> T.LISTA: return Deklaracija(p(T.ID))
-        elif self >> T.PRAZNA: return Provjera(p(T.ID))
-        elif self >> T.IZBACI: return Izbaci(p(T.ID), p(T.BROJ))
-        elif self >> T.DOHVATI: return Dohvati(p(T.ID), p(T.BROJ))
-        elif self >> T.KOLIKO: return Duljina(p(T.ID))
-        else: self.greška()
+        if self >= T.UBACI: return Ubaci(self >> T.ID, 
+            self >> {T.BROJ,T.MINUSBROJ}, self >> T.BROJ)
+        elif self >= T.LISTA: return Deklaracija(self >> T.ID)
+        elif self >= T.PRAZNA: return Provjera(self >> T.ID)
+        elif self >= T.IZBACI: return Izbaci(self >> T.ID, self >> T.BROJ)
+        elif self >= T.DOHVATI: return Dohvati(self >> T.ID, self >> T.BROJ)
+        elif self >= T.KOLIKO: return Duljina(self >> T.ID)
+        else: raise self.greška()
 
 
 class Program(AST('naredbe')):
