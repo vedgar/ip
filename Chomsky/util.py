@@ -381,7 +381,7 @@ def novo(prefiks, iskorišteni):
 
 
 def DOT_PA(automat):
-    """Dijagram danog PA u DOT formatu. ε se piše kao e."""
+    """Dijagram danog PA u formatu DOT. ε se piše kao e."""
     Q, Σ, Γ, Δ, q0, F = automat.komponente
     r = {q: i for i, q in enumerate(Q, 1)}
     obrazac = [

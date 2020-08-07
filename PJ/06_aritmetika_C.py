@@ -135,14 +135,14 @@ izračunaj('''\
     a^2^2^2^2^0 -> b
     b
 ''')
-izračunaj('''\
+izračunaj(f'''\
     8 -> d
     10^d -> n
     (1+1/n)^n -> e
-    {} -> pi
+    {pi} -> pi
     e^(i*pi) + 1 -> skoro0
     skoro0
-'''.format(pi))
+''')
 izračunaj('6.02214076e23->NA 1.6605e-27->u 1/(NA*u)')
 with očekivano(LeksičkaGreška): izračunaj('2e+3')
 with očekivano(GreškaIzvođenja): izračunaj('2+2/0')

@@ -25,6 +25,9 @@ Tipovi varijabli (i povratni tipovi funkcija) se reprezentiraju leksički:
 
 Minimalni kontekst je potreban da bismo zapamtili jesmo li trenutno u definiciji
     aritmetičke ili logičke funkcije, kako bi naredba "vrati" znala što očekuje.
+
+Dozvoljeni su i (ne uzajamno) rekurzivni pozivi, tako da se za vrijeme 
+    parsiranja i izvršavanja prati u kojoj smo funkciji.
 """
 
 
@@ -174,7 +177,7 @@ class P(Parser):
     def tipa(self, ime):
         if ime ^ T.AIME: return self.aritm()
         elif ime ^ T.LIME: return self.log()
-        else: assert False, 'Nepoznat tip od {}'.format(ime)
+        else: assert False, f'Nepoznat tip od {ime}'
         
     def aritm(self):
         članovi = [self.član()]
@@ -202,7 +205,7 @@ class P(Parser):
 
 
 def izvrši(funkcije, *argv):
-    print('Program je vratio:', funkcije[Token(T.AIME, 'program')].pozovi(argv))
+    print('Program je vratio:', funkcije['program'].pozovi(argv))
 
 
 ### AST
@@ -222,16 +225,15 @@ def izvrši(funkcije, *argv):
 class Funkcija(AST('ime parametri naredba')):
     def pozovi(self, argumenti):
         lokalni = Memorija(dict(zip(self.parametri, argumenti)))
-        try: self.naredba.izvrši(lokalni, self)
+        try: self.naredba.izvrši(mem=lokalni, unutar=self)
         except Povratak as exc: return exc.preneseno
-        else: raise GreškaIzvođenja('{} nije ništa vratila'.format(self.ime))
+        else: raise GreškaIzvođenja(f'{self.ime} nije ništa vratila')
 
 class Poziv(AST('funkcija argumenti')):
     def vrijednost(self, mem, unutar):
-        argumenti = [argument.vrijednost(mem, unutar)
-                     for argument in self.argumenti]
         pozvana = self.funkcija
-        if pozvana is nenavedeno: pozvana = unutar
+        if pozvana is nenavedeno: pozvana = unutar  # rekurzivni poziv
+        argumenti = [a.vrijednost(mem, unutar) for a in self.argumenti]
         return pozvana.pozovi(argumenti)
 
     def _asdict(self):  # samo za ispis, da se ne ispiše čitava funkcija
@@ -241,9 +243,7 @@ class Poziv(AST('funkcija argumenti')):
         return za_ispis
 
 def ispunjen(ast, mem, unutar):
-    if ast.istinitost ^ T.JE: traženo = True
-    elif ast.istinitost ^ T.NIJE: traženo = False
-    else: assert False, 'Nema trećeg.'
+    traženo = {T.JE: True, T.NIJE: False}[ast.istinitost.tip]
     return ast.uvjet.vrijednost(mem, unutar) == traženo
 
 class Grananje(AST('istinitost uvjet onda inače')):
@@ -278,7 +278,7 @@ class Usporedba(AST('lijevo relacija desno')):
         d = self.desno.vrijednost(mem, unutar)
         if self.relacija ^ T.JEDNAKO: return l == d
         elif self.relacija ^ T.MANJE: return l < d
-        else: assert False, 'Nepoznata relacija {}'.format(self.relacija)
+        else: assert False, f'Nepoznata relacija {self.relacija}'
 
 class Zbroj(AST('pribrojnici')):
     def vrijednost(self, mem, unutar):
@@ -378,8 +378,8 @@ izvrši(tablice_istinitosti, 3)  # poziv iz komandne linije, prijenos m=3
 print()
 
 rekurzivna = P('''\
-fakt(n) = ako je n = 0 vrati 1 inače vrati n*fakt(n-1)
-program() = vrati fakt(7)
+    fakt(n) = ako je n = 0 vrati 1 inače vrati n*fakt(n-1)
+    program() = vrati fakt(7)
 ''')
 prikaz(rekurzivna)
 izvrši(rekurzivna)

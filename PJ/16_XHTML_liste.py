@@ -82,8 +82,7 @@ class Lista(AST('vrsta stavke')):
             if i > 1 and zadnji.endswith('\t'): zadnji = '\t'
             if self.vrsta ^ T.OL: marker = str(i) + '.'
             elif self.vrsta ^ T.UL: marker = '*#@o-.,_ '[len(prethodni)] + ' '
-            novi = '{:>7}\t'.format(marker)
-            stavka.render(prethodni + [zadnji, novi])
+            stavka.render(prethodni + [zadnji, f'{marker:>7}\t'])
 
 class Tekst(AST('dijelovi')):
     def render(self, prefiks):

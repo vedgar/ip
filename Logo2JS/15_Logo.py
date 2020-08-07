@@ -80,12 +80,12 @@ class Program(AST('naredbe')):
         yield 'ctx.stroke();'
 
 class Pomak(AST('smjer pikseli')):
-    def js(self, _):
+    def js(self, repeat_br):
         d = self.smjer.predznak * self.pikseli.vrijednost()
         yield f'to.apply(ctx, [x-=Math.sin(h)*{d}, y-=Math.cos(h)*{d}]);'
 
 class Okret(AST('smjer stupnjevi')):
-    def js(self, _):
+    def js(self, repeat_br):
         φ = self.smjer.predznak * self.stupnjevi.vrijednost()
         yield f'h += {math.radians(φ)};'
 
@@ -97,7 +97,7 @@ class Ponavljanje(AST('koliko naredbe')):
         yield '}'
 
 class Olovka(AST('položaj')):
-    def js(self, _): yield f'to = ctx.{self.položaj.opkod}To'
+    def js(self, repeat_br): yield f'to = ctx.{self.položaj.opkod}To'
 
 
 def prevedi_string(kôd): return '\n'.join(P(kôd).js())
@@ -123,5 +123,6 @@ def nacrtaj_sve():
 nacrtaj('pisanje')
 # nacrtaj_sve()
 
+# DZ: dodajte REPCOUNT (pogledajte na webu kako se koristi)
 # DZ: pogledati http://www.mathcats.com/gallery/15wordcontest.html
 #     i implementirati neke od tih crteža (za mnoge trebaju varijable!)

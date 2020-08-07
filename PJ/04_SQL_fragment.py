@@ -91,16 +91,16 @@ class Skripta(AST('naredbe')):
 class Create(AST('tablica specifikacije')):
     """Naredba CREATE TABLE."""
     def razriješi(self, imena):
-        t = imena[self.tablica] = Memorija(redefinicija=True)
+        pristup = imena[self.tablica] = Memorija(redefinicija=True)
         for stupac in self.specifikacije:
-            t[stupac.ime] = 0
+            pristup[stupac.ime] = 0
         
 class Select(AST('tablica stupci')):
     """Naredba SELECT."""
     def razriješi(self, imena):
         t = imena[self.tablica]
         dohvaćeni = self.stupci
-        if dohvaćeni is nenavedeno: dohvaćeni = t.imena()
+        if dohvaćeni is nenavedeno: dohvaćeni = dict(t)
         for stupac in dohvaćeni: t[stupac] += 1
 
 class Stupac(AST('ime tip veličina')): """Specifikacija stupca u tablici."""
@@ -139,12 +139,8 @@ prikaz(skripta, 4)
 for tablica, log in skripta.razriješi():
     print('Tablica', tablica, '- stupci:')
     for stupac, pristup in log: print('\t', stupac, pristup)
-i = 1
-for tablica, stupac in za_indeks(skripta):
-    t = tablica.sadržaj
-    s = stupac.sadržaj
-    print('CREATE INDEX idx{} ON {} ({});'.format(i, t, s))
-    i += 1
+for i, (tablica, stupac) in enumerate(za_indeks(skripta), start=1):
+    print(f'CREATE INDEX idx{i} ON {tablica.sadržaj} ({stupac.sadržaj});')
 
 with očekivano(SemantičkaGreška): P('SELECT * FROM nema;').razriješi()
 with očekivano(SemantičkaGreška):

@@ -81,7 +81,7 @@ class Promjena(AST('op registar')):
         j = self.registar.broj()
         if self.op ^ T.INC: stroj.inc(j)
         elif self.op ^ T.DEC: stroj.dec(j)
-        else: assert False, 'Nepoznata operacija {}'.format(op)
+        else: assert False, f'Nepoznata operacija {self.op}'
 
 class Petlja(AST('registar tijelo')):
     def izvrši(self, stroj):

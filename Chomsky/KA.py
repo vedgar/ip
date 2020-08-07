@@ -51,7 +51,7 @@ class KonačniAutomat(types.SimpleNamespace):
         return KonačniAutomat.iz_komponenti(QN, Σ, δN, q0N, FN)
 
     def crtaj(automat):
-        """Ispisuje na ekran dijagram automata u DOT formatu.
+        """Ispisuje na ekran dijagram automata u formatu DOT.
         Dobiveni string može se kopirati u sandbox.kidstrythisathome.com/erdos
         ili u www.webgraphviz.com."""
         NedeterminističkiKonačniAutomat.iz_konačnog_automata(automat).crtaj()

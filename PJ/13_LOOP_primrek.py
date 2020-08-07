@@ -61,7 +61,7 @@ class P(Parser):
             self >> T.JEDNAKO
             f = self.funkcija()
             symtab[imef] = (f.mjesnost(symtab), f)
-        if not symtab.imena(): raise SemantičkaGreška('Prazan program')
+        if not symtab: raise SemantičkaGreška('Prazan program')
         return symtab
 
     def funkcija(self):
@@ -132,7 +132,7 @@ class PRekurzija(AST('baza korak')):
 
 
 def izračunaj(memorija, imef, *argumenti):
-    k, f = memorija[Token(T.FIME, imef)]
+    k, f = memorija[imef]
     if len(argumenti) == k: return f.izračunaj(memorija, argumenti)
     else: raise kriva_mjesnost
 

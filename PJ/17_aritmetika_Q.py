@@ -9,7 +9,7 @@ class T(TipoviTokena):
     class IME(Token):
         def izračunaj(self, mem, v):
             if self in mem: return mem[self]
-            else: raise self.nedeklaracija('pri pridruživanju {}'.format(v))
+            else: raise self.nedeklaracija(f'pri pridruživanju {v}')
 
 def aq(lex):
     for znak in lex:
@@ -77,14 +77,14 @@ class Program(AST('pridruživanja')):
 
 class Op(AST('op lijevo desno')):
     def izračunaj(self, memorija, v):
-        if self.lijevo is nenavedeno: l = 0
+        if self.lijevo is nenavedeno: l = 0  # unarni minus: -x = 0-x
         else: l = self.lijevo.izračunaj(memorija, v)
         o, d = self.op, self.desno.izračunaj(memorija, v)
         if o ^ T.PLUS: return l + d
         elif o ^ T.MINUS: return l - d
         elif o ^ T.PUTA: return l * d
         elif d: return l / d
-        else: raise o.iznimka('dijeljenje nulom pri pridruživanju {}'.format(v))
+        else: raise o.iznimka(f'dijeljenje nulom pri pridruživanju {v}')
 
 
 ast = P('''\

@@ -9,10 +9,10 @@ class T(TipoviTokena):
     AKO, INAČE, NADALJE = 'ako', 'inače', 'nadalje'
     class BROJ(Token):
         def vrijednost(self, mem): return fractions.Fraction(self.sadržaj)
-    class BVAR(Token):
-        def vrijednost(self, mem): return mem[self]
     class TEKST(Token):
         def vrijednost(self, mem): return self.sadržaj[1:-1]
+    class BVAR(Token):
+        def vrijednost(self, mem): return mem[self]
     class TVAR(Token):
         def vrijednost(self, mem): return mem[self]
 
@@ -175,13 +175,13 @@ class P(Parser):
 
 class Program(AST('naredbe')):
     def izvrši(self):
-        mem = {}
+        mem = Memorija()
         for naredba in self.naredbe: naredba.izvrši(mem)
 
 class Unos(AST('varijabla')):
     def izvrši(self, mem):
         v = self.varijabla
-        prompt = '\t' + v.sadržaj + '? '
+        prompt = f'\t{v.sadržaj}? '
         if v ^ T.TVAR: mem[v] = input(prompt)
         elif v ^ T.BVAR:
             while True:
@@ -189,7 +189,7 @@ class Unos(AST('varijabla')):
                 try: mem[v] = fractions.Fraction(t.replace('÷', '/'))
                 except ValueError: print(end='To nije racionalni broj! ')
                 else: break
-        else: assert False, 'Nepoznat tip varijable {}'.format(v)
+        else: assert False, f'Nepoznat tip varijable {v}'
 
 class Ispis(AST('što')):
     def izvrši(self, mem):
@@ -217,7 +217,7 @@ class Grananje(AST('uvjet onda inače')):
         b = self.uvjet.vrijednost(mem)
         if b == ~0: sljedeći = self.onda
         elif b == 0: sljedeći = self.inače
-        else: raise GreškaIzvođenja('Tertium ({}) non datur!'.format(b))
+        else: raise GreškaIzvođenja(f'Tertium ({b}) non datur!')
         for naredba in sljedeći: naredba.izvrši(mem)
 
 class JednakTekst(AST('lijevo desno')):
@@ -240,13 +240,13 @@ class Osnovna(AST('operacija lijevo desno')):
         elif o ^ T.KROZ:
             if d: return fractions.Fraction(l, d)
             else: raise o.iznimka('Nazivnik ne smije biti nula!')
-        else: assert False, 'Nepokrivena binarna operacija {}'.format(o)
+        else: assert False, f'Nepokrivena binarna operacija {o}'
 
 class TekstUBroj(AST('tekst')):
     def vrijednost(self, mem):
         arg = self.tekst.vrijednost(mem)
         try: return fractions.Fraction(arg.replace('÷', '/'))
-        except ValueError: raise GreškaIzvođenja('{!r} nije broj'.format(arg))
+        except ValueError: raise GreškaIzvođenja(f'{arg!r} nije broj')
 
 class BrojUTekst(AST('broj')):
     def vrijednost(self, mem): 

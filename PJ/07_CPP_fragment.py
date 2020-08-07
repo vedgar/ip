@@ -134,7 +134,7 @@ class Prekid(NelokalnaKontrolaToka): """Signal koji šalje naredba break."""
 class Program(AST('naredbe')):
     def izvrši(self):
         mem = Memorija()
-        try:
+        try:  # break izvan petlje je zapravo sintaksna greška - kompliciranije
             for naredba in self.naredbe: naredba.izvrši(mem)
         except Prekid: raise SemantičkaGreška('nedozvoljen break izvan petlje')
 
