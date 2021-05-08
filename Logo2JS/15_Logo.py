@@ -104,24 +104,25 @@ def prevedi_string(kôd): return '\n'.join(P(kôd).js())
 
 def prevedi_datoteku(datoteka):
     if isinstance(datoteka, str): datoteka = zb[datoteka]
-    pathlib.Path('a.js').write_text(prevedi_string(datoteka.read_text()))
+    (pathlib.Path(__file__).parent.parent/'Logo2JS'/'a.js').write_text(prevedi_string(datoteka.read_text()))
 
 def nacrtaj(ime):
     print('Crtam:', ime)
     prevedi_datoteku(zb[ime])
-    webbrowser.open(str(pathlib.Path('loader.html')))
+    webbrowser.open(str(pathlib.Path(__file__).parent.parent/'Logo2JS'/'loader.html'))
 
-zb = {f.stem: f for f in (pathlib.Path(__file__).parent/'crteži').iterdir()}
+print(pathlib.Path(__file__).parent.parent)
+zb = {f.stem: f for f in (pathlib.Path(__file__).parent.parent/'Logo2JS'/'crteži').iterdir()}
 crteži = set(zb)
 print(crteži)
 
 def nacrtaj_sve():
     for crtež in crteži:
         nacrtaj(crtež)
-        time.sleep(8)
+        time.sleep(4)
 
-nacrtaj('pisanje')
-# nacrtaj_sve()
+# nacrtaj('pisanje')
+nacrtaj_sve()
 
 # DZ: dodajte REPCOUNT (pogledajte na webu kako se koristi)
 # DZ: pogledati http://www.mathcats.com/gallery/15wordcontest.html
