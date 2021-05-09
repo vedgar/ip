@@ -35,14 +35,22 @@ def stablo_parsiranja(string):
                 ispis(podstablo, razina + 1)
     ispis(parser.suite(string).tolist(), 0)
 
-def apstablo(string): print(ast.dump(ast.parse(string)))
+def apstablo(string): 
+    try: print(ast.dump(ast.parse(string), indent=4))
+    except TypeError:
+        print(ast.dump(ast.parse(string)))
+        print('Za ljepši ispis pokrenite ovo pod Pythonom 3.9 ili kasnijim.')
 
 def bytecode(string): dis.dis(string)
 
+def izvrši(string): exec(string)
+
+def naredba(string): print(string)
+
 if __name__ == '__main__':
     primjer = 'for x in 2, 3: print(x)'
-    print(primjer)
-    for funkcija in tokeni, stablo_parsiranja, apstablo, bytecode:
+    for funkcija in naredba, tokeni, stablo_parsiranja, \
+                    apstablo, bytecode, izvrši:
         print(funkcija.__name__.center(75, '-'))
         funkcija(primjer)
         print()
