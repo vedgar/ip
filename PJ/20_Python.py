@@ -1,6 +1,4 @@
-import tokenize, io, keyword, ast, dis, warnings
-warnings.simplefilter('ignore')
-import parser
+import tokenize, io, keyword, ast, dis, warnings, textwrap
 
 def tokeni(string):
     lex = tokenize.tokenize(io.BytesIO(string.encode('utf8')).readline)
@@ -10,6 +8,16 @@ def tokeni(string):
         print('\t' + tip + repr(tok.string))
 
 def stablo_parsiranja(string):
+    warnings.simplefilter('ignore')
+    try: import parser
+    except ImportError: return print(textwrap.dedent('''\
+        U verziji 3.10 Python je prešao na novi parser, koji više nije
+        zasnovan na beskontekstnoj gramatici (i nije dostupan kroz
+        Pythonovu standardnu biblioteku). To je u skladu s onim što smo
+        rekli na nastavi, da sve više parsera producira direktno AST umjesto
+        stabala parsiranja. Više o razlozima možete pročitati u PEP617.
+        Ako ipak želite vidjeti stablo parsiranja za gornji komad koda, 
+        pokrenite ovaj program pod Pythonom 3.9 ili nižim.'''))
     def ispis(t, razina, nastavak=False):
         if not nastavak: print(end=' '*2*razina)
         if len(t) == 2:
