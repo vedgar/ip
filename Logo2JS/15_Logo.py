@@ -104,15 +104,15 @@ def prevedi_string(kôd): return '\n'.join(P(kôd).js())
 
 def prevedi_datoteku(datoteka):
     if isinstance(datoteka, str): datoteka = zb[datoteka]
-    (pathlib.Path(__file__).parent.parent/'Logo2JS'/'a.js').write_text(prevedi_string(datoteka.read_text()))
+    (pathlib.Path(__file__).parent/'a.js').write_text(prevedi_string(datoteka.read_text()))
 
 def nacrtaj(ime):
     print('Crtam:', ime)
     prevedi_datoteku(zb[ime])
-    webbrowser.open(str(pathlib.Path(__file__).parent.parent/'Logo2JS'/'loader.html'))
+    webbrowser.open(str(pathlib.Path(__file__).parent/'loader.html'))
 
 print(pathlib.Path(__file__).parent.parent)
-zb = {f.stem: f for f in (pathlib.Path(__file__).parent.parent/'Logo2JS'/'crteži').iterdir()}
+zb = {f.stem: f for f in (pathlib.Path(__file__).parent/'crteži').iterdir()}
 crteži = set(zb)
 print(crteži)
 
