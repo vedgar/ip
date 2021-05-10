@@ -1,4 +1,8 @@
-from pj import *
+"""Kemijske formule: zadatak s kolokvija 2018.
+https://web.math.pmf.unizg.hr/~veky/B/IP.k2p.18-09-07.pdf"""
+
+
+from vepar import *
 from backend import referentne_atomske_mase
 import collections
 
@@ -29,8 +33,7 @@ def kemija(lex):
         elif znak.isupper():
             if not lex.čitaj().islower(): lex.vrati()
             yield lex.token(T.ATOM)
-        else:
-            yield lex.literal(T)
+        else: yield lex.literal(T)
         možeN = znak in '])'
 
 
@@ -43,18 +46,18 @@ def kemija(lex):
 class spoj(Parser):
     def formula(self):
         l = [self.skupina()]
-        while self >= {T.ATOM, T.OOTV, T.UOTV}: l.append(self.skupina())
+        while self > {T.ATOM, T.OOTV, T.UOTV}: l.append(self.skupina())
         return Formula(l)
 
     def skupina(self):
-        if self >> T.OOTV:
+        if self >= T.OOTV:
             što = self.formula()
-            self.pročitaj(T.OZATV)
-        elif self >> T.UOTV:
+            self >> T.OZATV
+        elif self >= T.UOTV:
             što = self.formula()
-            self.pročitaj(T.UZATV)
-        else: što = self.pročitaj(T.ATOM)
-        return Skupina(što, self >> {T.BROJ, T.N} or nenavedeno)
+            self >> T.UZATV
+        else: što = self >> T.ATOM
+        return Skupina(što, self >= {T.BROJ, T.N})
 
     lexer = kemija
     start = formula
@@ -86,4 +89,4 @@ for krivo in 'SnABcdefG', 'O Be', 'Es(n)':
     with očekivano(LeksičkaGreška): spoj.tokeniziraj(krivo)
     print()
 spoj.tokeniziraj(']nB')
-print(spoj('CH3(CH2)nCH3').Mr(n=2))
+print('Molarna masa butana je', spoj('CH3(CH2)nCH3').Mr(n=2))

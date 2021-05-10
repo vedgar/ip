@@ -1,0 +1,1 @@
+repeat 10 [ repeat 5 [ fd 100 lt 72 ] lt 72 ]

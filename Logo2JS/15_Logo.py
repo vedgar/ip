@@ -100,19 +100,21 @@ class Olovka(AST('položaj')):
     def js(self, repeat_br): yield f'to = ctx.{self.položaj.opkod}To'
 
 
+direktorij = pathlib.Path(__file__).parent
+
 def prevedi_string(kôd): return '\n'.join(P(kôd).js())
 
 def prevedi_datoteku(datoteka):
     if isinstance(datoteka, str): datoteka = zb[datoteka]
-    (pathlib.Path(__file__).parent/'a.js').write_text(prevedi_string(datoteka.read_text()))
+    (direktorij/'a.js').write_text(prevedi_string(datoteka.read_text()))
 
 def nacrtaj(ime):
     print('Crtam:', ime)
     prevedi_datoteku(zb[ime])
-    webbrowser.open(str(pathlib.Path(__file__).parent/'loader.html'))
+    webbrowser.open(str(direktorij/'loader.html'))
 
-print(pathlib.Path(__file__).parent.parent)
-zb = {f.stem: f for f in (pathlib.Path(__file__).parent/'crteži').iterdir()}
+# print(pathlib.Path(__file__).parent.parent)
+zb = {f.stem: f for f in (direktorij/'crteži').iterdir()}
 crteži = set(zb)
 print(crteži)
 
@@ -121,8 +123,8 @@ def nacrtaj_sve():
         nacrtaj(crtež)
         time.sleep(4)
 
-# nacrtaj('pisanje')
-nacrtaj_sve()
+nacrtaj('pisanje')
+# nacrtaj_sve()
 
 # DZ: dodajte REPCOUNT (pogledajte na webu kako se koristi)
 # DZ: pogledati http://www.mathcats.com/gallery/15wordcontest.html
