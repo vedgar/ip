@@ -167,3 +167,5 @@ operacije = P('''\
 ''')
 prikaz(operacije)
 print(3, '^', 7, '=', izračunaj(operacije, 'pow', 3, 7))
+
+# DZ**: dokažite ekvivalentnost ovog sustava i programskog jezika LOOP
