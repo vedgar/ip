@@ -1,13 +1,11 @@
 """Interpreter za jednostavni fragment jezika C++: petlje, grananja, ispis.
-
-    petlje: for(var = broj; var < broj; var ++ ili var += broj) naredba
-    grananja: if(var == broj) naredba
-    ispis: cout << var1 << var2 << ..., s opcionalnim << endl na kraju
+    * petlje: for(var = broj; var < broj; var ++ ili var += broj) naredba
+    * grananja: if(var == broj) naredba
+    * ispis: cout << var1 << var2 << ..., s opcionalnim << endl na kraju
 
 Tijelo petlje može biti i blok u vitičastim zagradama.
 Podržana je i naredba break za izlaz iz unutarnje petlje:
-    nelokalna kontrola toka realizirana je pomoću izuzetka Prekid.
-"""
+    nelokalna kontrola toka realizirana je pomoću izuzetka Prekid."""
 
 
 from vepar import *

@@ -1,5 +1,8 @@
-﻿from vepar import *
-import itertools, math, pathlib, webbrowser, time, logging
+﻿"""Transpiler Logo -> JavaScript"""
+
+
+from vepar import *
+import itertools, math, pathlib, webbrowser, time, logging, random
 
 
 class T(TipoviTokena):
@@ -115,17 +118,22 @@ def nacrtaj(ime):
 
 # print(pathlib.Path(__file__).parent.parent)
 zb = {f.stem: f for f in (direktorij/'crteži').iterdir()}
-crteži = set(zb)
-print(crteži)
+crteži = list(zb)
 
 def nacrtaj_sve():
     for crtež in crteži:
         nacrtaj(crtež)
         time.sleep(4)
 
-nacrtaj('pisanje')
-# nacrtaj_sve()
+if __name__ == '__main__':
+    for i, crtež in enumerate(crteži): print(i, crtež)
+    utipkano = input('Što da nacrtam? ')
+    if not utipkano: nacrtaj(random.choice(crteži))
+    elif utipkano == '*': nacrtaj_sve()
+    elif utipkano.isdecimal(): nacrtaj(crteži[int(utipkano)])
+    else: print('Ne razumijem.')
 
 # DZ: dodajte REPCOUNT (pogledajte na webu kako se koristi)
 # DZ: pogledati http://www.mathcats.com/gallery/15wordcontest.html
 #     i implementirati neke od tih crteža (za mnoge trebaju varijable!)
+# DZ: dodati *varijable i **procedure (pogledati 09_ za inspiraciju)

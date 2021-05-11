@@ -6,7 +6,6 @@ Podržane naredbe:
     ako nije Uvjet naredba                  vrati izraz
     dok je Uvjet naredba                    vrati Uvjet
     dok nije Uvjet naredba                  (naredba1, naredba2, ...)
-
 Podržani aritmetički izrazi:            Podržani logički uvjeti:
     cijeli_broj                             Istina
     ime                                     Laž
@@ -22,13 +21,10 @@ Program se sastoji od jedne ili više deklaracija funkcija, s ili bez parametara
 Tipovi varijabli (i povratni tipovi funkcija) se reprezentiraju leksički:
     * veliko početno slovo označava logički tip (u Pythonu bool)
     * malo početno slovo označava aritmetički tip (u Pythonu int)
-
 Minimalni kontekst je potreban da bismo zapamtili jesmo li trenutno u definiciji
     aritmetičke ili logičke funkcije, kako bi naredba "vrati" znala što očekuje.
-
 Dozvoljeni su i (ne uzajamno) rekurzivni pozivi, tako da se za vrijeme 
-    parsiranja i izvršavanja prati u kojoj smo funkciji.
-"""
+    parsiranja i izvršavanja prati u kojoj smo funkciji."""
 
 
 from vepar import *

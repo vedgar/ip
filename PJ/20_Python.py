@@ -1,3 +1,5 @@
+"""Primjer kako python (interpreter) obrađuje Python (programski jezik)."""
+
 import tokenize, io, keyword, ast, dis, warnings, textwrap
 
 def tokeni(string):

@@ -1,4 +1,10 @@
+"""Aritmetika u Q, s deklaracijama varijabli, statičkim (sintaksnim) tipovima,
+i provjerom tipova (typechecking). Podržana su tri tipa, totalno uređena s
+obzirom na relaciju "biti podtip": nat (N), int (Z) i rat (Q)."""
+
+
 from vepar import *
+
 
 class T(TipoviTokena):
     NAT, INT, RAT, DIV, MOD = 'nat', 'int', 'rat', 'div', 'mod'

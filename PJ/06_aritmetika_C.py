@@ -4,8 +4,7 @@ Ulaz je nula ili više naredbi pridruživanja izraz -> ime,
     nakon kojih slijedi izraz čija vrijednost se računa i vraća.
     Svaki izraz može koristiti sva prethodno definirana imena.
 
-Prikazano je čitanje decimalnih brojeva, aliasi, postfiksni operatori, ...
-"""
+Prikazano je čitanje decimalnih brojeva, aliasi, postfiksni operatori, ..."""
 
 
 from vepar import *

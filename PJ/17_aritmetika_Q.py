@@ -1,3 +1,7 @@
+"""Aritmetika u skupu racionalnih brojeva, s detekcijom grešaka.
+Po uzoru na https://web.math.pmf.unizg.hr/~veky/B/IP.k2p.17-09-08.pdf."""
+
+
 from vepar import *
 import fractions  # kao backend
 

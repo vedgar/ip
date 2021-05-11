@@ -1,3 +1,16 @@
+"""Regularni izrazi kao beskontekstni jezik.
+
+Izgrađeni su od osnovnih (inicijalnih) regularnih izraza:
+    /0  prazan jezik
+    /1  jezik koji se sastoji samo od prazne riječi
+    x   jezik koji se sastoji od jednoslovne riječi x
+        - specijalni znakovi zahtijevaju escaping pomoću /
+pomoću operatora:
+    |       (infiksni) unija
+            (ne piše se) konkatenacija
+    *,+,?   (postfiksni) Kleenejevi operatori"""
+
+
 from vepar import *
 import RI  # kao backend
 

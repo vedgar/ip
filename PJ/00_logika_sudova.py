@@ -7,8 +7,7 @@ Standardna definicija iz [Vuković, Matematička logika]:
 Sve zagrade (oko binarnih veznika) su obavezne!
 
 Interpretaciju zadajemo imenovanim argumentima: vrijednost(F, P2=True, P7=False)
-Optimizacija (formula.optim()) zamjenjuje potformule oblika !!F sa F.
-"""
+Optimizacija (formula.optim()) zamjenjuje potformule oblika !!F sa F."""
 
 
 from vepar import *

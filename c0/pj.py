@@ -1,5 +1,5 @@
-"""Stara verzija frameworka PJ, služi samo za podršku interpretera C0.
-Ne koristiti u novijim programima!"""
+"""Stara verzija frameworka PJ (danas vepar), služi samo za implementaciju
+interpretera za jezik C0. Ne koristiti u novijim programima!"""
 
 import enum, types, collections, contextlib
 

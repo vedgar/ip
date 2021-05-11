@@ -1,3 +1,6 @@
+"""Zadaća 2020. https://youtu.be/1JELGXoKSiI"""
+
+
 from vepar import *
 import fractions
 

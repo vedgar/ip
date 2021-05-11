@@ -20,6 +20,7 @@ LOOP-program je slijed (jedne ili više) instrukcija sljedećeg oblika:
 
 Npr. LOOP-program "R2{DECR2;} R3{INCR2;DECR3;}" premješta broj iz R3 u R2."""
 
+
 from vepar import *
 from backend import RAMStroj
 

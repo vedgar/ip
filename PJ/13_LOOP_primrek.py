@@ -1,4 +1,19 @@
+"""Funkcijski jezik primitivno rekurzivnih simboličkih definicija funkcija.
+
+Slažemo funkcije od osnovnih (tzv. inicijalnih) funkcija:
+    nulfunkcija: Z(x) := 0
+    sljedbenik: Sc(x) := x + 1
+    koordinatna projekcija: Ikn(x1,...,xk) := xn
+pomoću dva operatora:
+    kompozicija: 
+        (H o (G1,...,Gl)) (x1,...,xk) := H(G1(x1,...,xk),...,Gl(x1,...xk))
+    primitivna rekurzija:
+        (G PR H) (x1,...,xk,0) := G(x1,...xk)
+        (G PR H) (x1,...,xk,y+1) := H(x1,...,xk,y,(G PR H)(x1,...,xk,y))"""
+
+
 from vepar import *
+
 
 class T(TipoviTokena):
     ZAREZ, OTV, ZATV, KOMPOZICIJA, JEDNAKO = ',()o='
@@ -7,24 +22,25 @@ class T(TipoviTokena):
     class FIME(Token):
         """Ime primitivno rekurzivne funkcije."""
         def mjesnost(self, symtab): return symtab[self][0]
-        def izračunaj(self, symtab, argumenti):
+        def izračunaj(self, symtab, *argumenti):
             k, f = symtab[self]
-            return f.izračunaj(symtab, argumenti)
+            assert k == len(argumenti)
+            return f.izračunaj(symtab, *argumenti)
 
     class NULFUNKCIJA(Token):
         literal = 'Z'
         def mjesnost(self, symtab): return 1
-        def izračunaj(self, symtab, argumenti): return 0
+        def izračunaj(self, symtab, argument): return 0
 
     class SLJEDBENIK(Token):
         literal = 'Sc'
         def mjesnost(self, symtab): return 1
-        def izračunaj(self, symtab, argumenti): return argumenti[0] + 1
+        def izračunaj(self, symtab, argument): return argument + 1
 
     class KPROJEKCIJA(Token):
         """Koordinatna projekcija, mjesnosti najviše 9."""
         def mjesnost(self, symtab): return int(self.sadržaj[2])
-        def izračunaj(self, symtab, argumenti):
+        def izračunaj(self, symtab, *argumenti):
             n = int(self.sadržaj[1])
             return argumenti[n - 1]
 
@@ -111,9 +127,9 @@ class Kompozicija(AST('lijeva desne')):
         return k
 
     @cache
-    def izračunaj(self, symtab, argumenti):
-        međurez = tuple(G.izračunaj(symtab, argumenti) for G in self.desne)
-        return self.lijeva.izračunaj(symtab, međurez)
+    def izračunaj(self, symtab, *argumenti):
+        međurezultati = (G.izračunaj(symtab, *argumenti) for G in self.desne)
+        return self.lijeva.izračunaj(symtab, *međurezultati)
 
 
 class PRekurzija(AST('baza korak')):
@@ -123,29 +139,31 @@ class PRekurzija(AST('baza korak')):
         return k + 1
 
     @cache
-    def izračunaj(self, symtab, argumenti):
-        xevi = argumenti[:-1]
-        y = argumenti[-1]
-        z = self.baza.izračunaj(symtab, xevi)
-        for i in range(y): z = self.korak.izračunaj(symtab, xevi + (i, z))
+    def izračunaj(self, symtab, *argumenti):
+        *xevi, y = argumenti
+        z = self.baza.izračunaj(symtab, *xevi)
+        for i in range(y): z = self.korak.izračunaj(symtab, *xevi, i, z)
         return z
 
 
 def izračunaj(memorija, imef, *argumenti):
     k, f = memorija[imef]
-    if len(argumenti) == k: return f.izračunaj(memorija, argumenti)
+    if len(argumenti) == k: return f.izračunaj(memorija, *argumenti)
     else: raise kriva_mjesnost
 
 
-proba = P('''\
+konstante = P('''\
         C01 = Z
         C11 = Sc o C01
         C21 = Sc o C11
         C23 = C21 o I13
         C58 = Sc o Sc o Sc o Sc o Sc o Z o I18
+''')
+prikaz(konstante)
+operacije = P('''\
         add2 = I11 PR Sc o I33
         mul2 = Z PR add2 o (I13, I33)
-        pow = C11 PR mul2 o (I13, I33)
+        pow = Sc o Z PR mul2 o (I13, I33)
 ''')
-prikaz(proba)
-print(3, '^', 7, '=', izračunaj(proba, 'pow', 3, 7))
+prikaz(operacije)
+print(3, '^', 7, '=', izračunaj(operacije, 'pow', 3, 7))
