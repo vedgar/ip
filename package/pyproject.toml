@@ -1,0 +1,10 @@
+[build-system]
+requires = ["flit_core >=2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "vepar"
+author = "Veky"
+author-email = "veky@math.hr"
+home-page = "https://web.math.pmf.unizg.hr/~veky/"
+

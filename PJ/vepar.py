@@ -1,6 +1,8 @@
 """Framework za leksičku, sintaksnu, semantičku analizu, te izvođenje programa.
 Za više detalja pogledati šalabahter.txt."""
 
+__version__ = '1.3'
+
 
 import enum, types, collections, contextlib, itertools, functools, math
 

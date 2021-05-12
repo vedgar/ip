@@ -1,0 +1,98 @@
+﻿# Leksička analiza #
+####################
+
+class T(TipoviTokena):
+        OPERATOR1, OPERATOR2, OPERATOR3 = '+-*'
+        OPERATOR4, OPERATOR5 = '&&', '<=>'
+        KLJUČNARIJEČ = 'ključnariječ'
+        JOŠNEKITIP = TipTokena()
+        class TIPTOKENA(Token): ...listovi AST metoda...
+
+def mojlexer(lex):
+    for znak in lex:
+        if znak ...
+
+Low level API:              High level API:
+--------------              ---------------
+znak = lex.čitaj()          lex.zvijezda(str.is...), lex.plus(...)
+lex.vrati()                 lex.pročitaj(znak)
+pročitano = lex.sadržaj     lex.pročitaj_do(znak, uključivo:bool)
+yield lex.token(T.TIP)      if lex >> znak:  # sljedeće je pročitan znak
+raise LeksičkaGreška(…)     raise lex.greška(info:str)
+lex.i                       yield lex.literal(T ili T.DEFAULT, case:bool)
+lex.j                       lex.prirodni_broj(početak, nula:bool)
+
+# Sintaksna analiza (Parsiranje) #
+##################################
+
+Za izraze: * popišemo sve operatore
+           * rasporedimo ih u hijerarhiju razina po prioritetima
+           * svakoj razini pridijelimo asociranost
+Napomene: * asociranost nema veze s asocijativnošću!
+          * prioritet nema veze s redoslijedom izvođenja!
+
+* napišemo beskontekstnu gramatiku! (ne preskakati ovaj korak!)
+* svakoj varijabli (otprilike) odgovara jedna metoda parsera
+. postfiksni, i infiksni lijevo asocirani, operatori: iteracija (petlja)
+. prefiksni, i infiksni desno asocirani, operatori, te zagrade: rekurzija
+
+    class P(Parser):
+        def v1(self):
+            if tk := self >= PRVITIP: ...  # sljedeći je tk tipa PRVITIP
+                elif self >= {DRUGITIP, TREĆITIP}: ...  # jedan od tipova
+                elif self >> MORABITIOVAJTIP: ...
+                    return NekoApstraktnoStablo(tokeni, manji astovi,...)
+                [ili] else: raise self.greška()
+        def v2(self):
+            if self > PRVITIP: ...  # sljedeći je PRVITIP (još nepojeden)
+
+        lexer = mojlexer  # ili koji već
+        start = v1        # ili koja već
+
+P.tokeniziraj(string)  # inkrementalno, korisno samo za debug
+stablo = P(string)
+
+# Semantička analiza #
+######################
+
+* popišemo apstraktna sintaksna stabla koja smo koristili
+class NekoApstraktnoStablo(AST('atribut')): ...
+class DrugoApstraktnoStablo(AST('atribut1 atribut2')): ...
+
+* te klase imaju metode koje rade dalju semantičku analizu
+  (ili je možemo raditi u globalnoj funkciji pomoću operatora ^)
+- metode su najčešće rekurzivne, s bazom zadanom na tipovima tokena
+- često primaju parametar (mem), koji predstavlja stanje memorije:
+  preslikavanje (Memory) tokena ili stringova (varijabli) u vrijednosti
+- pretvaranje u nativne (Pythonove) tipove: Python_tip(token.sadržaj...)
+
+* primjeri: def vrijednost(self, mem): ... # vraća neki nativni objekt
+            def izvrši(self, mem): ... # ne vraća ništa, mijenja mem
+            def optimiziraj(self): ... # vraća novo (ili isto) AST
+
+* Typechecking: Preslikavanje symtab -- kao mem, samo što ne preslikava
+  imena varijabli u njihove vrijednosti nego u njihove statičke tipove
+
+# Izvođenje #
+#############
+
+Uglavnom preslikavanjem na Pythonove alate (slijed, grananje, petlje).
+    npr. class Grananje(AST('uvjet onda inače')):
+            def izvrši(self, mem):
+               if self.uvjet.vrijednost(mem): self.onda.izvrši(mem)
+               else: self.inače.izvrši(mem)
+
+* Nelokalna kontrola toka (break, continue, return, throw, goto): izuzeci
+  . class Prekid(NelokalnaKontrolaToka):
+        u Break.izvrši... raise Prekid
+        u Petlja.izvrši... except Prekid: break
+  . class Povratak(NelokalnaKontrolaToka): 
+        u Return.izvrši... raise Povratak(povratnavrijednost)
+        u Poziv.izvrši... except Povratak as ex: return ex.preneseno
+
+* Kod funkcijskih poziva, iskonstruiramo novi lokalni mem (scope) koji
+  preslikava parametre deklaracije funkcije u argumente poziva funkcije
+  (ili u njihove vrijednosti) i u njemu izvršimo tijelo funkcije
+
+* raise token.izuzetak(ex:Exception ili info:str): prijava grešaka
+  izvođenja vezanih uz token (i time uz lokaciju u kodu -- debug symbols)
