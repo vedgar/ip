@@ -1,7 +1,7 @@
 """Framework za leksičku, sintaksnu, semantičku analizu, te izvođenje programa.
 Za više detalja pogledati šalabahter.txt."""
 
-__version__ = '1.3'
+__version__ = '1.4'
 
 
 import enum, types, collections, contextlib, itertools, functools, math
@@ -84,7 +84,7 @@ class Tokenizer:
         assert len(znak) == 1, f'Duljina znaka {znak!r} mora biti 1'
         return self.čitaj() == znak or self.vrati()
 
-    def __rshift__(self, znak):
+    def __ge__(self, znak):
         """Čita sljedeći znak ako i samo ako je jednak navedenom."""
         return self.slijedi(znak)
 
@@ -103,6 +103,10 @@ class Tokenizer:
         """Čita zadani znak, ili prijavljuje leksičku grešku."""
         if znak != self.čitaj():
             raise self.greška(f'očekivano {znak!r}')
+
+    def __rshift__(self, znak):
+        """Čita zadani znak, ili prijavljuje leksičku grešku."""
+        return self.pročitaj(znak)
 
     def pročitaj_do(self, znak, *, uključivo=True, više_redova=False):
         """Čita sve znakove do zadanog znaka."""

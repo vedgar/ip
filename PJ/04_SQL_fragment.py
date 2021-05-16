@@ -39,7 +39,7 @@ class P(Parser):
                 if lex.sadržaj.isdigit(): yield lex.token(T.BROJ)
                 else: yield lex.literal(T.IME, case=False)
             elif znak == '-':
-                lex.pročitaj('-'), lex.pročitaj_do('\n'), lex.zanemari()
+                lex >> '-', lex.pročitaj_do('\n'), lex.zanemari()
             else: yield lex.literal(T)
 
     def start(self):

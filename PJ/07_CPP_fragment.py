@@ -28,11 +28,11 @@ def cpp(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak == '+':
-            if lex >> '+': yield lex.token(T.PLUSP)
-            elif lex >> '=': yield lex.token(T.PLUSJ)
+            if lex >= '+': yield lex.token(T.PLUSP)
+            elif lex >= '=': yield lex.token(T.PLUSJ)
             else: raise lex.greška('u ovom jeziku nema samostalnog +')
-        elif znak == '<': yield lex.token(T.MMANJE if lex >> '<' else T.MANJE)
-        elif znak=='=': yield lex.token(T.JJEDNAKO if lex >> '=' else T.JEDNAKO)
+        elif znak == '<': yield lex.token(T.MMANJE if lex >= '<' else T.MANJE)
+        elif znak=='=': yield lex.token(T.JJEDNAKO if lex >= '=' else T.JEDNAKO)
         elif znak.isalpha():
             lex.zvijezda(identifikator)
             yield lex.literal(T.IME)

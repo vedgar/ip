@@ -4,6 +4,7 @@
 from vepar import *
 import fractions
 
+
 class T(TipoviTokena):
     PLUS, MINUS, PUTA, KROZ = '+-×÷'
     MANJE, VEĆE, JEDNAKO, OTV, ZATV = '<>=()'
@@ -19,6 +20,7 @@ class T(TipoviTokena):
     class TVAR(Token):
         def vrijednost(self, mem): return mem[self]
 
+
 def basic(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
@@ -27,7 +29,7 @@ def basic(lex):
             yield lex.token(T.BROJ)
         elif znak.isalpha():
             lex.zvijezda(str.isalnum)
-            default = T.TVAR if lex.slijedi('$') else T.BVAR
+            default = T.TVAR if lex >= '$' else T.BVAR
             yield lex.literal(default, case=False)
         elif znak == ',':
             lex.pročitaj_do("'")
@@ -36,6 +38,7 @@ def basic(lex):
             lex.pročitaj_do("'")
             lex.zanemari()
         else: yield lex.literal(T)
+
 
 ### BKG
 # start = naredbe -> naredba*

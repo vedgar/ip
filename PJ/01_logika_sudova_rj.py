@@ -29,10 +29,10 @@ def ls(lex):
             lex.prirodni_broj('')
             yield lex.token(T.PVAR)
         elif znak == '-':
-            lex.pročitaj('>')
+            lex >> '>'
             yield lex.token(T.KOND)
         elif znak == '<':
-            lex.pročitaj('-'), lex.pročitaj('>')
+            lex >> '-', lex >> '>'
             yield lex.token(T.BIKOND)
         else: yield lex.literal(T)
 

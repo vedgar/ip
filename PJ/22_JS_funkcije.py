@@ -18,7 +18,7 @@ def js(lex):
             lex.zvijezda(identifikator)
             yield lex.literal(T.IME)
         elif znak == '/':
-            if lex >> '/':
+            if lex >= '/':
                 lex.pročitaj_do('\n')
                 yield lex.token(T.KOMENTAR)
             else: yield lex.token(T.KOSACRTA)

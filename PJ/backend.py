@@ -104,6 +104,7 @@ referentne_atomske_mase = dict(H=1.00797, He=4.00260, Li=6.941, Be=9.01218,
 
 
 def Python_eval(izraz):
+    """Kao Pythonov eval, ali bez warninga i grešaka koje nisu sintaksne."""
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         try: return eval(izraz)

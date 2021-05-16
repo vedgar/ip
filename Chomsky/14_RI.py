@@ -28,12 +28,12 @@ def ri(lex):
         elif znak == '/':
             lex.zanemari()
             sljedeći = lex.čitaj()
-            if not sljedeći: lex.greška('/ na kraju stringa')
+            if not sljedeći: raise lex.greška('/ na kraju stringa')
             elif sljedeći == '0': yield lex.token(T.PRAZAN)
             elif sljedeći == '1': yield lex.token(T.EPSILON)
             elif sljedeći == '/': yield lex.token(T.ZNAK)  # // kao /
             elif sljedeći in specijalni: yield lex.token(T.ZNAK)
-            else: lex.greška('nedefinirana /-sekvenca')
+            else: raise lex.greška('nedefinirana /-sekvenca')
         else: yield lex.token(T.ZNAK)
 
 
