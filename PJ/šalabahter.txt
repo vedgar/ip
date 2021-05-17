@@ -15,12 +15,12 @@ def mojlexer(lex):
 Low level API:              High level API:
 --------------              ---------------
 znak = lex.čitaj()          lex.zvijezda(str.is...), lex.plus(...)
-lex.vrati()                 lex.pročitaj(znak)
+lex.vrati()                 lex >> znak
 pročitano = lex.sadržaj     lex.pročitaj_do(znak, uključivo:bool)
-yield lex.token(T.TIP)      if lex >> znak:  # sljedeće je pročitan znak
+yield lex.token(T.TIP)      if lex >= znak:  # sljedeće je pročitan znak
 raise LeksičkaGreška(…)     raise lex.greška(info:str)
-lex.i                       yield lex.literal(T ili T.DEFAULT, case:bool)
-lex.j                       lex.prirodni_broj(početak, nula:bool)
+lex.i, lex.j # pozicija     yield lex.literal(T ili T.DEFAULT, case:bool)
+                            lex.prirodni_broj(početak, nula:bool)
 
 # Sintaksna analiza (Parsiranje) #
 ##################################
@@ -28,8 +28,8 @@ lex.j                       lex.prirodni_broj(početak, nula:bool)
 Za izraze: * popišemo sve operatore
            * rasporedimo ih u hijerarhiju razina po prioritetima
            * svakoj razini pridijelimo asociranost
-Napomene: * asociranost nema veze s asocijativnošću!
-          * prioritet nema veze s redoslijedom izvođenja!
+ Napomene: * asociranost nema veze s asocijativnošću!
+           * prioritet nema veze s redoslijedom izvođenja!
 
 * napišemo beskontekstnu gramatiku! (ne preskakati ovaj korak!)
 * svakoj varijabli (otprilike) odgovara jedna metoda parsera
