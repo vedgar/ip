@@ -45,15 +45,19 @@ def apstablo(string):
 
 def bytecode(string): dis.dis(string)
 
-def izvrši(string): exec(string)
+def izvršavanje(string): exec(string)
 
-def naredba(string): print(string)
+def source(string): print(string)
 
 if __name__ == '__main__':
-    primjer = 'for x in 2, 3: print(x)'
-    for funkcija in naredba, tokeni, stablo_parsiranja, \
-                    apstablo, bytecode, izvrši:
-        print(funkcija.__name__.center(75, '-'))
+    primjer = textwrap.dedent('''\
+        for x in 2, 3:
+            print(x)
+    ''')  # slobodno eksperimentirajte!
+    for funkcija in source, tokeni, stablo_parsiranja, \
+                    apstablo, bytecode, izvršavanje:
+        print(funkcija.__name__.join('[]').center(75, '-'))
+        print()
         funkcija(primjer)
         print()
 

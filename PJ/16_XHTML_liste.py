@@ -80,7 +80,7 @@ class Lista(AST('vrsta stavke')):
         prethodni, zadnji = prefiks[:-1], prefiks[-1]
         for i, stavka in enumerate(self.stavke, 1):
             if i > 1 and zadnji.endswith('\t'): zadnji = '\t'
-            if self.vrsta ^ T.OL: marker = str(i) + '.'
+            if self.vrsta ^ T.OL: marker = f'{i}.'
             elif self.vrsta ^ T.UL: marker = '*#@o-.,_ '[len(prethodni)] + ' '
             stavka.render(prethodni + [zadnji, f'{marker:>7}\t'])
 

@@ -150,7 +150,7 @@ class Binaran(RegularniIzraz, abc.ABC):
 class Unija(Binaran):
     """L ∪ M = {w : w ∈ L ∨ w ∈ M}"""
 
-    def __str__(self): return '({}|{})'.format(self.lijevo, self.desno)
+    def __str__(self): return f'({self.lijevo}|{self.desno})'
 
     def prazan(self): return self.lijevo.prazan() and self.desno.prazan()
 
@@ -176,7 +176,7 @@ class Unija(Binaran):
 class Konkatenacija(Binaran):
     """LM = {uv : u ∈ L ∧ v ∈ M}"""
 
-    def __str__(self): return '({}{})'.format(self.lijevo, self.desno)
+    def __str__(self): return f'({self.lijevo}{self.desno})'
 
     def prazan(self): return self.lijevo.prazan() or self.desno.prazan()
 
@@ -210,7 +210,7 @@ class Zvijezda(RegularniIzraz):
         assert isinstance(ri, RegularniIzraz)
         self.ispod = ri
 
-    def __str__(self): return '{}*'.format(self.ispod)
+    def __str__(self): return f'{self.ispod}*'
 
     def prazan(self): return False
 

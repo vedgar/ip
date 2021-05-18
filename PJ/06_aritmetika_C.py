@@ -107,7 +107,7 @@ class Binarna(AST('op lijevo desno')):
             elif o ^ T.PUTA: return x * y
             elif o ^ T.KROZ: return x / y
             elif o ^ T.NA: return x ** y
-            else: assert False, 'nepokriveni slučaj binarnog operatora' + str(o)
+            else: assert False, f'nepokriveni slučaj binarnog operatora {o}'
         except ArithmeticError as ex: raise o.iznimka(ex)
 
 class Unarna(AST('op ispod')):
@@ -115,7 +115,7 @@ class Unarna(AST('op ispod')):
         o, z = self.op, self.ispod.vrijednost(env)
         if o ^ T.MINUS: return -z
         elif o ^ T.KONJ: return z.conjugate()
-        else: assert False, 'nepokriveni slučaj unarnog operatora ' + str(o)
+        else: assert False, f'nepokriveni slučaj unarnog operatora {o}'
 
 
 def izračunaj(string): 
