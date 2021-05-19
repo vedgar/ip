@@ -23,7 +23,6 @@ class T(TipoviTokena):
     class IME(Token):
         def vrijednost(self, mem): return mem[self]
 
-
 def cpp(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
@@ -53,10 +52,7 @@ def cpp(lex):
 # ispis -> COUT varijable | COUT varijable MMANJE ENDL
 # varijable -> '' | MMANJE IME varijable
 # grananje -> IF OOTV IME JJEDNAKO BROJ OZATV naredba
-
  
-
-
 class P(Parser):
     lexer = cpp
 

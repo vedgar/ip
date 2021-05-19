@@ -25,7 +25,7 @@ def ls(lex):
     for znak in lex:
         if znak == 'P':
             prvo = lex.čitaj()
-            if not prvo.isdigit(): lex.greška('očekivana znamenka')
+            if not prvo.isdecimal(): raise lex.greška('očekivana znamenka')
             if prvo != '0': lex.zvijezda(str.isdigit)
             yield lex.token(T.PVAR)
         elif znak == '-':

@@ -514,6 +514,8 @@ class Memorija:
 
     def __len__(self): return len(self.podaci)
 
+    #TODO: dodati Memorija.imena kao dict(Memorija).keys(), koristiti u 04_...
+
 
 cache = functools.lru_cache(maxsize=None)
 
