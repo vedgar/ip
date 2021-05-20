@@ -6,6 +6,7 @@ Napisan je semantički analizator u obliku name resolvera:
 
 
 from vepar import *
+from backend import PristupLog
 
 
 class T(TipoviTokena):
@@ -91,9 +92,9 @@ class Skripta(AST('naredbe')):
 class Create(AST('tablica specifikacije')):
     """Naredba CREATE TABLE."""
     def razriješi(self, imena):
-        pristup = imena[self.tablica] = Memorija(redefinicija=True)
+        pristup = imena[self.tablica] = Memorija(redefinicija=False)
         for stupac in self.specifikacije:
-            pristup[stupac.ime] = 0
+            pristup[stupac.ime] = PristupLog(stupac)
         
 class Select(AST('tablica stupci')):
     """Naredba SELECT."""
@@ -101,21 +102,21 @@ class Select(AST('tablica stupci')):
         t = imena[self.tablica]
         dohvaćeni = self.stupci
         if dohvaćeni is nenavedeno: dohvaćeni = dict(t)
-        for stupac in dohvaćeni: t[stupac] += 1
+        for stupac in dohvaćeni: t[stupac].pristupi()
 
 class Stupac(AST('ime tip veličina')): """Specifikacija stupca u tablici."""
 
 
 def za_indeks(skripta):
-    for tablica, log in skripta.razriješi():
+    for tablica, logovi in skripta.razriješi():
         ukupni = brojač = 0
-        for stupac, pristup in log:
-            ukupni += pristup
+        for stupac, log in logovi:
+            ukupni += log.pristup
             brojač += 1
         if not brojač: continue
         prosjek = ukupni / brojač
-        for stupac, pristup in log:
-            if pristup > prosjek: yield tablica, stupac
+        for stupac, log in logovi:
+            if log.pristup > prosjek: yield tablica, stupac
 
 
 skripta = P('''\
@@ -142,10 +143,10 @@ for tablica, log in skripta.razriješi():
 for i, (tablica, stupac) in enumerate(za_indeks(skripta), start=1):
     print(f'CREATE INDEX idx{i} ON {tablica.sadržaj} ({stupac.sadržaj});')
 
-with očekivano(SemantičkaGreška): P('SELECT * FROM nema;').razriješi()
-with očekivano(SemantičkaGreška):
+with SemantičkaGreška: P('SELECT * FROM nema;').razriješi()
+with SemantičkaGreška:
     P('CREATE TABLE mala (stupac int); SELECT drugi FROM mala;').razriješi()
-with očekivano(SintaksnaGreška): P('CREATE TABLE 2000 (s t);')
+with SintaksnaGreška: P('CREATE TABLE 2000 (s t);')
 
 # ideje za dalji razvoj:
 # * pristup stupcu umjesto samog broja može biti lista brojeva linija \

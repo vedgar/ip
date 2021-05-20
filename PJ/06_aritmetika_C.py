@@ -120,10 +120,8 @@ class Unarna(AST('op ispod')):
 
 def izračunaj(string): 
     print('-' * 60)
-    stablo = P(string)
-    prikaz(stablo)
-    print(string.rstrip(), end=' = ')
-    print(stablo.izvrši())
+    prikaz(stablo := P(string))
+    print(string.rstrip(), '=', stablo.izvrši())
 
 izračunaj('2+2*3')
 izračunaj('(1+6*i)/(3*i-4)~^2~')
@@ -143,9 +141,9 @@ izračunaj(f'''\
     skoro0
 ''')
 izračunaj('6.02214076e23->NA 1.6605e-27->u 1/(NA*u)')
-with očekivano(LeksičkaGreška): izračunaj('2e+3')
-with očekivano(GreškaIzvođenja): izračunaj('2+2/0')
-with očekivano(GreškaIzvođenja): izračunaj('0**i')
+with LeksičkaGreška: izračunaj('2e+3')
+with GreškaIzvođenja: izračunaj('2+2/0')
+with GreškaIzvođenja: izračunaj('0**i')
 
 # DZ: Dodajte implicitno množenje, barem s i; tako da radi npr. 2+3i
 # DZ: Stritkno držanje IEEE-754 zahtijeva i ispravno tretiranje dijeljenja nulom

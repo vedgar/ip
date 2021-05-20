@@ -87,7 +87,6 @@ class P(Parser):
     start = rx
 
 
-ri = '(a(/*c?)+)?'
-P.tokeniziraj(ri)
+P.tokeniziraj(ri := '(a(/*c?)+)?')
 prikaz(P(ri))
 print(*P(ri).početak(20))

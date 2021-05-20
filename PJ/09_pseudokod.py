@@ -28,6 +28,7 @@ Dozvoljeni su i (ne uzajamno) rekurzivni pozivi, tako da se za vrijeme
 
 
 from vepar import *
+from math import prod
 
 
 class T(TipoviTokena):
@@ -285,9 +286,7 @@ class Suprotan(AST('od')):
     
 class Umnožak(AST('faktori')):
     def vrijednost(self, mem, unutar):
-        p = 1
-        for faktor in self.faktori: p *= faktor.vrijednost(mem, unutar)
-        return p
+        return math.prod(f.vrijednost(mem, unutar) for f in self.faktori)
 
 class Povratak(NelokalnaKontrolaToka): """Signal koji šalje naredba vrati."""
 
@@ -296,11 +295,11 @@ proba = P('program() = ako je Istina vrati 1 inače vrati 2')
 prikaz(proba, 5)
 izvrši(proba)
 
-with očekivano(SemantičkaGreška): P('f(x)=() f(x)=()')
-with očekivano(SintaksnaGreška):
+with SemantičkaGreška: P('f(x)=() f(x)=()')
+with SintaksnaGreška:
     P('f(x) = vrati 7    program() = vrati f(Laž)')
-with očekivano(SintaksnaGreška): izvrši(P('program() = vrati2'))
-with očekivano(LeksičkaGreška): P('program() = vrati 007')
+with SintaksnaGreška: izvrši(P('program() = vrati2'))
+with LeksičkaGreška: P('program() = vrati 007')
 
 modul = '''\
 Negacija(V) = ako je V vrati Laž inače vrati Istina

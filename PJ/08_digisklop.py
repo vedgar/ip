@@ -71,11 +71,8 @@ def optimiziraj(sklop):
     return pod_negacijom(pod_negacijom(opt)) or opt
 
 
-opis = "x([yxx']+y')"
-print(opis)
+print(opis := "x([yxx']+y')")
 P.tokeniziraj(opis)
-ast = P(opis)
-prikaz(ast)
-nand = ast.uNand()
-print(nand)  # [['x', [[[[['y', 'x', ['x']]]]], [['y']]]]]
+prikaz(ast := P(opis))
+print(nand := ast.uNand())  # [['x', [[[[['y', 'x', ['x']]]]], [['y']]]]]
 print(optimiziraj(nand))

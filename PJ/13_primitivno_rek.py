@@ -152,20 +152,18 @@ def izračunaj(memorija, imef, *argumenti):
     else: raise kriva_mjesnost
 
 
-konstante = P('''\
+prikaz(konstante := P('''\
         C01 = Z
         C11 = Sc o C01
         C21 = Sc o C11
         C23 = C21 o I13
         C58 = Sc o Sc o Sc o Sc o Sc o Z o I18
-''')
-prikaz(konstante)
-operacije = P('''\
+'''))
+prikaz(operacije := P('''\
         add2 = I11 PR Sc o I33
         mul2 = Z PR add2 o (I13, I33)
         pow = Sc o Z PR mul2 o (I13, I33)
-''')
-prikaz(operacije)
+'''))
 print(3, '^', 7, '=', izračunaj(operacije, 'pow', 3, 7))
 
 # DZ**: dokažite ekvivalentnost ovog sustava i programskog jezika LOOP

@@ -146,22 +146,17 @@ def optim(formula):
     else: return Negacija(bez_neg)
 
 def istinitost(formula, **interpretacija):
-    I = Memorija(interpretacija)
-    return formula.vrijednost(I)
+    return formula.vrijednost(Memorija(interpretacija))
 
 
 for ulaz in '!(P5&!!(P3->P0))', '(!P0&(!P1<->!P5))':
-    print(ulaz)
     P.tokeniziraj(ulaz)
-
-    F = P(ulaz)
+    prikaz(F := P(ulaz))
     print(F.ispis())
-    prikaz(F)
-    F = optim(F)
+    prikaz(F := optim(F))
     print(F.ispis())
-    prikaz(F)
-    print(istinitost(F, P0=False, P3=True, P5=False, P1=True))
+    print(f'{istinitost(F, P0=False, P3=True, P5=False, P1=True)=}')
     print('-' * 60)
 
-for krivo in 'P007', 'P1\nP2', 'P34<>P56', 'P05', 'P-2':
-    with očekivano(LeksičkaGreška): P.tokeniziraj(krivo)
+for krivo in 'P007', 'P1 P2', 'P34<>P56', 'P05', 'P-2':
+    with LeksičkaGreška: P.tokeniziraj(krivo)

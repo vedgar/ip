@@ -85,14 +85,10 @@ class Lista(AST('elementi')):
     def vrijednost(self): return [el.vrijednost() for el in self.elementi]
 
 
-lista = r'''
-    [23, "ab\"c]", 'a[]', [2, 3, ], 523, [1,2,2,3],
-    '"', '\', "\e", "\\", '']
-'''
-print(lista)
+print(lista := r''' [23, "ab\"c]", 'a[]', [2, 3, ], 523, [1,2,2,3],
+                    '"', '\', "\e", "\\", ''] ''')
 P.tokeniziraj(lista)
-ast = P(lista)
-prikaz(ast, 2)
+prikaz(ast := P(lista), 2)
 print(ast.vrijednost())
 
 

@@ -57,8 +57,7 @@ nula, jedan = Token(T.BROJ, '0'), Token(T.BROJ, '1')
 
 
 class Zbroj(AST('pribrojnici')):
-    def vrijednost(self):
-        return sum(x.vrijednost() for x in self.pribrojnici)
+    def vrijednost(self): return sum(x.vrijednost() for x in self.pribrojnici)
     
     def optim(self):
         opt_pribr = [x.optim() for x in self.pribrojnici]
@@ -68,10 +67,7 @@ class Zbroj(AST('pribrojnici')):
 
 
 class Umnožak(AST('faktori')):
-    def vrijednost(self):
-        rezultat = 1
-        for faktor in self.faktori: rezultat *= faktor.vrijednost()
-        return rezultat
+    def vrijednost(self): return math.prod(x.vrijednost() for x in self.faktori)
 
     def optim(self):
         opt_fakt = [x.optim() for x in self.faktori]
@@ -83,27 +79,25 @@ class Umnožak(AST('faktori')):
 
 def testiraj(izraz):
     print('-' * 60)
-    stablo = P(izraz)
-    izraz = izraz.strip()
-    prikaz(stablo, 3)
-    opt = stablo.optim()
-    prikaz(opt, 2)
+    prikaz(stablo := P(izraz), 3)
+    prikaz(opt := stablo.optim(), 2)
     mi = opt.vrijednost()
     try: Python = Python_eval(izraz)
-    except SyntaxError:
-        print('Python ne zna ovo izračunati!', izraz, '==', mi)
+    except SyntaxError: print('Python ovo ne zna!', izraz, '==', mi)
     else:
         if mi == Python: print(izraz, '==', mi, 'OK')
-        else: print(izraz, 'mi:', mi, 'Python:', Python, 'krivo')
+        else:
+            print(izraz, 'mi:', mi, 'Python:', Python, 'krivo')
+            raise ArithmeticError
 
 P.tokeniziraj('(2+3)*4')
 testiraj('(2+3)*4')
 testiraj('2 + (0+1*1*2)')
 testiraj('2(3+5)')
 testiraj('(1+1) (0+2+0) (0+1) (3+4)')
-with očekivano(SintaksnaGreška): testiraj('(2+3)4')
-with očekivano(SintaksnaGreška): testiraj('2\n37')
-with očekivano(LeksičkaGreška): testiraj('2^3')
-with očekivano(LeksičkaGreška): testiraj('3+00')
-with očekivano(SintaksnaGreška): testiraj('+1')
-with očekivano(LeksičkaGreška): testiraj('-1')
+with SintaksnaGreška: testiraj('(2+3)4')
+with SintaksnaGreška: testiraj('2\t37')
+with LeksičkaGreška: testiraj('2^3')
+with LeksičkaGreška: testiraj('3+00')
+with SintaksnaGreška: testiraj('+1')
+with LeksičkaGreška: testiraj('-1')

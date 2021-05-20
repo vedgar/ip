@@ -157,7 +157,7 @@ class Grananje(AST('lijevo desno naredba')):
 
 
 def očekuj(greška, kôd):
-    with očekivano(greška): P(kôd).izvrši()
+    with greška: P(kôd).izvrši()
 
 cpp = P('''\
     for ( i = 8 ; i < 13 ; i += 2 )

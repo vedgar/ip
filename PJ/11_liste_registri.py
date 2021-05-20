@@ -130,7 +130,7 @@ source = '''lista L1  lista L3
     dohvati L5 0  dohvati L5 1  dohvati L5 2  dohvati L5 3  koliko L5
     izbaci L5 1  dohvati L5 0 dohvati L5 1 dohvati L5 2  koliko L5'''
 P(source).izvrši()
-with očekivano(LeksičkaGreška): P.tokeniziraj('L0')
-with očekivano(SintaksnaGreška): P('ubaci L5 6 -2')
-with očekivano(SemantičkaGreška): P('ubaci L7 5 0').izvrši()
-with očekivano(LeksičkaGreška): P.tokeniziraj('ubaci L3 5 -0')
+with LeksičkaGreška: P.tokeniziraj('L0')
+with SintaksnaGreška: P('ubaci L5 6 -2')
+with SemantičkaGreška: P('ubaci L7 5 0').izvrši()
+with LeksičkaGreška: P.tokeniziraj('ubaci L3 5 -0')

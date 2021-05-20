@@ -134,10 +134,8 @@ class Potencija(AST('baza eksponent')):
 def testiraj(izraz):
     print('-' * 60)
     print(izraz)
-    stablo = P(izraz)
-    prikaz(stablo)
-    opt = stablo.optim()
-    prikaz(opt)
+    prikaz(stablo := P(izraz))
+    prikaz(opt := stablo.optim())
 
     vm = StrojSaStogom()
     for instrukcija in opt.prevedi(): 
@@ -148,7 +146,9 @@ def testiraj(izraz):
     mi = opt.vrijednost()
     Python = Python_eval(izraz.replace('^', '**'))
     if mi == Python: print(izraz, '==', mi, 'OK')
-    else: print(izraz, 'mi:', mi, 'Python:', Python)
+    else: 
+        print(izraz, 'mi:', mi, 'Python:', Python, 'krivo')
+        raise ArithmeticError
 
 
 P.tokeniziraj('(2+3)*4^1')
@@ -156,7 +156,7 @@ testiraj('(2+3)*4^1')
 testiraj('2^0^0^0^0')
 testiraj('2+(0+1*1*2)')
 testiraj('1+2*3^4+0*5^6*7+8*9')
-with očekivano(LeksičkaGreška): testiraj('2 3')
-with očekivano(SintaksnaGreška): testiraj('2+')
-with očekivano(SintaksnaGreška): testiraj('(2+3)45')
-with očekivano(LeksičkaGreška): testiraj('3+02')
+with LeksičkaGreška: testiraj('2 3')
+with SintaksnaGreška: testiraj('2+')
+with SintaksnaGreška: testiraj('(2+3)45')
+with LeksičkaGreška: testiraj('3+02')

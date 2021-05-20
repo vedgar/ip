@@ -97,18 +97,13 @@ def istinitost(formula, **interpretacija):
     return formula.vrijednost(I)
 
 
-ulaz = '!(P5&!!(P3->P0))'
-print(ulaz)
-P.tokeniziraj(ulaz)
+P.tokeniziraj(ulaz := '!(P5&!!(P3->P0))')
+prikaz(F := P(ulaz))
+prikaz(F := F.optim())
+print(f'{istinitost(F, P0=False, P3=True, P5=False)=}')  # True
 
-F = P(ulaz)
-prikaz(F)
-F = F.optim()
-prikaz(F)
-print(istinitost(F, P0=False, P3=True, P5=False))  # True
-
-for krivo in 'P00', 'P1\nP2', 'P34<>P56':
-    with očekivano(LeksičkaGreška): print(P.tokeniziraj(krivo))
+for krivo in 'P', 'P00', 'P1\tP2', 'P34<>P56':
+    with LeksičkaGreška: print(P.tokeniziraj(krivo))
 
 
 # DZ: implementirajte još neke optimizacije: npr. F|!G u G->F.

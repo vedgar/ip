@@ -86,7 +86,7 @@ class Skupina(AST('čega koliko')):
 natrijev_trikarbonatokobaltat = spoj('Na3[Co(CO3)3]')
 prikaz(natrijev_trikarbonatokobaltat)
 for krivo in 'SnABcdefG', 'O Be', 'Es(n)':
-    with očekivano(LeksičkaGreška): spoj.tokeniziraj(krivo)
+    with LeksičkaGreška: spoj.tokeniziraj(krivo)
     print()
 spoj.tokeniziraj(']nB')
 print('Molarna masa butana je', spoj('CH3(CH2)nCH3').Mr(n=2))

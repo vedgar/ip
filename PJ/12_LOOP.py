@@ -96,7 +96,7 @@ def računaj(program, *ulazi):
     return stroj.rezultat
 
 
-with očekivano(LeksičkaGreška): P.tokeniziraj('inc R00')
+with LeksičkaGreška: P.tokeniziraj('inc R00')
 power = P('''\
     INC R0;
     R2{

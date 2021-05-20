@@ -1,7 +1,7 @@
 """Framework za leksičku, sintaksnu, semantičku analizu, te izvođenje programa.
 Za više detalja pogledati šalabahter.txt."""
 
-__version__ = '1.4'
+__version__ = '2.0'
 
 
 import enum, types, collections, contextlib, itertools, functools, math
@@ -14,22 +14,22 @@ def identifikator(znak):
 TipoviTokena = enum.Enum
 TipTokena = enum.auto
 
+
+class Kontekst(type):
+    def __enter__(self): pass
+    def __exit__(self, e_type, e_val, e_tb):
+        if e_type is None: raise Greška(f'{self.__name__} nije dignuta')
+        elif issubclass(e_type, self):
+            print(e_type.__name__, e_val, sep=': ')
+            return True
+
 # TODO: bolji API: Greška(poruka, pozicija ili token ili AST...)
 # ali ostaviti i lex.greška() i parser.greška() for convenience
-class Greška(Exception): """Baza za sve greške vezane uz poziciju u kodu."""
+class Greška(Exception, metaclass=Kontekst): """Greška vezana uz poziciju."""
 class LeksičkaGreška(Greška): """Greška nastala prilikom leksičke analize."""
 class SintaksnaGreška(Greška): """Greška nastala prilikom sintaksne analize."""
 class SemantičkaGreška(Greška):"""Greška nastala prilikom semantičke analize."""
 class GreškaIzvođenja(Greška): """Greška nastala prilikom izvođenja."""
-
-
-#TODO maknuti potrebu za ovim: with SintaksnaGreška:... (zahtijeva metaklase)
-@contextlib.contextmanager
-def očekivano(tip_greške):
-    """Kontekst u kojem se mora pojaviti greška tip_greške, koja se ispisuje."""
-    try: yield
-    except tip_greške as e: print(type(e).__name__, e, sep=': ')
-    else: raise Greška(f'{tip_greške.__name__} nije dignuta')
 
 
 class Tokenizer:
@@ -287,6 +287,7 @@ class Parser:
     @classmethod
     def tokeniziraj(cls, ulaz): 
         """Pregledno ispisuje pronađene tokene, za debugiranje tokenizacije."""
+        if '\n' not in ulaz: print('Tokenizacija:', ulaz)
         cls.static_lexer = staticmethod(cls.lexer)
         for token in cls.static_lexer(Tokenizer(ulaz)):
             print(f'\t{raspon(token):23}: {token}')
@@ -464,7 +465,7 @@ def AST(atributi):
 
 class Memorija:
     """Memorija računala, indeksirana tokenima ili njihovim sadržajima."""
-    def __init__(self, podaci={}, redefinicija=True):
+    def __init__(self, podaci={}, *, redefinicija=True):
         self.redefinicija = redefinicija
         self.podaci, self.token_sadržaja = {}, {}
         for ključ, vrijednost in podaci.items(): self[ključ] = vrijednost
