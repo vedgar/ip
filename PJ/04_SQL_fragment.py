@@ -119,7 +119,7 @@ def za_indeks(skripta):
             if log.pristup > prosjek: yield tablica, stupac
 
 
-skripta = P('''\
+skripta = P('''
     CREATE TABLE Persons
     (
         PersonID int,

@@ -126,13 +126,13 @@ def izračunaj(string):
 izračunaj('2+2*3')
 izračunaj('(1+6*i)/(3*i-4)~^2~')
 izračunaj('i^i')
-izračunaj('''\
+izračunaj('''
     i+1 -> t
     t/2^2^-1 -> a
     a^2^2^2^2^0 -> b
     b
 ''')
-izračunaj(f'''\
+izračunaj(f'''
     8 -> d
     10^d -> n
     (1+1/n)^n -> e

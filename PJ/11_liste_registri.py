@@ -122,7 +122,8 @@ class Ubaci(AST('lista element indeks')):
 
 
 P.tokeniziraj('lista L1 prazna ubaci-2345izbaci L9 dohvati 3 koliko')
-source = '''lista L1  lista L3
+source = '''
+    lista L1  lista L3
     ubaci L3 45 0  dohvati L3 0
     koliko L1  koliko L3
     prazna L1  prazna L3

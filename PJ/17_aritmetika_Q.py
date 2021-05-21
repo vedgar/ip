@@ -91,6 +91,7 @@ class Op(AST('op lijevo desno')):
         else: raise o.iznimka(f'dijeljenje nulom pri pridruživanju {v}')
 
 
+# Moramo staviti backslash na početak jer inače program počinje novim redom.
 ast = P('''\
     a = 3 / 7
     b = a + 3

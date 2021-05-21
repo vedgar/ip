@@ -301,7 +301,7 @@ with SintaksnaGreška:
 with SintaksnaGreška: izvrši(P('program() = vrati2'))
 with LeksičkaGreška: P('program() = vrati 007')
 
-modul = '''\
+modul = '''
 Negacija(V) = ako je V vrati Laž inače vrati Istina
 Neparan(x) = (
     N = Laž,
@@ -313,7 +313,7 @@ Neparan(x) = (
 )
 '''
 
-suma_faktorijela = P(modul + '''\
+suma_faktorijela = P(modul + '''
 fakt(x) = (
     f = 1,
     dok nije x = 0 (
@@ -335,7 +335,7 @@ program() = (
 prikaz(suma_faktorijela)
 izvrši(suma_faktorijela)
 
-tablice_istinitosti = P(modul + '''\
+tablice_istinitosti = P(modul + '''
 Konjunkcija(P, Q) = ako je P vrati Q inače vrati P
 Disjunkcija(P, Q) = ako je P vrati P inače vrati Q
 Kondicional(P, Q) = vrati Disjunkcija(Negacija(P), Q)
@@ -372,7 +372,7 @@ prikaz(tablice_istinitosti)
 izvrši(tablice_istinitosti, 3)  # poziv iz komandne linije, prijenos m=3
 print()
 
-rekurzivna = P('''\
+rekurzivna = P('''
     fakt(n) = ako je n = 0 vrati 1 inače vrati n*fakt(n-1)
     program() = vrati fakt(7)
 ''')

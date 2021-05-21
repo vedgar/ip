@@ -90,7 +90,7 @@ class Tekst(AST('dijelovi')):
         for dio in self.dijelovi: dio.render()
 
 
-r = P('''\
+r = P('''
     <html>
         <head>
             bla   bla
@@ -119,7 +119,7 @@ r = P('''\
     </html>
 ''')
 
-n = P('''\
+n = P('''
     <html>
         <head>_</head>
         <body><ol>
@@ -146,7 +146,7 @@ n = P('''\
     </html>
 ''')
 
-v = P('''\
+v = P('''
         <html>
         <head>_</head>
         <body>

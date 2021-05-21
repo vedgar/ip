@@ -26,10 +26,10 @@ class Kontekst(type):
 # TODO: bolji API: Greška(poruka, pozicija ili token ili AST...)
 # ali ostaviti i lex.greška() i parser.greška() for convenience
 class Greška(Exception, metaclass=Kontekst): """Greška vezana uz poziciju."""
-class LeksičkaGreška(Greška): """Greška nastala prilikom leksičke analize."""
-class SintaksnaGreška(Greška): """Greška nastala prilikom sintaksne analize."""
-class SemantičkaGreška(Greška):"""Greška nastala prilikom semantičke analize."""
-class GreškaIzvođenja(Greška): """Greška nastala prilikom izvođenja."""
+class LeksičkaGreška(Greška): """Greška nastala u leksičkoj analizi."""
+class SintaksnaGreška(Greška): """Greška nastala u sintaksnoj analizi."""
+class SemantičkaGreška(Greška): """Greška nastala u semantičkoj analizi."""
+class GreškaIzvođenja(Greška): """Greška nastala u izvođenju."""
 
 
 class Tokenizer:
@@ -37,10 +37,10 @@ class Tokenizer:
     def __init__(self, string):
         """Inicijalizira tokenizer tako da čita string (od početka)."""
         self.pročitani, self.buffer, self.stream = [], None, iter(string)
-        self.i, self.j = 1, 0
-        self.početak = 1, 1
+        self.i = int('\n' in string and not string.startswith('\n'))
+        self.j = 0
+        self.početak = 0, 1
 
-    #TODO razmisliti o tome da i kreće od 0 za onelinere, a bez \ nakon '''
     @property
     def pozicija(self):
         """Uređeni par (redak, stupac): gdje se tokenizer trenuntno nalazi."""
@@ -122,7 +122,7 @@ class Tokenizer:
         if self.buffer is not None: self.čitaj()
         if self.j: i, j = self.i, self.j
         else: i, j = self.i - 1, self.gornji_j + 1
-        poruka = f'Redak {i}, stupac {j}: '
+        poruka = f'Redak {i}, stupac {j}: ' if i else f'Znak #{j}: '
         zadnji = self.pročitani.pop()
         opis = f'znak {zadnji!r}' if zadnji else 'kraj ulaza'
         poruka += f'neočekivani {opis}'
@@ -290,7 +290,9 @@ class Parser:
         if '\n' not in ulaz: print('Tokenizacija:', ulaz)
         cls.static_lexer = staticmethod(cls.lexer)
         for token in cls.static_lexer(Tokenizer(ulaz)):
-            print(f'\t{raspon(token):23}: {token}')
+            r = raspon(token)
+            if r.startswith('Znak'): print(f'\t\t{r:15}: {token}')
+            else: print(f'\t{r:23}: {token}')
 
     def čitaj(self):
         """Čitanje sljedećeg tokena iz buffera ili inicijalnog niza."""
@@ -386,12 +388,16 @@ def prikaz(objekt, dubina:int=math.inf, uvlaka:str='', ime:str=None):
 
 
 def raspon(ast):
-    """String koji kazuje odakle dokle se prostire token ili AST."""
+    """String koji kazuje odakle dokle se prostire token (ili AST)."""
+    #! Ne radi za ASTove... trebalo bi bitno drugačije organizirati kod.
     if hasattr(ast, '_početak'):
         ip, jp = ast._početak
         ik, jk = ast._kraj
         if ip == ik:
-            if jp == jk: return f'Redak {ip}, stupac {jp}'
+            if ip == 0:
+                if jp == jk: return f'Znak #{jp}'
+                else: return f'Znakovi #{jp}–#{jk}'
+            elif jp == jk: return f'Redak {ip}, stupac {jp}'
             else: return f'Redak {ip}, stupci {jp}–{jk}'
         else: return f'Redak {ip}, stupac {jp} – redak {ik}, stupac {jk}'
     else: return 'Nepoznata pozicija'

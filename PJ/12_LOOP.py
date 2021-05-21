@@ -97,7 +97,7 @@ def računaj(program, *ulazi):
 
 
 with LeksičkaGreška: P.tokeniziraj('inc R00')
-power = P('''\
+power = P('''
     INC R0;
     R2{
         R0{

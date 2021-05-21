@@ -159,7 +159,7 @@ class Grananje(AST('lijevo desno naredba')):
 def očekuj(greška, kôd):
     with greška: P(kôd).izvrši()
 
-cpp = P('''\
+cpp = P('''
     for ( i = 8 ; i < 13 ; i += 2 )
         for(j=0; j<3; j++) {
             cout<<i<<j<<endl;
