@@ -93,7 +93,7 @@ class P(Parser):
             t = self.funkcija()
             self >> T.ZATV
         else: t = self.osnovna()
-        while self >= T.KOMPOZICIJA: t = Kompozicija(t, self.desno())
+        while self >= T.KOMPOZICIJA: t = Kompozicija(t, tuple(self.desno()))
         return t
 
     def desno(self):
@@ -117,7 +117,10 @@ class P(Parser):
 kriva_mjesnost = SemantičkaGreška('Mjesnosti ne odgovaraju')
 
 
-class Kompozicija(AST('lijeva desne')):
+class Kompozicija(AST):
+    lijeva: 'funkcija'
+    desne: 'funkcija*'
+
     def mjesnost(self, symtab):
         l = self.lijeva.mjesnost(symtab)
         if len(self.desne) != l: raise kriva_mjesnost
@@ -132,7 +135,10 @@ class Kompozicija(AST('lijeva desne')):
         return self.lijeva.izračunaj(symtab, *međurezultati)
 
 
-class PRekurzija(AST('baza korak')):
+class PRekurzija(AST):
+    baza: 'funkcija'
+    korak: 'funkcija'
+
     def mjesnost(self, symtab):
         k = self.baza.mjesnost(symtab)
         if self.korak.mjesnost(symtab) != k + 2: raise kriva_mjesnost
@@ -164,6 +170,7 @@ prikaz(operacije := P('''
         mul2 = Z PR add2 o (I13, I33)
         pow = Sc o Z PR mul2 o (I13, I33)
 '''))
-print(3, '^', 7, '=', izračunaj(operacije, 'pow', 3, 7))
+print(izračunaj(konstante, 'C11', 5))
+print(b:=3, '^', e:=7, '=', izračunaj(operacije, 'pow', b, e))
 
 # DZ**: dokažite ekvivalentnost ovog sustava i programskog jezika LOOP

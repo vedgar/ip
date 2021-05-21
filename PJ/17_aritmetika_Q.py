@@ -71,7 +71,8 @@ class P(Parser):
             return u_zagradi
 
 
-class Program(AST('pridruživanja')):
+class Program(AST):
+    pridruživanja: '(IME,izraz)*'
     def izvrši(self):
         memorija = Memorija()
         for ime, vrijednost in self.pridruživanja:
@@ -79,7 +80,10 @@ class Program(AST('pridruživanja')):
         return memorija
 
 
-class Op(AST('op lijevo desno')):
+class Op(AST):
+    op: 'T'
+    lijevo: 'izraz?'
+    desno: 'izraz'
     def izračunaj(self, memorija, v):
         if self.lijevo is nenavedeno: l = 0  # unarni minus: -x = 0-x
         else: l = self.lijevo.izračunaj(memorija, v)

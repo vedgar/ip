@@ -79,7 +79,9 @@ nula = Token(T.BROJ, '0')
 jedan = Token(T.BROJ, '1')
 
 
-class Zbroj(AST('pribrojnici')):
+class Zbroj(AST):
+    pribrojnici: 'izraz*'
+    
     def vrijednost(izraz):
         a, b = izraz.pribrojnici
         return a.vrijednost() + b.vrijednost()
@@ -96,7 +98,9 @@ class Zbroj(AST('pribrojnici')):
         yield ['ADD']
 
 
-class Umnožak(AST('faktori')):
+class Umnožak(AST):
+    faktori: 'izraz*'
+
     def vrijednost(izraz):
         a, b = izraz.faktori
         return a.vrijednost() * b.vrijednost()
@@ -106,7 +110,7 @@ class Umnožak(AST('faktori')):
         a, b = a.optim(), b.optim()
         if a == jedan: return b
         elif b == jedan: return a
-        elif nula in {a, b}: return nula
+        elif nula in [a, b]: return nula
         else: return Umnožak([a, b])
 
     def prevedi(izraz):
@@ -114,7 +118,10 @@ class Umnožak(AST('faktori')):
         yield ['MUL']
 
 
-class Potencija(AST('baza eksponent')):
+class Potencija(AST):
+    baza: 'izraz'
+    eksponent: 'izraz'
+
     def vrijednost(izraz):
         return izraz.baza.vrijednost() ** izraz.eksponent.vrijednost()
 

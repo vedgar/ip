@@ -69,7 +69,8 @@ class P(Parser):
             return Ponavljanje(koliko, tijelo)
 
 
-class Program(AST('naredbe')):
+class Program(AST):
+    naredbe: 'naredba*'
     def js(self):
         repeat_br = itertools.count(1)
         yield from [
@@ -82,24 +83,31 @@ class Program(AST('naredbe')):
         for naredba in self.naredbe: yield from naredba.js(repeat_br)
         yield 'ctx.stroke();'
 
-class Pomak(AST('smjer pikseli')):
+class Pomak(AST):
+    smjer: 'FORWARD|BACKWARD'
+    pikseli: 'BROJ'
     def js(self, repeat_br):
         d = self.smjer.predznak * self.pikseli.vrijednost()
         yield f'to.apply(ctx, [x-=Math.sin(h)*{d}, y-=Math.cos(h)*{d}]);'
 
-class Okret(AST('smjer stupnjevi')):
+class Okret(AST):
+    smjer: 'LEFT|RIGHT'
+    stupnjevi: 'BROJ'
     def js(self, repeat_br):
         φ = self.smjer.predznak * self.stupnjevi.vrijednost()
         yield f'h += {math.radians(φ)};'
 
-class Ponavljanje(AST('koliko naredbe')):
+class Ponavljanje(AST):
+    koliko: 'BROJ'
+    naredbe: 'naredba*'
     def js(self, repeat_br):
         i, n = next(repeat_br), self.koliko.vrijednost()
         yield f'for (var r{i} = 0; r{i} < {n}; r{i} ++) ' + '{'
         for naredba in self.naredbe: yield from naredba.js(repeat_br)
         yield '}'
 
-class Olovka(AST('položaj')):
+class Olovka(AST):
+    položaj: 'PENUP|PENDOWN'
     def js(self, repeat_br): yield f'to = ctx.{self.položaj.opkod}To'
 
 

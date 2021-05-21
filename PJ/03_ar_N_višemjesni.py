@@ -56,7 +56,9 @@ class P(Parser):
 nula, jedan = Token(T.BROJ, '0'), Token(T.BROJ, '1')
 
 
-class Zbroj(AST('pribrojnici')):
+class Zbroj(AST):
+    pribrojnici: 'izraz*'
+
     def vrijednost(self): return sum(x.vrijednost() for x in self.pribrojnici)
     
     def optim(self):
@@ -66,7 +68,9 @@ class Zbroj(AST('pribrojnici')):
         return Zbroj.ili_samo(opt_pribr)
 
 
-class Umnožak(AST('faktori')):
+class Umnožak(AST):
+    faktori: 'izraz*'
+
     def vrijednost(self): return math.prod(x.vrijednost() for x in self.faktori)
 
     def optim(self):

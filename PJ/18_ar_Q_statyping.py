@@ -97,10 +97,10 @@ class P(Parser):
 
 
 ### Apstraktna sintaksna stabla
-# Program: naredbe symtab
-# Pridruživanje: varijabla tip? vrijednost
-# Suprotan: operand
-# Op: operator lijevo desno
+# Program: naredbe:[naredba] symtab:Memorija
+# Pridruživanje: varijabla:IME tip:T? vrijednost:izraz
+# Suprotan: operand:izraz
+# Op: operator:T lijevo:izraz desno:izraz
 
 
 def ažuriraj(var, tip, symtab):
@@ -113,20 +113,27 @@ def ažuriraj(var, tip, symtab):
     return symtab[var]
 
 
-class Program(AST('naredbe symtab')):
+class Program(AST):
+    naredbe: 'naredba*'
+    symtab: 'Memorija'
     def provjeri_tipove(self):
-        symtab = Memorija(dict(self.symtab))
         for naredba in self.naredbe:
-            tip = naredba.provjeri_tip(symtab)
+            tip = naredba.provjeri_tip(self.symtab)
             if tip: print(tip)
 
-class Pridruživanje(AST('varijabla tip vrijednost')):
+class Pridruživanje(AST):
+    varijabla: 'IME'
+    tip: 'Tip?'
+    vrijednost: 'izraz'
     def provjeri_tip(self, symtab):
         lijevo = symtab[self.varijabla]
         desno = self.vrijednost.provjeri_tip(symtab)
         if not desno <= lijevo: raise self.varijabla.krivi_tip(lijevo, desno)
 
-class Op(AST('operator lijevo desno')):
+class Op(AST):
+    operator: 'T'
+    lijevo: 'izraz'
+    desno: 'izraz'
     def provjeri_tip(self, symtab):
         if self.lijevo is nenavedeno: prvi = Tip.N  # -x = 0 - x
         else: prvi = self.lijevo.provjeri_tip(symtab)

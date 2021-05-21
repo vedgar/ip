@@ -82,29 +82,42 @@ class P(Parser):
         return rezultat
 
 
-class Skripta(AST('naredbe')):
+class Skripta(AST):
     """Niz naredbi SQLa, svaka završava točkazarezom."""
+    naredbe: 'naredba*'
+
     def razriješi(self):
         imena = Memorija(redefinicija=False)
         for naredba in self.naredbe: naredba.razriješi(imena)
         return imena
 
-class Create(AST('tablica specifikacije')):
+class Stupac(AST):
+    """Specifikacija stupca u tablici."""
+    ime: 'IME'
+    tip: 'IME'
+    veličina: 'BROJ?'
+
+class Create(AST):
     """Naredba CREATE TABLE."""
+    tablica: 'IME'
+    specifikacije: 'Stupac*'
+
     def razriješi(self, imena):
         pristup = imena[self.tablica] = Memorija(redefinicija=False)
         for stupac in self.specifikacije:
             pristup[stupac.ime] = PristupLog(stupac)
         
-class Select(AST('tablica stupci')):
+class Select(AST):
     """Naredba SELECT."""
+    tablica: 'IME'
+    stupci: 'IME*?'
+
     def razriješi(self, imena):
         t = imena[self.tablica]
         dohvaćeni = self.stupci
         if dohvaćeni is nenavedeno: dohvaćeni = dict(t)
         for stupac in dohvaćeni: t[stupac].pristupi()
 
-class Stupac(AST('ime tip veličina')): """Specifikacija stupca u tablici."""
 
 
 def za_indeks(skripta):

@@ -123,16 +123,22 @@ class Prekid(NelokalnaKontrolaToka): """Signal koji šalje naredba break."""
 #          Petlja: varijabla:IME početak:BROJ granica:BROJ
 #                      inkrement:BROJ? blok:[naredba]
 #          Ispis: varijable:[IME] novired:ENDL?
-#          Grananje: lijevo:IME desno:BROJ naredba:naredba
+#          Grananje: lijevo:IME desno:BROJ onda:naredba
 
-class Program(AST('naredbe')):
+class Program(AST):
+    naredbe: 'naredba*'
     def izvrši(self):
         mem = Memorija()
         try:  # break izvan petlje je zapravo sintaksna greška - kompliciranije
             for naredba in self.naredbe: naredba.izvrši(mem)
         except Prekid: raise SemantičkaGreška('nedozvoljen break izvan petlje')
 
-class Petlja(AST('varijabla početak granica inkrement blok')):
+class Petlja(AST):
+    varijabla: 'IME'
+    početak: 'BROJ'
+    granica: 'BROJ'
+    inkrement: 'BROJ?'
+    blok: 'naredba*'
     def izvrši(self, mem):
         kv = self.varijabla  # kontrolna varijabla petlje
         mem[kv] = self.početak.vrijednost(mem)
@@ -145,28 +151,33 @@ class Petlja(AST('varijabla početak granica inkrement blok')):
             else: inkr = inkr.vrijednost(mem)
             mem[kv] += inkr 
 
-class Ispis(AST('varijable novired')):
+class Ispis(AST):
+    varijable: 'IME*'
+    novired: 'ENDL?'
     def izvrši(self, mem):
         for var in self.varijable: print(var.vrijednost(mem), end=' ')
         if self.novired ^ T.ENDL: print()
 
-class Grananje(AST('lijevo desno naredba')):
+class Grananje(AST):
+    lijevo: 'IME'
+    desno: 'BROJ'
+    onda: 'naredba'
     def izvrši(self, mem):
         if self.lijevo.vrijednost(mem) == self.desno.vrijednost(mem):
-            self.naredba.izvrši(mem)
+            self.onda.izvrši(mem)
 
 
 def očekuj(greška, kôd):
+    print('Testiram:', kôd)
     with greška: P(kôd).izvrši()
 
-cpp = P('''
+prikaz(cpp := P('''
     for ( i = 8 ; i < 13 ; i += 2 )
         for(j=0; j<3; j++) {
             cout<<i<<j<<endl;
             if(i == 10) if (j == 1) break;
         }
-''')
-prikaz(cpp, 8)
+'''), 8)
 cpp.izvrši()
 prikaz(P('cout;'))
 očekuj(SintaksnaGreška, '')

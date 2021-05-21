@@ -68,15 +68,19 @@ class spoj(Parser):
 # Skupina: čega:ATOM|Formula koliko:(BROJ|N)?
 
 
-class Formula(AST('skupine')):
+class Formula(AST):
+    skupine: 'Skupina*'
+
     def masa(self, tablica): return sum(s.ukupno(tablica) for s in self.skupine)
 
     def Mr(self, **mase):
-        spojeno = collections.ChainMap(mase, referentne_atomske_mase)
-        return self.masa(Memorija(spojeno))
+        return self.masa(Memorija(referentne_atomske_mase | mase))
 
 
-class Skupina(AST('čega koliko')):
+class Skupina(AST):
+    čega: 'ATOM|Formula'
+    koliko: '(BROJ|N)?'
+
     def ukupno(self, tablica):
         m = self.čega.masa(tablica)
         if self.koliko: m *= self.koliko.vrijednost(tablica)

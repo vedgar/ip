@@ -84,7 +84,7 @@ class P(Parser):
 
 
 ### Apstraktna sintaksna stabla
-# Program: okolina:[(izraz,IME)] izraz:izraz
+# Program: okolina:[(izraz,IME)] završni:izraz
 # izraz: BROJ: Token
 #        I: Token
 #        IME: Token
@@ -92,13 +92,18 @@ class P(Parser):
 #        Unarna: op:MINUS|KONJ ispod:izraz
 
 
-class Program(AST('okolina završni')):
+class Program(AST):
+    okolina: '(izraz,IME)*'
+    završni: 'izraz'
     def izvrši(self):
         env = Memorija()
         for ime, izraz in self.okolina: env[ime] = izraz.vrijednost(env)
         return self.završni.vrijednost(env)
 
-class Binarna(AST('op lijevo desno')):
+class Binarna(AST):
+    op: 'T'
+    lijevo: 'izraz'
+    desno: 'izraz'
     def vrijednost(self, env):
         o,x,y = self.op, self.lijevo.vrijednost(env), self.desno.vrijednost(env)
         try:
@@ -110,7 +115,9 @@ class Binarna(AST('op lijevo desno')):
             else: assert False, f'nepokriveni slučaj binarnog operatora {o}'
         except ArithmeticError as ex: raise o.iznimka(ex)
 
-class Unarna(AST('op ispod')):
+class Unarna(AST):
+    op: 'T'
+    ispod: 'izraz'
     def vrijednost(self, env):
         o, z = self.op, self.ispod.vrijednost(env)
         if o ^ T.MINUS: return -z

@@ -73,11 +73,15 @@ class P(Parser):
 # Funkcija: ime:IME argumenti:[IME] tijelo:[NAREDBA]
 # Program: funkcije:[Funkcija]
 
-class Funkcija(AST('ime argumenti tijelo')): pass
-class Program(AST('funkcije')): pass
+class Funkcija(AST):
+    ime: 'IME'
+    argumenti: 'IME*'
+    tijelo: 'NAREDBA*'
+class Program(AST):
+    funkcije: 'Funkcija*'
 
 
-prikaz(P('''\
+prikaz(P('''
     function ime (var x, var y, var z) {
         //neke naredbe odvojene s ; ili komentarima
         naredba; naredba //kom 

@@ -70,12 +70,16 @@ class P(Parser):
         return rezultat
             
 
-class Dokument(AST('zaglavlje tijelo')):
+class Dokument(AST):
+    zaglavlje: 'Tekst'
+    tijelo: 'element*'
     def render(self):
         for element in self.tijelo: element.render([''])
         print()
 
-class Lista(AST('vrsta stavke')):
+class Lista(AST):
+    vrsta: 'OL|UL'
+    stavke: 'element*'
     def render(self, prefiks):
         prethodni, zadnji = prefiks[:-1], prefiks[-1]
         for i, stavka in enumerate(self.stavke, 1):
@@ -84,7 +88,8 @@ class Lista(AST('vrsta stavke')):
             elif self.vrsta ^ T.UL: marker = '*#@o-.,_ '[len(prethodni)] + ' '
             stavka.render(prethodni + [zadnji, f'{marker:>7}\t'])
 
-class Tekst(AST('dijelovi')):
+class Tekst(AST):
+    dijelovi: 'TEKST*'
     def render(self, prefiks):
         print('\n', *prefiks, sep='', end='')
         for dio in self.dijelovi: dio.render()

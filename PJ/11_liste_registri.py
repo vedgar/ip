@@ -81,40 +81,51 @@ class P(Parser):
         else: raise self.greška()
 
 
-class Program(AST('naredbe')):
+class Program(AST):
     """Program u jeziku listâ."""
+    naredbe: 'naredba*'
     def izvrši(self):
         mem = Memorija(redefinicija=False)
         for nar in self.naredbe: print(nar, nar.izvrši(mem), sep=' --> ')
 
-class Deklaracija(AST('lista')):
+class Deklaracija(AST):
     """Deklaracija liste."""
+    lista: 'ID'
     def izvrši(self, memorija): memorija[self.lista] = []
 
-class Provjera(AST('lista')):
+class Provjera(AST):
     """Je li lista prazna?"""
+    lista: 'ID'
     def izvrši(self, memorija): return not memorija[self.lista]
 
-class Duljina(AST('lista')):
+class Duljina(AST):
     """Broj elemenata u listi."""
+    lista: 'ID'
     def izvrši(self, memorija): return len(memorija[self.lista])
 
-class Dohvati(AST('lista indeks')):
+class Dohvati(AST):
     """Element zadanog indeksa (brojeći od 0). Prevelik indeks javlja grešku."""
+    lista: 'ID'
+    indeks: 'BROJ'
     def izvrši(self, memorija):
         l, i = memorija[self.lista], self.indeks.vrijednost()
         if i < len(l): return l[i]
         else: raise self.indeks.iznimka('Prevelik indeks')
         
-class Izbaci(AST('lista indeks')):
+class Izbaci(AST):
     """Izbacuje element zadanog indeksa iz liste ili javlja grešku izvođenja."""
+    lista: 'ID'
+    indeks: 'BROJ'
     def izvrši(self, memorija):
         l, i = memorija[self.lista], self.indeks.vrijednost()
         if i < len(l): del l[i]
         else: raise self.indeks.iznimka('Prevelik indeks')
 
-class Ubaci(AST('lista element indeks')):
+class Ubaci(AST):
     """Ubacuje vrijednost u listu na zadanom indeksu, ili javlja grešku."""
+    lista: 'ID'
+    element: 'BROJ|MINUSBROJ'
+    indeks: 'BROJ'
     def izvrši(self, memorija):
         l, i = memorija[self.lista], self.indeks.vrijednost()
         if i <= len(l): l.insert(i, self.element.vrijednost())

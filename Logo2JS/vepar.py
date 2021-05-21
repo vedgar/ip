@@ -4,7 +4,8 @@ Za više detalja pogledati šalabahter.txt."""
 __version__ = '2.0'
 
 
-import enum, types, collections, contextlib, itertools, functools, math
+import enum, types, collections, contextlib, itertools, functools, \
+        math, typing, dataclasses
 
 
 def identifikator(znak):
@@ -13,6 +14,8 @@ def identifikator(znak):
 
 TipoviTokena = enum.Enum
 TipTokena = enum.auto
+# AST = typing.NamedTuple
+from typing import Optional
 
 
 class Kontekst(type):
@@ -340,7 +343,7 @@ class NoneInAST(Exception): """U apstraktnom sintaksnom stablu se našao None.""
 
 def AST_adapt(component):
     """Pretvara komponente budućeg AST-a u oblik prikladan za AST."""
-    if isinstance(component, (Token, AST0, elementarni)): return component
+    if isinstance(component, (Token, AST, elementarni)): return component
     elif isinstance(component, (tuple, list)):
         if None in component: raise NoneInAST(component)
         return ListaAST(component)
@@ -360,14 +363,14 @@ def prikaz(objekt, dubina:int=math.inf, uvlaka:str='', ime:str=None):
     if isinstance(objekt, (Token, elementarni, Nenavedeno, enum.Enum)) \
             or not dubina:
         return print(intro, repr(objekt), sep='')
-    if isinstance(objekt, ListaAST):
+    if isinstance(objekt, (ListaAST, list)):
         print(intro, end='[...]:\n' if objekt else '[]\n')
         for vrijednost in objekt:
             prikaz(vrijednost, dubina-1, uvlaka+'. ')
-    elif isinstance(objekt, AST0):
-        print(intro + type(objekt).__name__ + ':')  # + '  ' + raspon(objekt))
-        for ime, vrijednost in objekt._asdict().items():
-            prikaz(vrijednost, dubina-1, uvlaka+' '*2, ime)
+    #elif isinstance(objekt, AST0):
+    #    print(intro + type(objekt).__name__ + ':')  # + '  ' + raspon(objekt))
+    #    for ime, vrijednost in objekt._asdict().items():
+    #        prikaz(vrijednost, dubina-1, uvlaka+' '*2, ime)
     elif isinstance(objekt, Memorija):
         print(intro + type(objekt).__name__ + ':')
         for ime, vrijednost in objekt:
@@ -380,7 +383,9 @@ def prikaz(objekt, dubina:int=math.inf, uvlaka:str='', ime:str=None):
         print(intro, end='(...):\n' if objekt else '()\n')
         for vrijednost in objekt:
             prikaz(vrijednost, dubina-1, uvlaka+', ')
-    elif isinstance(objekt, types.SimpleNamespace):
+    elif isinstance(objekt, (types.SimpleNamespace, AST)):
+        if hasattr(objekt, 'za_prikaz'): 
+            prikaz(objekt.za_prikaz(), dubina, uvlaka, ime)
         print(intro + type(objekt).__name__ + ':'*bool(vars(objekt)))
         for ime, vrijednost in vars(objekt).items():
             prikaz(vrijednost, dubina-1, uvlaka+'  ', ime)
@@ -403,21 +408,7 @@ def raspon(ast):
     else: return 'Nepoznata pozicija'
 
 
-class AST0:
-    """Bazna klasa za sva apstraktna sintaksna stabla."""
-    def __xor__(self, tip):
-        """Vraća sebe (istina) ako je zadanog tipa, inače nenavedeno (laž)."""
-        if isinstance(tip, type) and isinstance(self, tip): return self
-
-    @classmethod
-    def ili_samo(cls, lista):
-        """Konstruktor koji umjesto cls([x]) vraća samo x."""
-        if not lista or len(cls._fields) != 1:
-            raise SemantičkaGreška('Ispuštanje korijena nije dozvoljeno!')
-        return lista[0] if len(lista) == 1 else cls(lista)
-    
-
-class Atom(Token, AST0): """Atomarni token kao apstraktno stablo."""
+# class Atom(Token, AST0): """Atomarni token kao apstraktno stablo."""
 
 
 class ListaAST(tuple):
@@ -437,12 +428,6 @@ class RječnikAST(tuple):
     def __repr__(self): return repr(dict(self))
 
 
-class Nenavedeno(AST0):
-    """Atribut koji nije naveden."""
-    def __bool__(self): return False
-    def __repr__(self): return type(self).__name__.lower().join('<>')
-
-nenavedeno = Nenavedeno()
 
 
 def obuhvati(dijelovi):
@@ -451,7 +436,7 @@ def obuhvati(dijelovi):
     if d: return min(p._početak for p in d), max(p._kraj for p in d)
 
 
-def AST(atributi):
+def AST3(atributi):
     """Dinamički generirana klasa sa zadanim atributima."""
     AST2 = collections.namedtuple('AST2', atributi)
     # AST2.__new__.__defaults__ = tuple(nenavedeno for field in AST2._fields)
@@ -467,6 +452,29 @@ def AST(atributi):
             if raspon: self._početak, self._kraj = raspon
             return self
     return AST1
+
+class AST:
+    """Bazna klasa za sva apstraktna sintaksna stabla."""
+    def __init_subclass__(cls): dataclasses.dataclass(cls, frozen=True)
+
+    def __xor__(self, tip):
+        """Vraća sebe (istina) ako je zadanog tipa, inače None (laž)."""
+        if isinstance(tip, type) and isinstance(self, tip): return self
+
+    @classmethod
+    def ili_samo(cls, lista):
+        """Konstruktor koji umjesto cls([x]) vraća samo x."""
+        if not lista or len(dataclasses.fields(cls)) != 1:
+            raise SemantičkaGreška('Ispuštanje korijena nije dozvoljeno!')
+        return lista[0] if len(lista) == 1 else cls(lista)
+
+
+class Nenavedeno(AST):
+    """Atribut koji nije naveden."""
+    def __bool__(self): return False
+    def __repr__(self): return type(self).__name__.lower().join('<>')
+
+nenavedeno = Nenavedeno()
 
 
 class Memorija:

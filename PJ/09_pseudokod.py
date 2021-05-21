@@ -206,7 +206,7 @@ def izvrši(funkcije, *argv):
 
 
 ### AST
-# Funkcija: ime:IME parametri:[IME] naredba:naredba
+# Funkcija: ime:IME parametri:[IME] tijelo:naredba
 # naredba: Grananje: istinitost:JE|NIJE uvjet:log onda:naredba inače:naredba
 #          Petlja: istinitost:JE|NIJE uvjet:log tijelo:naredba
 #          Blok: naredbe:[naredba]
@@ -219,57 +219,79 @@ def izvrši(funkcije, *argv):
 #               Umnožak: faktori:[aritm]
 #        Poziv: funkcija:Funkcija argumenti:[izraz]
 
-class Funkcija(AST('ime parametri naredba')):
+class Funkcija(AST):
+    ime: 'IME'
+    parametri: 'IME*'
+    tijelo: 'naredba'
     def pozovi(self, argumenti):
         lokalni = Memorija(dict(zip(self.parametri, argumenti)))
-        try: self.naredba.izvrši(mem=lokalni, unutar=self)
+        try: self.tijelo.izvrši(mem=lokalni, unutar=self)
         except Povratak as exc: return exc.preneseno
         else: raise GreškaIzvođenja(f'{self.ime} nije ništa vratila')
 
-class Poziv(AST('funkcija argumenti')):
+class Poziv(AST):
+    funkcija: 'Funkcija'
+    argumenti: 'izraz*'
     def vrijednost(self, mem, unutar):
         pozvana = self.funkcija
         if pozvana is nenavedeno: pozvana = unutar  # rekurzivni poziv
         argumenti = [a.vrijednost(mem, unutar) for a in self.argumenti]
         return pozvana.pozovi(argumenti)
 
-    def _asdict(self):  # samo za ispis, da se ne ispiše čitava funkcija
-        za_ispis = {'argumenti': self.argumenti}
-        if self.funkcija is nenavedeno: za_ispis['*rekurzivni'] = True
-        else: za_ispis['*ime'] = self.funkcija.ime
-        return za_ispis
+    def za_prikaz(self):  # samo za ispis, da se ne ispiše čitava funkcija
+        r = {'argumenti': self.argumenti}
+        if self.funkcija is nenavedeno: r['*rekurzivni'] = True
+        else: r['*ime'] = self.funkcija.ime
+        return r
 
 def ispunjen(ast, mem, unutar):
-    traženo = {T.JE: True, T.NIJE: False}[ast.istinitost.tip]
-    return ast.uvjet.vrijednost(mem, unutar) == traženo
+    u = ast.uvjet.vrijednost(mem, unutar)
+    if ast.istinitost ^ T.JE: return u
+    elif ast.istinitost ^ T.NIJE: return not u
+    else: assert False, f'Tertium non datur! {ast.istinitost}'
 
-class Grananje(AST('istinitost uvjet onda inače')):
+class Grananje(AST):
+    istinitost: 'JE|NIJE'
+    uvjet: 'log'
+    onda: 'naredba'
+    inače: 'naredba'
     def izvrši(self, mem, unutar):
         if ispunjen(self, mem, unutar): self.onda.izvrši(mem, unutar)
         else: self.inače.izvrši(mem, unutar)
 
-class Petlja(AST('istinitost uvjet tijelo')):
+class Petlja(AST):
+    istinitost: 'JE|NIJE'
+    uvjet: 'log'
+    tijelo: 'naredba'
     def izvrši(self, mem, unutar):
         while ispunjen(self, mem, unutar): self.tijelo.izvrši(mem, unutar)
 
-class Blok(AST('naredbe')):
+class Blok(AST):
+    naredbe: 'naredba*'
     def izvrši(self, mem, unutar):
         for naredba in self.naredbe: naredba.izvrši(mem, unutar)
 
-class Pridruživanje(AST('ime pridruženo')):
+class Pridruživanje(AST):
+    ime: 'IME'
+    pridruženo: 'izraz'
     def izvrši(self, mem, unutar):
         mem[self.ime] = self.pridruženo.vrijednost(mem, unutar)
 
-class Vrati(AST('što')):
+class Vrati(AST):
+    što: 'izraz'
     def izvrši(self, mem, unutar):
         raise Povratak(self.što.vrijednost(mem, unutar))
 
-class Disjunkcija(AST('disjunkti')):
+class Disjunkcija(AST):
+    disjunkti: 'log*'
     def vrijednost(self, mem, unutar):
         return any(disjunkt.vrijednost(mem, unutar)
                 for disjunkt in self.disjunkti)
     
-class Usporedba(AST('lijevo relacija desno')):
+class Usporedba(AST):
+    lijevo: 'aritm'
+    relacija: 'MANJE|JEDNAKO'
+    desno: 'aritm'
     def vrijednost(self, mem, unutar):
         l = self.lijevo.vrijednost(mem, unutar)
         d = self.desno.vrijednost(mem, unutar)
@@ -277,14 +299,17 @@ class Usporedba(AST('lijevo relacija desno')):
         elif self.relacija ^ T.MANJE: return l < d
         else: assert False, f'Nepoznata relacija {self.relacija}'
 
-class Zbroj(AST('pribrojnici')):
+class Zbroj(AST):
+    pribrojnici: 'aritm*'
     def vrijednost(self, mem, unutar):
         return sum(p.vrijednost(mem, unutar) for p in self.pribrojnici)
     
-class Suprotan(AST('od')):
+class Suprotan(AST):
+    od: 'aritm'
     def vrijednost(self, mem, unutar): return -self.od.vrijednost(mem, unutar)
     
-class Umnožak(AST('faktori')):
+class Umnožak(AST):
+    faktori: 'aritm*'
     def vrijednost(self, mem, unutar):
         return math.prod(f.vrijednost(mem, unutar) for f in self.faktori)
 

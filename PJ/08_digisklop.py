@@ -51,13 +51,16 @@ class P(Parser):
     start = sklop
 
 
-class Not(AST('ulaz')):
+class Not(AST):
+    ulaz: 'sklop'
     def uNand(self): return [self.ulaz.uNand()]
 
-class And(AST('ulazi')):
+class And(AST):
+    ulazi: 'sklop*'
     def uNand(self): return [[ulaz.uNand() for ulaz in self.ulazi]]
 
-class Or(AST('ulazi')):
+class Or(AST):
+    ulazi: 'sklop*'
     def uNand(self): return [[ulaz.uNand()] for ulaz in self.ulazi]
 
 

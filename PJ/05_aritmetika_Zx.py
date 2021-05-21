@@ -76,16 +76,22 @@ class P(Parser):
     start = izraz
 
 
-class Zbroj(AST('lijevo desno')):
+class Zbroj(AST):
+    lijevo: 'izraz'
+    desno: 'izraz'
     def prevedi(self): return self.lijevo.prevedi() + self.desno.prevedi()
     
-class Umnožak(AST('lijevo desno')):
+class Umnožak(AST):
+    lijevo: 'izraz'
+    desno: 'izraz'
     def prevedi(self): return self.lijevo.prevedi() * self.desno.prevedi()
 
-class Suprotan(AST('od')):
+class Suprotan(AST):
+    od: 'izraz'
     def prevedi(self): return -self.od.prevedi()
     
-class Xna(AST('eksponent')):
+class Xna(AST):
+    eksponent: 'BROJ'
     def prevedi(self): return Polinom.x(self.eksponent.vrijednost())
 
 

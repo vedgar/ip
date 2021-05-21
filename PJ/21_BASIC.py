@@ -179,12 +179,14 @@ class P(Parser):
 #        TEKST: Token
 #        TVAR: Token
 
-class Program(AST('naredbe')):
+class Program(AST):
+    naredbe: 'naredba*'
     def izvrši(self):
         mem = Memorija()
         for naredba in self.naredbe: naredba.izvrši(mem)
 
-class Unos(AST('varijabla')):
+class Unos(AST):
+    varijabla: 'BVAR|TVAR'
     def izvrši(self, mem):
         v = self.varijabla
         prompt = f'\t{v.sadržaj}? '
@@ -197,7 +199,8 @@ class Unos(AST('varijabla')):
                 else: break
         else: assert False, f'Nepoznat tip varijable {v}'
 
-class Ispis(AST('što')):
+class Ispis(AST):
+    što: 'broj|tekst|SLJEDEĆI'
     def izvrši(self, mem):
         if self.što ^ T.SLJEDEĆI: print()
         else: 
@@ -205,10 +208,16 @@ class Ispis(AST('što')):
             if isinstance(t, fractions.Fraction): t = str(t).replace('/', '÷')
             print(t, end=' ')
 
-class Pridruživanje(AST('varijabla što')):
+class Pridruživanje(AST):
+    varijabla: 'BVAR|!TVAR'
+    što: 'broj|!tekst'
     def izvrši(self, mem): mem[self.varijabla] = self.što.vrijednost(mem)
 
-class Petlja(AST('varijabla početak kraj tijelo')):
+class Petlja(AST):
+    varijabla: 'BVAR'
+    početak: 'broj'
+    kraj: 'broj'
+    tijelo: 'naredba*'
     def izvrši(self, mem):
         kv = self.varijabla
         p, k = self.početak.vrijednost(mem), self.kraj.vrijednost(mem)
@@ -218,7 +227,10 @@ class Petlja(AST('varijabla početak kraj tijelo')):
             for naredba in self.tijelo: naredba.izvrši(mem)
             mem[kv] += korak
 
-class Grananje(AST('uvjet onda inače')):
+class Grananje(AST):
+    uvjet: 'broj'
+    onda: 'naredba*'
+    inače: 'naredba*'
     def izvrši(self, mem):
         b = self.uvjet.vrijednost(mem)
         if b == ~0: sljedeći = self.onda
@@ -226,17 +238,27 @@ class Grananje(AST('uvjet onda inače')):
         else: raise GreškaIzvođenja(f'Tertium ({b}) non datur!')
         for naredba in sljedeći: naredba.izvrši(mem)
 
-class JednakTekst(AST('lijevo desno')):
+class JednakTekst(AST):
+    lijevo: 'tekst'
+    desno: 'tekst'
     def vrijednost(self, mem):
         return -(self.lijevo.vrijednost(mem) == self.desno.vrijednost(mem))
 
-class Usporedba(AST('lijevo desno manje veće jednako')):
+class Usporedba(AST):
+    lijevo: 'broj'
+    desno: 'broj'
+    manje: 'MANJE?'
+    veće: 'VEĆE?'
+    jednako: 'JEDNAKO?'
     def vrijednost(self, mem):
         l, d = self.lijevo.vrijednost(mem), self.desno.vrijednost(mem)
         return -((self.manje and l < d) or (self.jednako and l == d) \
                    or (self.veće and l > d) or False)
 
-class Osnovna(AST('operacija lijevo desno')):
+class Osnovna(AST):
+    operacija: 'T'
+    lijevo: 'broj'
+    desno: 'broj'
     def vrijednost(self, mem):
         l, d = self.lijevo.vrijednost(mem), self.desno.vrijednost(mem)
         o = self.operacija
@@ -248,17 +270,21 @@ class Osnovna(AST('operacija lijevo desno')):
             else: raise o.iznimka('Nazivnik ne smije biti nula!')
         else: assert False, f'Nepokrivena binarna operacija {o}'
 
-class TekstUBroj(AST('tekst')):
+class TekstUBroj(AST):
+    tekst: 'tekst'
     def vrijednost(self, mem):
         arg = self.tekst.vrijednost(mem)
         try: return fractions.Fraction(arg.replace('÷', '/'))
         except ValueError: raise GreškaIzvođenja(f'{arg!r} nije broj')
 
-class BrojUTekst(AST('broj')):
+class BrojUTekst(AST):
+    broj: 'broj'
     def vrijednost(self, mem): 
         return str(self.broj.vrijednost(mem)).replace('/', '÷')
 
-class Konkatenacija(AST('lijevo desno')):
+class Konkatenacija(AST):
+    lijevo: 'tekst'
+    desno: 'tekst'
     def vrijednost(self, mem):
         return self.lijevo.vrijednost(mem) + self.desno.vrijednost(mem)
 

@@ -55,10 +55,14 @@ class λ(Parser):
 #        Apstrakcija: varijabla:SLOVO doseg:izraz
 #        Aplikacija: funkcija:izraz argument:izraz
 
-class Apstrakcija(AST('varijabla doseg')):
+class Apstrakcija(AST):
+    varijabla: 'SLOVO'
+    doseg: 'izraz'
     def slobodne(self): return self.doseg.slobodne() - self.varijabla.slobodne()
 
-class Aplikacija(AST('funkcija argument')):
+class Aplikacija(AST):
+    funkcija: 'izraz'
+    argument: 'izraz'
     def slobodne(self): return self.funkcija.slobodne()|self.argument.slobodne()
 
 def kombinator(l): return not λ(l).slobodne()

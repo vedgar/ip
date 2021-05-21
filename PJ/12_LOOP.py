@@ -73,18 +73,23 @@ class P(Parser):
     start = program
 
 
-class Program(AST('naredbe')):
+class Program(AST):
+    naredbe: 'naredba*'
     def izvrši(self, stroj):
         for naredba in self.naredbe: naredba.izvrši(stroj)
 
-class Promjena(AST('op registar')):
+class Promjena(AST):
+    op: 'INC|DEC'
+    registar: 'REG'
     def izvrši(self, stroj):
         j = self.registar.broj()
         if self.op ^ T.INC: stroj.inc(j)
         elif self.op ^ T.DEC: stroj.dec(j)
         else: assert False, f'Nepoznata operacija {self.op}'
 
-class Petlja(AST('registar tijelo')):
+class Petlja(AST):
+    registar: 'REG'
+    tijelo: 'Program'
     def izvrši(self, stroj):
         n = stroj.registri[self.registar.broj()]
         for ponavljanje in range(n): self.tijelo.izvrši(stroj)
@@ -97,7 +102,7 @@ def računaj(program, *ulazi):
 
 
 with LeksičkaGreška: P.tokeniziraj('inc R00')
-power = P('''
+prikaz(power := P('''
     INC R0;
     R2{
         R0{
@@ -106,10 +111,8 @@ power = P('''
         }
         R3{DECR3;INCR0;}
     }
-''')
-prikaz(power, 9)
-baza, eksponent = 3, 7
-print(baza, '^', eksponent, '=', računaj(power, baza, eksponent))
+'''), 9)
+print(baza:=3, '^', eksponent:=7, '=', računaj(power, baza, eksponent))
 
 
 # DZ: napišite multiply i add (mnogo su jednostavniji od power)

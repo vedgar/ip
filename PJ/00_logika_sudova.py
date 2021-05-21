@@ -10,6 +10,7 @@ Interpretaciju zadajemo imenovanim argumentima: vrijednost(F, P2=True, P7=False)
 Optimizacija (formula.optim()) zamjenjuje potformule oblika !!F sa F."""
 
 
+from __future__ import annotations
 from vepar import *
 
 
@@ -66,7 +67,9 @@ class P(Parser):
     start = formula
 
 
-class Negacija(AST('ispod')):
+class Negacija(AST):
+    ispod: 'formula'
+
     def vrijednost(self, I): return not self.ispod.vrijednost(I)
 
     def optim(self):
@@ -75,7 +78,11 @@ class Negacija(AST('ispod')):
         else: return Negacija(ispod_opt)
 
 
-class Binarna(AST('veznik lijevo desno')):
+class Binarna(AST):
+    veznik: 'T'
+    lijevo: 'formula'
+    desno: 'formula'
+
     def vrijednost(self, I):
         v = self.veznik
         l = self.lijevo.vrijednost(I)

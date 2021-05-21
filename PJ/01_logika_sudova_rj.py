@@ -73,7 +73,8 @@ class P(Parser):
     start = formula
 
 
-class Negacija(AST('ispod')):
+class Negacija(AST):
+    ispod: 'formula'
     veznik = '¬'
 
     def vrijednost(self, I): return not self.ispod.vrijednost(I)
@@ -85,7 +86,10 @@ class Negacija(AST('ispod')):
     def ispis(self): return self.veznik + self.ispod.ispis()
 
 
-class Binarna(AST('lijevo desno')):
+class Binarna(AST):
+    lijevo: 'formula'
+    desno: 'formula'
+
     def vrijednost(self, I):
         klasa = type(self)
         l, d = self.lijevo.vrijednost(I), self.desno.vrijednost(I)
