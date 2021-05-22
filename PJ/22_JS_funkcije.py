@@ -15,11 +15,11 @@ def js(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak.isalpha() or znak == '$':
-            lex.zvijezda(identifikator)
+            lex * identifikator
             yield lex.literal(T.IME)
         elif znak == '/':
             if lex >= '/':
-                lex.pročitaj_do('\n')
+                lex - '\n'
                 yield lex.token(T.KOMENTAR)
             else: yield lex.token(T.KOSACRTA)
         else: yield lex.literal(T)
@@ -34,39 +34,39 @@ def js(lex):
 class P(Parser):
     lexer = js
 
-    def funkcija(self):
-        self >> T.FUNCTION
-        ime = self >> T.IME
-        self >> T.O_OTV
+    def funkcija(p):
+        p >> T.FUNCTION
+        ime = p >> T.IME
+        p >> T.O_OTV
         argumenti = []
-        if self > T.VAR:
-            argumenti = [self.argument()]
-            while self >= T.ZAREZ: argumenti.append(self.argument())
-        self >> T.O_ZATV
-        return Funkcija(ime, argumenti, self.tijelo())
+        if p > T.VAR:
+            argumenti = [p.argument()]
+            while p >= T.ZAREZ: argumenti.append(p.argument())
+        p >> T.O_ZATV
+        return Funkcija(ime, argumenti, p.tijelo())
 
-    def tijelo(self):
-        self >> T.V_OTV
-        while self >= T.KOMENTAR: pass
+    def tijelo(p):
+        p >> T.V_OTV
+        while p >= T.KOMENTAR: pass
         naredbe = []
-        while not self >= T.V_ZATV:
-            naredbe.append(self.naredba())
-            if self >= T.TOČKAZAREZ: pass
-            elif self > T.KOMENTAR:
-                while self >= T.KOMENTAR: pass
-            elif self >> T.V_ZATV: break
+        while not p >= T.V_ZATV:
+            naredbe.append(p.naredba())
+            if p >= T.TOČKAZAREZ: pass
+            elif p > T.KOMENTAR:
+                while p >= T.KOMENTAR: pass
+            elif p >> T.V_ZATV: break
         return naredbe
 
-    def start(self):
-        funkcije = [self.funkcija()]
-        while not self > KRAJ: funkcije.append(self.funkcija())
+    def start(p):
+        funkcije = [p.funkcija()]
+        while not p > KRAJ: funkcije.append(p.funkcija())
         return Program(funkcije)
 
-    def argument(self):
-        self >> T.VAR
-        return self >> T.IME
+    def argument(p):
+        p >> T.VAR
+        return p >> T.IME
 
-    def naredba(self): return self >> T.NAREDBA
+    def naredba(p): return p >> T.NAREDBA
 
 
 ### AST
@@ -77,6 +77,7 @@ class Funkcija(AST):
     ime: 'IME'
     argumenti: 'IME*'
     tijelo: 'NAREDBA*'
+
 class Program(AST):
     funkcije: 'Funkcija*'
 

@@ -4,7 +4,6 @@ https://web.math.pmf.unizg.hr/~veky/B/IP.k2p.18-09-07.pdf"""
 
 from vepar import *
 from backend import referentne_atomske_mase
-import collections
 
 
 class T(TipoviTokena):
@@ -12,29 +11,29 @@ class T(TipoviTokena):
 
     class N(Token):
         literal = 'n'
-        def vrijednost(self, tablica): return tablica[self]
+        def vrijednost(t, tablica): return tablica[t]
 
     class ATOM(Token):
-        def masa(self, tablica): return tablica[self]
+        def masa(t, tablica): return tablica[t]
 
     class BROJ(Token):
-        def vrijednost(self, tablica): return int(self.sadržaj)
+        def vrijednost(t, _): return int(t.sadržaj)
 
 
 def kemija(lex):
-    možeN = False
+    može_n = False
     for znak in lex:
         if znak == 'n':
-            if možeN: yield lex.token(T.N)
+            if može_n: yield lex.token(T.N)
             else: raise lex.greška('n ne može doći ovdje')
         elif znak.isdecimal():
             lex.prirodni_broj(znak, nula=False)
             yield lex.token(T.BROJ)
         elif znak.isupper():
-            if not lex.čitaj().islower(): lex.vrati()
+            lex >= str.islower
             yield lex.token(T.ATOM)
         else: yield lex.literal(T)
-        možeN = znak in '])'
+        može_n = znak in {']', ')'}
 
 
 ### BKG
@@ -44,20 +43,20 @@ def kemija(lex):
 
 
 class spoj(Parser):
-    def formula(self):
-        l = [self.skupina()]
-        while self > {T.ATOM, T.OOTV, T.UOTV}: l.append(self.skupina())
+    def formula(p):
+        l = [p.skupina()]
+        while p > {T.ATOM, T.OOTV, T.UOTV}: l.append(p.skupina())
         return Formula(l)
 
-    def skupina(self):
-        if self >= T.OOTV:
-            što = self.formula()
-            self >> T.OZATV
-        elif self >= T.UOTV:
-            što = self.formula()
-            self >> T.UZATV
-        else: što = self >> T.ATOM
-        return Skupina(što, self >= {T.BROJ, T.N})
+    def skupina(p):
+        if p >= T.OOTV:
+            što = p.formula()
+            p >> T.OZATV
+        elif p >= T.UOTV:
+            što = p.formula()
+            p >> T.UZATV
+        else: što = p >> T.ATOM
+        return Skupina(što, p >= {T.BROJ, T.N})
 
     lexer = kemija
     start = formula
@@ -71,19 +70,20 @@ class spoj(Parser):
 class Formula(AST):
     skupine: 'Skupina*'
 
-    def masa(self, tablica): return sum(s.ukupno(tablica) for s in self.skupine)
+    def masa(spoj, tablica):
+        return sum(skupina.ukupno(tablica) for skupina in spoj.skupine)
 
-    def Mr(self, **mase):
-        return self.masa(Memorija(referentne_atomske_mase | mase))
+    def Mr(spoj, **mase):
+        return spoj.masa(Memorija(referentne_atomske_mase | mase))
 
 
 class Skupina(AST):
     čega: 'ATOM|Formula'
     koliko: '(BROJ|N)?'
 
-    def ukupno(self, tablica):
-        m = self.čega.masa(tablica)
-        if self.koliko: m *= self.koliko.vrijednost(tablica)
+    def ukupno(skupina, tablica):
+        m = skupina.čega.masa(tablica)
+        if skupina.koliko: m *= skupina.koliko.vrijednost(tablica)
         return m
 
 

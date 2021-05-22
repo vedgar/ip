@@ -10,7 +10,7 @@ tests |= {21, 22, 23, 24, 25, 26, 27, 28, 29, 30}
 tests |= {31, 32, 33, 34, 35, 36, 37, 38, 39, 40}
 tests |= {41, 42, 43, 44, 45, 46, 47, 48, 49, 50}
 tests |= {51, 52, 53, 54}
-# tests = {90}
+tests |= {90}
 
 
 def test(i):
@@ -143,11 +143,11 @@ if test(9):
 
 
 if test(10):  # page 48 figure 1.27
-    N1 = NedeterminističkiKonačniAutomat.iz_komponenti({'q1', 'q2', 'q3', 'q4'},
+    N1 = NedeterminističniKonačniAutomat.iz_komponenti({'q1', 'q2', 'q3', 'q4'},
         {'0', '1'}, {('q1', '0', 'q1'), ('q1', '1', 'q1'), ('q1', '1', 'q2'),
                      ('q2', '0', 'q3'), ('q2', ε, 'q3'), ('q3', '1', 'q4'),
                      ('q4', '0', 'q4'), ('q4', '1', 'q4')}, 'q1', {'q4'})
-    assert N1 == NedeterminističkiKonačniAutomat.iz_tablice('''
+    assert N1 == NedeterminističniKonačniAutomat.iz_tablice('''
            0  1
         q1 q1 q1/q2
         q2 q3 /     q3
@@ -158,13 +158,13 @@ if test(10):  # page 48 figure 1.27
     print(*N1.izračunavanje('010110'))  # page 49 figure 1.29
     print(*N1.izračunavanje('010'))
 
-    N1b = NedeterminističkiKonačniAutomat.iz_komponenti({1,2,3,4}, {0,1},
+    N1b = NedeterminističniKonačniAutomat.iz_komponenti({1,2,3,4}, {0,1},
     {(1,0,1),(1,1,1),(1,1,2),(2,0,3),(2,ε,3),(3,1,4),(4,0,4),(4,1,4)}, 1, {4})
     D1b = N1b.optimizirana_partitivna_konstrukcija()
 
 
 if test(11):  # page 51 example 1.30 figure 1.31
-    N2 = NedeterminističkiKonačniAutomat.iz_tablice('''
+    N2 = NedeterminističniKonačniAutomat.iz_tablice('''
            0  1
         q1 q1 q1/q2
         q2 q3 q3
@@ -181,7 +181,7 @@ if test(11):  # page 51 example 1.30 figure 1.31
 
 
 if test(12):  # page 52 example 1.33
-    N3 = NedeterminističkiKonačniAutomat.iz_tablice('''
+    N3 = NedeterminističniKonačniAutomat.iz_tablice('''
             0
         0   / 20 30
         20 21 #
@@ -197,7 +197,7 @@ if test(12):  # page 52 example 1.33
 
 
 if test(13):  # page 52 example 1.35 figure 1.36
-    N4 = NedeterminističkiKonačniAutomat.iz_tablice('''
+    N4 = NedeterminističniKonačniAutomat.iz_tablice('''
             a     b
         q1  /     q2  q3  #
         q2  q2/q3 q3
@@ -212,9 +212,9 @@ if test(13):  # page 52 example 1.35 figure 1.36
 
 
 if test(14):
-    N1 = NedeterminističkiKonačniAutomat.iz_komponenti(
+    N1 = NedeterminističniKonačniAutomat.iz_komponenti(
         {0, 1}, {'a'}, {(0, 'a', 1), (1, 'a', 0)}, 0, {0})
-    N2 = NedeterminističkiKonačniAutomat.iz_komponenti(
+    N2 = NedeterminističniKonačniAutomat.iz_komponenti(
         {0, 1, 2}, {'a'}, {(0, 'a', 1), (1, 'a', 2), (2, 'a', 0)}, 0, {0})
     N1u2 = N1.unija(N2)
     N1o2 = N1.konkatenacija(N2)
@@ -576,7 +576,7 @@ if test(90):  # 2019-k1-z3
                             J   Z   J
                             N   N   Z
                             Z   /   Z    #   '''
-    službeni_NKA = NedeterminističkiKonačniAutomat.iz_tablice(službeno_rješenje)
+    službeni_NKA = NedeterminističniKonačniAutomat.iz_tablice(službeno_rješenje)
     službeni_KA = službeni_NKA.optimizirana_partitivna_konstrukcija()
     rješenje = '''       0     1
                     q0   q2    q3/q1
@@ -584,11 +584,11 @@ if test(90):  # 2019-k1-z3
                     q2   q2    q3
                     q3   q2    q3    #
     '''
-    rješenje = NedeterminističkiKonačniAutomat.iz_tablice(rješenje)
-    # print(*rješenje.izračunavanje('1101'))
+    rješenje = NedeterminističniKonačniAutomat.iz_tablice(rješenje)
+    print(*rješenje.izračunavanje('0101'))
     deterministični = rješenje.optimizirana_partitivna_konstrukcija()
     razlika = deterministični.optimizirana_simetrična_razlika(službeni_KA)
-    nedet = NedeterminističkiKonačniAutomat.iz_konačnog_automata(razlika)
+    nedet = NedeterminističniKonačniAutomat.iz_konačnog_automata(razlika)
     prazni = nedet.optimizirana_partitivna_konstrukcija()
     prazni.prirodni().crtaj()
-    assert not prazni.završna
+    print(prazni.završna)

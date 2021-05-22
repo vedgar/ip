@@ -10,8 +10,8 @@ from backend import Python_eval
 class T(TipoviTokena):
     PLUS, PUTA, OTVORENA, ZATVORENA = '+*()'
     class BROJ(Token):
-        def vrijednost(self): return int(self.sadržaj)
-        def optim(self): return self
+        def vrijednost(t): return int(t.sadržaj)
+        def optim(t): return t
 
 
 def an(lex):
@@ -31,22 +31,22 @@ def an(lex):
 
 
 class P(Parser):
-    def izraz(self):
-        trenutni = [self.član()]
-        while self >= T.PLUS: trenutni.append(self.član())
+    def izraz(p):
+        trenutni = [p.član()]
+        while p >= T.PLUS: trenutni.append(p.član())
         return Zbroj.ili_samo(trenutni)
 
-    def član(self):
-        trenutni = [self.faktor()]
-        while self >= T.PUTA or self > T.OTVORENA:
-            trenutni.append(self.faktor())
+    def član(p):
+        trenutni = [p.faktor()]
+        while p >= T.PUTA or p > T.OTVORENA:
+            trenutni.append(p.faktor())
         return Umnožak.ili_samo(trenutni)
 
-    def faktor(self):
-        if broj := self >= T.BROJ: return broj
-        elif self >> T.OTVORENA:
-            u_zagradi = self.izraz()
-            self >> T.ZATVORENA
+    def faktor(p):
+        if broj := p >= T.BROJ: return broj
+        elif p >> T.OTVORENA:
+            u_zagradi = p.izraz()
+            p >> T.ZATVORENA
             return u_zagradi
 
     lexer = an
@@ -59,10 +59,11 @@ nula, jedan = Token(T.BROJ, '0'), Token(T.BROJ, '1')
 class Zbroj(AST):
     pribrojnici: 'izraz*'
 
-    def vrijednost(self): return sum(x.vrijednost() for x in self.pribrojnici)
+    def vrijednost(zbroj):
+        return sum(pribrojnik.vrijednost() for pribrojnik in zbroj.pribrojnici)
     
-    def optim(self):
-        opt_pribr = [x.optim() for x in self.pribrojnici]
+    def optim(zbroj):
+        opt_pribr = [pribrojnik.optim() for pribrojnik in zbroj.pribrojnici]
         opt_pribr = [x for x in opt_pribr if x != nula]
         if not opt_pribr: return nula
         return Zbroj.ili_samo(opt_pribr)
@@ -71,10 +72,11 @@ class Zbroj(AST):
 class Umnožak(AST):
     faktori: 'izraz*'
 
-    def vrijednost(self): return math.prod(x.vrijednost() for x in self.faktori)
+    def vrijednost(umnožak):
+        return math.prod(faktor.vrijednost() for faktor in umnožak.faktori)
 
-    def optim(self):
-        opt_fakt = [x.optim() for x in self.faktori]
+    def optim(umnožak):
+        opt_fakt = [faktor.optim() for faktor in umnožak.faktori]
         if nula in opt_fakt: return nula
         opt_fakt = [x for x in opt_fakt if x != jedan]
         if not opt_fakt: return jedan

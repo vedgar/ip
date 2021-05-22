@@ -28,7 +28,6 @@ Dozvoljeni su i (ne uzajamno) rekurzivni pozivi, tako da se za vrijeme
 
 
 from vepar import *
-from math import prod
 
 
 class T(TipoviTokena):
@@ -57,16 +56,16 @@ def pseudokod_lexer(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak.islower():
-            lex.zvijezda(str.isalnum)
+            lex * str.isalnum
             yield lex.literal(T.AIME)
         elif znak.isupper():
-            lex.zvijezda(str.isalnum)
+            lex * str.isalnum
             yield lex.literal(T.LIME)
         elif znak.isdecimal():
             lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
         elif znak == '#':
-            lex.pročitaj_do('\n')
+            lex - '\n'
             lex.zanemari()
         else: yield lex.literal(T)
 
@@ -93,109 +92,109 @@ def pseudokod_lexer(lex):
 # argument -> aritm |! log  [KONTEKST!]
 
 class P(Parser):
-    def program(self):
-        self.funkcije = Memorija(redefinicija=False)
-        while not self > KRAJ:
-            funkcija = self.funkcija()
-            self.funkcije[funkcija.ime] = funkcija
-        return self.funkcije
+    def program(p):
+        p.funkcije = Memorija(redefinicija=False)
+        while not p > KRAJ:
+            funkcija = p.funkcija()
+            p.funkcije[funkcija.ime] = funkcija
+        return p.funkcije
 
-    def ime(self): return self >> {T.AIME, T.LIME}
+    def ime(p): return p >> {T.AIME, T.LIME}
 
-    def naredba(self):
-        if self > T.AKO: return self.grananje()
-        elif self > T.DOK: return self.petlja()
-        elif self > T.OTV: return self.blok()
-        elif self >= T.VRATI: return Vrati(self.tipa(self.imef))
+    def naredba(p):
+        if p > T.AKO: return p.grananje()
+        elif p > T.DOK: return p.petlja()
+        elif p > T.OTV: return p.blok()
+        elif p >= T.VRATI: return Vrati(p.tipa(p.imef))
         else:
-            ime = self.ime()
-            self >> T.JEDNAKO
-            return Pridruživanje(ime, self.tipa(ime))
+            ime = p.ime()
+            p >> T.JEDNAKO
+            return Pridruživanje(ime, p.tipa(ime))
 
-    def blok(self):
-        self >> T.OTV
-        if self >= T.ZATV: return Blok([])
-        n = [self.naredba()]
-        while self >= T.ZAREZ and not self > T.ZATV: n.append(self.naredba())
-        self >> T.ZATV
+    def blok(p):
+        p >> T.OTV
+        if p >= T.ZATV: return Blok([])
+        n = [p.naredba()]
+        while p >= T.ZAREZ and not p > T.ZATV: n.append(p.naredba())
+        p >> T.ZATV
         return Blok.ili_samo(n)
 
-    def petlja(self):
-        self >> T.DOK
-        return Petlja(self >> {T.JE, T.NIJE}, self.log(), self.naredba())
+    def petlja(p):
+        p >> T.DOK
+        return Petlja(p >> {T.JE, T.NIJE}, p.log(), p.naredba())
 
-    def grananje(self):
-        self >> T.AKO
-        je = self > T.JE
-        atributi = self >> {T.JE, T.NIJE}, self.log(), self.naredba()
-        if je and self >= T.INAČE: inače = self.naredba()
+    def grananje(p):
+        p >> T.AKO
+        je = p > T.JE
+        atributi = p >> {T.JE, T.NIJE}, p.log(), p.naredba()
+        if je and p >= T.INAČE: inače = p.naredba()
         else: inače = Blok([])
         return Grananje(*atributi, inače)
 
-    def funkcija(self):
-        atributi = self.imef, self.parametrif = self.ime(), self.parametri()
-        self >> T.JEDNAKO
-        return Funkcija(*atributi, self.naredba())
+    def funkcija(p):
+        atributi = p.imef, p.parametrif = p.ime(), p.parametri()
+        p >> T.JEDNAKO
+        return Funkcija(*atributi, p.naredba())
 
-    def parametri(self):
-        self >> T.OTV
-        if self >= T.ZATV: return []
-        param = [self.ime()]
-        while self >= T.ZAREZ: param.append(self.ime())
-        self >> T.ZATV
+    def parametri(p):
+        p >> T.OTV
+        if p >= T.ZATV: return []
+        param = [p.ime()]
+        while p >= T.ZAREZ: param.append(p.ime())
+        p >> T.ZATV
         return param
 
-    def log(self):
-        disjunkti = [self.disjunkt()]
-        while self >= T.ILI: disjunkti.append(self.disjunkt())
+    def log(p):
+        disjunkti = [p.disjunkt()]
+        while p >= T.ILI: disjunkti.append(p.disjunkt())
         return Disjunkcija.ili_samo(disjunkti)
 
-    def disjunkt(self):
-        if log := self >= {T.ISTINA,T.LAŽ,T.LIME}: return self.možda_poziv(log)
-        return Usporedba(self.aritm(), self>>{T.JEDNAKO,T.MANJE}, self.aritm())
+    def disjunkt(p):
+        if log := p >= {T.ISTINA, T.LAŽ, T.LIME}: return p.možda_poziv(log)
+        return Usporedba(p.aritm(), p >> {T.JEDNAKO, T.MANJE}, p.aritm())
 
-    def možda_poziv(self, ime):
-        if ime in self.funkcije:
-            funkcija = self.funkcije[ime]
-            return Poziv(funkcija, self.argumenti(funkcija.parametri))
-        elif ime == self.imef:
-            return Poziv(nenavedeno, self.argumenti(self.parametrif))
+    def možda_poziv(p, ime):
+        if ime in p.funkcije:
+            funkcija = p.funkcije[ime]
+            return Poziv(funkcija, p.argumenti(funkcija.parametri))
+        elif ime == p.imef:
+            return Poziv(nenavedeno, p.argumenti(p.parametrif))
         else: return ime
 
-    def argumenti(self, parametri):
+    def argumenti(p, parametri):
         arg = []
-        self >> T.OTV
+        p >> T.OTV
         for i, parametar in enumerate(parametri):
-            if i: self >> T.ZAREZ
-            arg.append(self.tipa(parametar))
-        self >> T.ZATV
+            if i: p >> T.ZAREZ
+            arg.append(p.tipa(parametar))
+        p >> T.ZATV
         return arg
     
-    def tipa(self, ime):
-        if ime ^ T.AIME: return self.aritm()
-        elif ime ^ T.LIME: return self.log()
+    def tipa(p, ime):
+        if ime ^ T.AIME: return p.aritm()
+        elif ime ^ T.LIME: return p.log()
         else: assert False, f'Nepoznat tip od {ime}'
         
-    def aritm(self):
-        članovi = [self.član()]
-        while True:
-            if self >= T.PLUS: članovi.append(self.član())
-            elif self >= T.MINUS: članovi.append(Suprotan(self.član()))
+    def aritm(p):
+        članovi = [p.član()]
+        while ...:
+            if p >= T.PLUS: članovi.append(p.član())
+            elif p >= T.MINUS: članovi.append(Suprotan(p.član()))
             else: return Zbroj.ili_samo(članovi)
 
-    def član(self):
-        faktori = [self.faktor()]
-        while self >= T.ZVJEZDICA: faktori.append(self.faktor())
+    def član(p):
+        faktori = [p.faktor()]
+        while p >= T.ZVJEZDICA: faktori.append(p.faktor())
         return Umnožak.ili_samo(faktori)
 
-    def faktor(self):
-        if self >= T.MINUS: return Suprotan(self.faktor())
-        elif aritm := self >= T.AIME: return self.možda_poziv(aritm)
-        elif self >= T.OTV:
-            u_zagradi = self.aritm()
-            self >> T.ZATV
+    def faktor(p):
+        if p >= T.MINUS: return Suprotan(p.faktor())
+        elif aritm := p >= T.AIME: return p.možda_poziv(aritm)
+        elif p >= T.OTV:
+            u_zagradi = p.aritm()
+            p >> T.ZATV
             return u_zagradi
-        else: return self >> T.BROJ
+        else: return p >> T.BROJ
 
     start = program
     lexer = pseudokod_lexer
@@ -223,25 +222,25 @@ class Funkcija(AST):
     ime: 'IME'
     parametri: 'IME*'
     tijelo: 'naredba'
-    def pozovi(self, argumenti):
-        lokalni = Memorija(dict(zip(self.parametri, argumenti)))
-        try: self.tijelo.izvrši(mem=lokalni, unutar=self)
+    def pozovi(funkcija, argumenti):
+        lokalni = Memorija(dict(zip(funkcija.parametri, argumenti)))
+        try: funkcija.tijelo.izvrši(mem=lokalni, unutar=funkcija)
         except Povratak as exc: return exc.preneseno
-        else: raise GreškaIzvođenja(f'{self.ime} nije ništa vratila')
+        else: raise GreškaIzvođenja(f'{funkcija.ime} nije ništa vratila')
 
 class Poziv(AST):
     funkcija: 'Funkcija'
     argumenti: 'izraz*'
-    def vrijednost(self, mem, unutar):
-        pozvana = self.funkcija
+    def vrijednost(poziv, mem, unutar):
+        pozvana = poziv.funkcija
         if pozvana is nenavedeno: pozvana = unutar  # rekurzivni poziv
-        argumenti = [a.vrijednost(mem, unutar) for a in self.argumenti]
+        argumenti = [a.vrijednost(mem, unutar) for a in poziv.argumenti]
         return pozvana.pozovi(argumenti)
 
-    def za_prikaz(self):  # samo za ispis, da se ne ispiše čitava funkcija
-        r = {'argumenti': self.argumenti}
-        if self.funkcija is nenavedeno: r['*rekurzivni'] = True
-        else: r['*ime'] = self.funkcija.ime
+    def za_prikaz(poziv):  # samo za ispis, da se ne ispiše čitava funkcija
+        r = {'argumenti': poziv.argumenti}
+        if poziv.funkcija is nenavedeno: r['*rekurzivni'] = True
+        else: r['*ime'] = poziv.funkcija.ime
         return r
 
 def ispunjen(ast, mem, unutar):
@@ -255,21 +254,21 @@ class Grananje(AST):
     uvjet: 'log'
     onda: 'naredba'
     inače: 'naredba'
-    def izvrši(self, mem, unutar):
-        if ispunjen(self, mem, unutar): self.onda.izvrši(mem, unutar)
-        else: self.inače.izvrši(mem, unutar)
+    def izvrši(grananje, mem, unutar):
+        if ispunjen(grananje, mem, unutar): grananje.onda.izvrši(mem, unutar)
+        else: grananje.inače.izvrši(mem, unutar)
 
 class Petlja(AST):
     istinitost: 'JE|NIJE'
     uvjet: 'log'
     tijelo: 'naredba'
-    def izvrši(self, mem, unutar):
-        while ispunjen(self, mem, unutar): self.tijelo.izvrši(mem, unutar)
+    def izvrši(petlja, mem, unutar):
+        while ispunjen(petlja, mem, unutar): petlja.tijelo.izvrši(mem, unutar)
 
 class Blok(AST):
     naredbe: 'naredba*'
-    def izvrši(self, mem, unutar):
-        for naredba in self.naredbe: naredba.izvrši(mem, unutar)
+    def izvrši(blok, mem, unutar):
+        for naredba in blok.naredbe: naredba.izvrši(mem, unutar)
 
 class Pridruživanje(AST):
     ime: 'IME'
@@ -284,25 +283,25 @@ class Vrati(AST):
 
 class Disjunkcija(AST):
     disjunkti: 'log*'
-    def vrijednost(self, mem, unutar):
+    def vrijednost(disjunkcija, mem, unutar):
         return any(disjunkt.vrijednost(mem, unutar)
-                for disjunkt in self.disjunkti)
+                for disjunkt in disjunkcija.disjunkti)
     
 class Usporedba(AST):
     lijevo: 'aritm'
     relacija: 'MANJE|JEDNAKO'
     desno: 'aritm'
-    def vrijednost(self, mem, unutar):
-        l = self.lijevo.vrijednost(mem, unutar)
-        d = self.desno.vrijednost(mem, unutar)
-        if self.relacija ^ T.JEDNAKO: return l == d
-        elif self.relacija ^ T.MANJE: return l < d
-        else: assert False, f'Nepoznata relacija {self.relacija}'
+    def vrijednost(usporedba, mem, unutar):
+        l = usporedba.lijevo.vrijednost(mem, unutar)
+        d = usporedba.desno.vrijednost(mem, unutar)
+        if usporedba.relacija ^ T.JEDNAKO: return l == d
+        elif usporedba.relacija ^ T.MANJE: return l < d
+        else: assert False, f'Nepoznata relacija {usporedba.relacija}'
 
 class Zbroj(AST):
     pribrojnici: 'aritm*'
-    def vrijednost(self, mem, unutar):
-        return sum(p.vrijednost(mem, unutar) for p in self.pribrojnici)
+    def vrijednost(zbroj, mem, unutar):
+        return sum(p.vrijednost(mem, unutar) for p in zbroj.pribrojnici)
     
 class Suprotan(AST):
     od: 'aritm'
@@ -310,8 +309,9 @@ class Suprotan(AST):
     
 class Umnožak(AST):
     faktori: 'aritm*'
-    def vrijednost(self, mem, unutar):
-        return math.prod(f.vrijednost(mem, unutar) for f in self.faktori)
+    def vrijednost(umnožak, mem, unutar):
+        return math.prod(f.vrijednost(mem, unutar) for f in umnožak.faktori)
+
 
 class Povratak(NelokalnaKontrolaToka): """Signal koji šalje naredba vrati."""
 

@@ -9,19 +9,19 @@ import fractions  # kao backend
 class T(TipoviTokena):
     PLUS, MINUS, PUTA, KROZ, JEDNAKO, OTV, ZATV, NOVIRED = '+-*/=()\n'
     class BROJ(Token):
-        def izračunaj(self, mem, v): return fractions.Fraction(self.sadržaj)
+        def izračunaj(t, mem, v): return fractions.Fraction(t.sadržaj)
     class IME(Token):
-        def izračunaj(self, mem, v):
-            if self in mem: return mem[self]
-            else: raise self.nedeklaracija(f'pri pridruživanju {v}')
+        def izračunaj(t, mem, v):
+            if t in mem: return mem[t]
+            else: raise t.nedeklaracija(f'pri pridruživanju {v}')
 
 def aq(lex):
     for znak in lex:
         if znak.isdecimal():
             lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
-        elif identifikator(znak):
-            lex.zvijezda(identifikator)
+        elif znak.isalnum():
+            lex * {str.isalnum, '_'}
             yield lex.token(T.IME)
         elif znak.isspace() and znak != '\n': lex.zanemari()
         else: yield lex.literal(T)
@@ -44,38 +44,38 @@ def aq(lex):
 class P(Parser):
     lexer = aq
 
-    def start(self):
+    def start(p):
         pridruživanja = []
-        while ime := self >= T.IME:
-            self >> T.JEDNAKO
-            pridruživanja.append((ime, self.izraz()))
-            self >> T.NOVIRED
+        while ime := p >= T.IME:
+            p >> T.JEDNAKO
+            pridruživanja.append((ime, p.izraz()))
+            p >> T.NOVIRED
         return Program(pridruživanja)
 
-    def izraz(self):
-        t = self.član()
-        while op := self >= {T.PLUS, T.MINUS}: t = Op(op, t, self.član())
+    def izraz(p):
+        t = p.član()
+        while op := p >= {T.PLUS, T.MINUS}: t = Op(op, t, p.član())
         return t
 
-    def član(self):
-        t = self.faktor()
-        while op := self >= {T.PUTA, T.KROZ}: t = Op(op, t, self.faktor())
+    def član(p):
+        t = p.faktor()
+        while op := p >= {T.PUTA, T.KROZ}: t = Op(op, t, p.faktor())
         return t
 
-    def faktor(self):
-        if op := self >= T.MINUS: return Op(op, nenavedeno, self.faktor())
-        if elementarni := self >= {T.IME, T.BROJ}: return elementarni
-        elif self >> T.OTV:
-            u_zagradi = self.izraz()
-            self >> T.ZATV
+    def faktor(p):
+        if op := p >= T.MINUS: return Op(op, nenavedeno, p.faktor())
+        if elementarni := p >= {T.IME, T.BROJ}: return elementarni
+        elif p >> T.OTV:
+            u_zagradi = p.izraz()
+            p >> T.ZATV
             return u_zagradi
 
 
 class Program(AST):
     pridruživanja: '(IME,izraz)*'
-    def izvrši(self):
+    def izvrši(program):
         memorija = Memorija()
-        for ime, vrijednost in self.pridruživanja:
+        for ime, vrijednost in program.pridruživanja:
             memorija[ime] = vrijednost.izračunaj(memorija, ime)
         return memorija
 

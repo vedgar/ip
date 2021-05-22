@@ -8,23 +8,22 @@ from vepar import *
 class T(TipoviTokena):
     HTML, HEAD, BODY = '<html>', '<head>', '<body>'
     ZHTML, ZHEAD, ZBODY = '</html>', '</head>', '</body>'
-    OL,ZOL,UL,ZUL,LI,ZLI = '<ol>','</ol>','<ul>','</ul>','<li>','</li>'
+    OL, UL, LI = '<ol>', '<ul>', '<li>'
+    ZOL, ZUL, ZLI = '</ol>', '</ul>', '</li>'
     class TEKST(Token):
-        def render(self): print(self.sadržaj, end=' ')
-
-def zatvoreni(tag): return T['Z' + tag.name]
+        def render(t): print(t.sadržaj, end=' ')
 
 def html(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak == '<':
-            lex.pročitaj_do('>')
-            token = lex.literal(T.TEKST, case=False)
-            if token ^ T.TEKST: lex.zanemari()
+            lex - '>'
+            try: token = lex.literal(T, case=False)
+            except LeksičkaGreška: lex.zanemari()
             else: yield token
         else:
-            lex.zvijezda(lambda z: z and not z.isspace() and z != '<')
-            yield lex.token(T.TEKST)            
+            lex < {'', '<', str.isspace}
+            yield lex.token(T.TEKST)
 
 
 ### Beskontekstna gramatika
@@ -41,58 +40,60 @@ def html(lex):
 class P(Parser):
     lexer = html
 
-    def start(self):
-        self >> T.HTML, self >> T.HEAD
-        zaglavlje = self.tekst()
-        self >> T.ZHEAD, self >> T.BODY
+    def start(p):
+        p >> T.HTML, p >> T.HEAD
+        zaglavlje = p.tekst()
+        p >> T.ZHEAD, p >> T.BODY
         tijelo = []
-        while not self >= T.ZBODY: tijelo.append(self.element())
-        self >> T.ZHTML
+        while not p >= T.ZBODY: tijelo.append(p.element())
+        p >> T.ZHTML
         return Dokument(zaglavlje, tijelo)
         
-    def tekst(self):
-        dijelovi = [self >> T.TEKST]
-        while tekst := self >= T.TEKST: dijelovi.append(tekst)
+    def tekst(p):
+        dijelovi = [p >> T.TEKST]
+        while tekst := p >= T.TEKST: dijelovi.append(tekst)
         return Tekst(dijelovi)
 
-    def element(self):
-        if vrsta := self >= {T.OL, T.UL}:
-            stavke = [self.stavka()]
-            while self > T.LI: stavke.append(self.stavka())
-            self >> zatvoreni(vrsta.tip)
+    def element(p):
+        if vrsta := p >= {T.OL, T.UL}:
+            stavke = [p.stavka()]
+            while p > T.LI: stavke.append(p.stavka())
+            if vrsta ^ T.OL: p >> T.ZOL
+            elif vrsta ^ T.UL: p >> T.ZUL
+            else: assert False, 'nepoznata vrsta liste'
             return Lista(vrsta, stavke)
-        else: return self.tekst()
+        else: return p.tekst()
 
-    def stavka(self):
-        self >> T.LI
-        rezultat = self.element()
-        self >> T.ZLI
+    def stavka(p):
+        p >> T.LI
+        rezultat = p.element()
+        p >> T.ZLI
         return rezultat
             
 
 class Dokument(AST):
     zaglavlje: 'Tekst'
     tijelo: 'element*'
-    def render(self):
-        for element in self.tijelo: element.render([''])
+    def render(dokument):
+        for element in dokument.tijelo: element.render([''])
         print()
 
 class Lista(AST):
     vrsta: 'OL|UL'
     stavke: 'element*'
-    def render(self, prefiks):
+    def render(lista, prefiks):
         prethodni, zadnji = prefiks[:-1], prefiks[-1]
-        for i, stavka in enumerate(self.stavke, 1):
+        for i, stavka in enumerate(lista.stavke, 1):
             if i > 1 and zadnji.endswith('\t'): zadnji = '\t'
-            if self.vrsta ^ T.OL: marker = f'{i}.'
-            elif self.vrsta ^ T.UL: marker = '*#@o-.,_ '[len(prethodni)] + ' '
+            if lista.vrsta ^ T.OL: marker = f'{i}.'
+            elif lista.vrsta ^ T.UL: marker = '*#@o-.,_ '[len(prethodni)] + ' '
             stavka.render(prethodni + [zadnji, f'{marker:>7}\t'])
 
 class Tekst(AST):
     dijelovi: 'TEKST*'
-    def render(self, prefiks):
+    def render(tekst, prefiks):
         print('\n', *prefiks, sep='', end='')
-        for dio in self.dijelovi: dio.render()
+        for dio in tekst.dijelovi: dio.render()
 
 
 r = P('''

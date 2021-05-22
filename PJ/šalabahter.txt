@@ -14,8 +14,8 @@ def mojlexer(lex):
 
 Low level API:              High level API:
 --------------              ---------------
-znak = lex.čitaj()          lex.zvijezda(str.is...), lex.plus(...)
-lex.vrati()                 lex >> znak
+znak = next(lex)            lex * str.is..., lex + ...
+lex.vrati()                 lex >> znak                lex - znak
 pročitano = lex.sadržaj     lex.pročitaj_do(znak, uključivo:bool)
 yield lex.token(T.TIP)      if lex >= znak:  # sljedeće je pročitan znak
 raise LeksičkaGreška(…)     raise lex.greška(info:str)

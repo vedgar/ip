@@ -9,7 +9,7 @@ from vepar import *
 class T(TipoviTokena):
     OOTV, OZATV, UOTV, UZATV, ILI, NE = "()[]+'"
     class SLOVO(Token):
-        def uNand(self): return self.sadržaj
+        def uNand(t): return t.sadržaj
 
 
 def ds(lex):
@@ -26,25 +26,25 @@ def ds(lex):
 
 
 class P(Parser):
-    def sklop(self):
-        disjunkti = [self.disjunkt()]
-        while self >= T.ILI: disjunkti.append(self.disjunkt())
+    def sklop(p):
+        disjunkti = [p.disjunkt()]
+        while p >= T.ILI: disjunkti.append(p.disjunkt())
         return Or.ili_samo(disjunkti)
 
-    def disjunkt(self):
-        konjunkti = [self.faktor()]
-        while self > {T.SLOVO, T.OOTV, T.UOTV}: konjunkti.append(self.faktor())
+    def disjunkt(p):
+        konjunkti = [p.faktor()]
+        while p > {T.SLOVO, T.OOTV, T.UOTV}: konjunkti.append(p.faktor())
         return And.ili_samo(konjunkti)
 
-    def faktor(self):
-        if self >= T.OOTV:
-            trenutni = self.sklop()
-            self >> T.OZATV
-        elif self >= T.UOTV:
-            trenutni = Not(self.sklop())
-            self >> T.UZATV
-        else: trenutni = self >> T.SLOVO
-        while self >= T.NE: trenutni = Not(trenutni)
+    def faktor(p):
+        if p >= T.OOTV:
+            trenutni = p.sklop()
+            p >> T.OZATV
+        elif p >= T.UOTV:
+            trenutni = Not(p.sklop())
+            p >> T.UZATV
+        else: trenutni = p >> T.SLOVO
+        while p >= T.NE: trenutni = Not(trenutni)
         return trenutni
 
     lexer = ds

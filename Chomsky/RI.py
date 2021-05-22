@@ -1,5 +1,5 @@
 from util import *
-from KA import NedeterminističkiKonačniAutomat as NKA
+from KA import NedeterminističniKonačniAutomat as NKA
 
 
 class RegularniIzraz(types.SimpleNamespace, abc.ABC):

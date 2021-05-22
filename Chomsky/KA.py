@@ -54,7 +54,7 @@ class KonačniAutomat(types.SimpleNamespace):
         """Ispisuje na ekran dijagram automata u formatu DOT.
         Dobiveni string može se kopirati u sandbox.kidstrythisathome.com/erdos
         ili u www.webgraphviz.com."""
-        NedeterminističkiKonačniAutomat.iz_konačnog_automata(automat).crtaj()
+        NedeterminističniKonačniAutomat.iz_konačnog_automata(automat).crtaj()
 
     def unija(M1, M2):
         """Konačni automat za L(M1)∪L(M2)."""
@@ -99,15 +99,12 @@ def dohvatljiva(δ, S, α):
 
 def ε_ljuska(δ, S):
     """Stanja do kojih je moguće doći iz stanja iz S bez čitanja znaka."""
-    while True:
-        S_novi = dohvatljiva(δ, S, ε) | S
-        if S_novi == S:
-            return S_novi
-        S = S_novi
+    while (noviS := dohvatljiva(δ, S, ε) | S) != S: S = noviS
+    return noviS  # ne S, jer to ne mora biti fset
 
 
-class NedeterminističkiKonačniAutomat(types.SimpleNamespace):
-    """Nedeterministički automat koji prepoznaje regularni jezik."""
+class NedeterminističniKonačniAutomat(types.SimpleNamespace):
+    """Nedeterministični automat koji prepoznaje regularni jezik."""
 
     @classmethod
     def iz_komponenti(klasa, stanja, abeceda, prijelaz, početno, završna):
@@ -126,14 +123,14 @@ class NedeterminističkiKonačniAutomat(types.SimpleNamespace):
 
     @classmethod
     def iz_konačnog_automata(klasa, konačni_automat):
-        """Pretvorba iz determinističkog KA u nedeterministički."""
+        """Pretvorba iz determinističnog KA u nedeterministični."""
         Q, Σ, δ, q0, F = konačni_automat.komponente
         Δ = {(q, α, δ[q, α]) for q in Q for α in Σ}
         return klasa.iz_komponenti(Q, Σ, Δ, q0, F)
 
     @classmethod
     def iz_tablice(klasa, tablica):
-        """Parsiranje tabličnog zapisa nedeterminističkog KA (Sipser page 54).
+        """Parsiranje tabličnog zapisa nedeterminističnog KA (Sipser page 54).
         Pogledati funkciju util.parsiraj_tablicu_NKA za detalje."""
         return klasa.iz_komponenti(*parsiraj_tablicu_NKA(tablica))
 
@@ -161,10 +158,10 @@ class NedeterminističkiKonačniAutomat(types.SimpleNamespace):
         ili u www.webgraphviz.com."""
         from PA import PotisniAutomat
         print(DOT_PA(PotisniAutomat.
-            iz_nedeterminističkog_konačnog_automata(automat)))
+            iz_nedeterminističnog_konačnog_automata(automat)))
 
     def izračunavanje(nka, ulaz):
-        """Generator niza skupova mogućih stanja kroz koja nedeterministički
+        """Generator niza skupova mogućih stanja kroz koja nedeterministični
         konačni automat prolazi čitajući zadani ulaz."""
         return nka.optimizirana_partitivna_konstrukcija().izračunavanje(ulaz)
 
@@ -206,10 +203,10 @@ class NedeterminističkiKonačniAutomat(types.SimpleNamespace):
         Δl = {(označi1(p, l), α, označi1(q, l)) for p, α, q in Δ}
         q0l = označi1(q0, l)
         Fl = {označi1(q, l) for q in F}
-        return NedeterminističkiKonačniAutomat.iz_komponenti(Ql, Σ, Δl, q0l, Fl)
+        return NedeterminističniKonačniAutomat.iz_komponenti(Ql, Σ, Δl, q0l, Fl)
 
     def unija(N1, N2):
-        """Nedeterministički konačni automat koji prepoznaje L(N1)∪L(N2)."""
+        """Nedeterministični konačni automat koji prepoznaje L(N1)∪L(N2)."""
         assert N1.abeceda == N2.abeceda
         if not N1.stanja.isdisjoint(N2.stanja):
             N1 = N1.označi(1)
@@ -220,10 +217,10 @@ class NedeterminističkiKonačniAutomat(types.SimpleNamespace):
         Q = disjunktna_unija(Q1, Q2, {q0})
         F = disjunktna_unija(F1, F2)
         Δ = disjunktna_unija(Δ1, Δ2, {(q0, ε, q1), (q0, ε, q2)})
-        return NedeterminističkiKonačniAutomat.iz_komponenti(Q, Σ, Δ, q0, F)
+        return NedeterminističniKonačniAutomat.iz_komponenti(Q, Σ, Δ, q0, F)
 
     def konkatenacija(N1, N2):
-        """Nedeterministički konačni automat koji prepoznaje L(N1)L(N2)."""
+        """Nedeterministični konačni automat koji prepoznaje L(N1)L(N2)."""
         assert N1.abeceda == N2.abeceda
         if not N1.stanja.isdisjoint(N2.stanja):
             N1 = N1.označi(3)
@@ -232,17 +229,17 @@ class NedeterminističkiKonačniAutomat(types.SimpleNamespace):
         Q2, Σ, Δ2, q2, F2 = N2.komponente
         Q = disjunktna_unija(Q1, Q2)
         Δ = disjunktna_unija(Δ1, Δ2, {(p1, ε, q2) for p1 in F1})
-        return NedeterminističkiKonačniAutomat.iz_komponenti(Q, Σ, Δ, q1, F2)
+        return NedeterminističniKonačniAutomat.iz_komponenti(Q, Σ, Δ, q1, F2)
 
     def plus(N):
-        """Nedeterministički konačni automat za Kleenejev plus od L(N)."""
+        """Nedeterministični konačni automat za Kleenejev plus od L(N)."""
         Q, Σ, Δ, q0, F = N.komponente
         Δp = Δ | {(p, ε, q0) for p in F}
-        return NedeterminističkiKonačniAutomat.iz_komponenti(Q, Σ, Δp, q0, F)
+        return NedeterminističniKonačniAutomat.iz_komponenti(Q, Σ, Δp, q0, F)
 
     def zvijezda(N):
-        """Nedeterministički konačni automat za Kleenejevu zvijezdu od L(N)."""
+        """Nedeterministični konačni automat za Kleenejevu zvijezdu od L(N)."""
         Q, Σ, Δ, q0, F = N.plus().komponente
         start = novo('start', Q)
-        return NedeterminističkiKonačniAutomat.iz_komponenti(
+        return NedeterminističniKonačniAutomat.iz_komponenti(
             Q | {start}, Σ, Δ | {(start, ε, q0)}, start, F | {start})

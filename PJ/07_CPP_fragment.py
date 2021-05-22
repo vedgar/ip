@@ -31,9 +31,10 @@ def cpp(lex):
             elif lex >= '=': yield lex.token(T.PLUSJ)
             else: raise lex.greška('u ovom jeziku nema samostalnog +')
         elif znak == '<': yield lex.token(T.MMANJE if lex >= '<' else T.MANJE)
-        elif znak=='=': yield lex.token(T.JJEDNAKO if lex >= '=' else T.JEDNAKO)
+        elif znak == '=':
+            yield lex.token(T.JJEDNAKO if lex >= '=' else T.JEDNAKO)
         elif znak.isalpha():
-            lex.zvijezda(identifikator)
+            lex * {str.isalnum, '_'}
             yield lex.literal(T.IME)
         elif znak.isdecimal():
             lex.prirodni_broj(znak)
@@ -56,62 +57,62 @@ def cpp(lex):
 class P(Parser):
     lexer = cpp
 
-    def start(self):
-        naredbe = [self.naredba()]
-        while not self > KRAJ: naredbe.append(self.naredba())
+    def start(p):
+        naredbe = [p.naredba()]
+        while not p > KRAJ: naredbe.append(p.naredba())
         return Program(naredbe)
 
-    def naredba(self):
-        if self > T.FOR: return self.petlja()
-        elif self > T.COUT: return self.ispis()
-        elif self > T.IF: return self.grananje()
-        elif br := self >> T.BREAK:
-            self >> T.TOČKAZ
+    def naredba(p):
+        if p > T.FOR: return p.petlja()
+        elif p > T.COUT: return p.ispis()
+        elif p > T.IF: return p.grananje()
+        elif br := p >> T.BREAK:
+            p >> T.TOČKAZ
             return br
 
-    def petlja(self):
+    def petlja(p):
         kriva_varijabla = SemantičkaGreška(
             'Sva tri dijela for-petlje moraju imati istu varijablu.')
-        self >> T.FOR, self >> T.OOTV
-        i = self >> T.IME
-        self >> T.JEDNAKO
-        početak = self >> T.BROJ
-        self >> T.TOČKAZ
+        p >> T.FOR, p >> T.OOTV
+        i = p >> T.IME
+        p >> T.JEDNAKO
+        početak = p >> T.BROJ
+        p >> T.TOČKAZ
 
-        if (self >> T.IME) != i: raise kriva_varijabla
-        self >> T.MANJE
-        granica = self >> T.BROJ
-        self >> T.TOČKAZ
+        if (p >> T.IME) != i: raise kriva_varijabla
+        p >> T.MANJE
+        granica = p >> T.BROJ
+        p >> T.TOČKAZ
 
-        if (self >> T.IME) != i: raise kriva_varijabla
-        if self >= T.PLUSP: inkrement = nenavedeno
-        elif self >> T.PLUSJ: inkrement = self >> T.BROJ
-        self >> T.OZATV
+        if (p >> T.IME) != i: raise kriva_varijabla
+        if p >= T.PLUSP: inkrement = nenavedeno
+        elif p >> T.PLUSJ: inkrement = p >> T.BROJ
+        p >> T.OZATV
 
-        if self >= T.VOTV:
+        if p >= T.VOTV:
             blok = []
-            while not self >= T.VZATV: blok.append(self.naredba())
-        else: blok = [self.naredba()]
+            while not p >= T.VZATV: blok.append(p.naredba())
+        else: blok = [p.naredba()]
         return Petlja(i, početak, granica, inkrement, blok)
         
-    def ispis(self):
-        self >> T.COUT
+    def ispis(p):
+        p >> T.COUT
         varijable, novired = [], nenavedeno
-        while self >= T.MMANJE:
-            if varijabla := self >= T.IME: varijable.append(varijabla)
+        while p >= T.MMANJE:
+            if varijabla := p >= T.IME: varijable.append(varijabla)
             else:
-                novired = self >> T.ENDL
+                novired = p >> T.ENDL
                 break
-        self >> T.TOČKAZ
+        p >> T.TOČKAZ
         return Ispis(varijable, novired)
 
-    def grananje(self):
-        self >> T.IF, self >> T.OOTV
-        lijevo = self >> T.IME
-        self >> T.JJEDNAKO
-        desno = self >> T.BROJ
-        self >> T.OZATV
-        return Grananje(lijevo, desno, self.naredba())
+    def grananje(p):
+        p >> T.IF, p >> T.OOTV
+        lijevo = p >> T.IME
+        p >> T.JJEDNAKO
+        desno = p >> T.BROJ
+        p >> T.OZATV
+        return Grananje(lijevo, desno, p.naredba())
 
 
 class Prekid(NelokalnaKontrolaToka): """Signal koji šalje naredba break."""
@@ -127,10 +128,10 @@ class Prekid(NelokalnaKontrolaToka): """Signal koji šalje naredba break."""
 
 class Program(AST):
     naredbe: 'naredba*'
-    def izvrši(self):
+    def izvrši(program):
         mem = Memorija()
         try:  # break izvan petlje je zapravo sintaksna greška - kompliciranije
-            for naredba in self.naredbe: naredba.izvrši(mem)
+            for naredba in program.naredbe: naredba.izvrši(mem)
         except Prekid: raise SemantičkaGreška('nedozvoljen break izvan petlje')
 
 class Petlja(AST):
@@ -139,14 +140,14 @@ class Petlja(AST):
     granica: 'BROJ'
     inkrement: 'BROJ?'
     blok: 'naredba*'
-    def izvrši(self, mem):
-        kv = self.varijabla  # kontrolna varijabla petlje
-        mem[kv] = self.početak.vrijednost(mem)
-        while mem[kv] < self.granica.vrijednost(mem):
+    def izvrši(petlja, mem):
+        kv = petlja.varijabla  # kontrolna varijabla petlje
+        mem[kv] = petlja.početak.vrijednost(mem)
+        while mem[kv] < petlja.granica.vrijednost(mem):
             try:
-                for naredba in self.blok: naredba.izvrši(mem)
+                for naredba in petlja.blok: naredba.izvrši(mem)
             except Prekid: break
-            inkr = self.inkrement
+            inkr = petlja.inkrement
             if inkr is nenavedeno: inkr = 1
             else: inkr = inkr.vrijednost(mem)
             mem[kv] += inkr 
@@ -154,17 +155,17 @@ class Petlja(AST):
 class Ispis(AST):
     varijable: 'IME*'
     novired: 'ENDL?'
-    def izvrši(self, mem):
-        for var in self.varijable: print(var.vrijednost(mem), end=' ')
-        if self.novired ^ T.ENDL: print()
+    def izvrši(ispis, mem):
+        for var in ispis.varijable: print(var.vrijednost(mem), end=' ')
+        if ispis.novired ^ T.ENDL: print()
 
 class Grananje(AST):
     lijevo: 'IME'
     desno: 'BROJ'
     onda: 'naredba'
-    def izvrši(self, mem):
-        if self.lijevo.vrijednost(mem) == self.desno.vrijednost(mem):
-            self.onda.izvrši(mem)
+    def izvrši(grananje, mem):
+        if grananje.lijevo.vrijednost(mem) == grananje.desno.vrijednost(mem):
+            grananje.onda.izvrši(mem)
 
 
 def očekuj(greška, kôd):
@@ -183,7 +184,7 @@ prikaz(P('cout;'))
 očekuj(SintaksnaGreška, '')
 očekuj(SintaksnaGreška, 'for(c=1; c<3; c++);')
 očekuj(LeksičkaGreška, '+1')
-očekuj(SemantičkaGreška, 'for(a=1; b<3; c++);')
+očekuj(SemantičkaGreška, 'for(a=1; b<3; c++)break;')
 očekuj(SemantičkaGreška, 'break;')
 očekuj(LeksičkaGreška, 'if(i == 07) cout;')
 

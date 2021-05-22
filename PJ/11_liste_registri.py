@@ -21,17 +21,16 @@ def list_lexer(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak == 'L':
-            nakonL = lex.čitaj()
-            if nakonL.isdecimal():
+            if (nakonL := next(lex)).isdecimal():
                 n = lex.prirodni_broj(nakonL)
                 tok = lex.token(T.ID)
                 if 1 <= n <= 9: yield tok
                 else: raise tok.krivi_sadržaj('očekivan broj liste između 1 i 9')
             else:
-                lex.zvijezda(str.isalpha)
+                lex * str.isalpha
                 yield lex.literal(T, case=False)
         elif znak.isalpha():
-            lex.zvijezda(str.isalpha)
+            lex * str.isalpha
             yield lex.literal(T, case=False)
         elif znak.isdecimal():
             lex.prirodni_broj(znak)
@@ -86,7 +85,7 @@ class Program(AST):
     naredbe: 'naredba*'
     def izvrši(self):
         mem = Memorija(redefinicija=False)
-        for nar in self.naredbe: print(nar, nar.izvrši(mem), sep=' --> ')
+        for nar in self.naredbe: print(nar, nar.izvrši(mem), sep='  -->  ')
 
 class Deklaracija(AST):
     """Deklaracija liste."""

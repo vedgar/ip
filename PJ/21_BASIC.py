@@ -12,13 +12,13 @@ class T(TipoviTokena):
     ZA, DO, SLJEDEĆI = 'za', 'do', 'sljedeći'
     AKO, INAČE, NADALJE = 'ako', 'inače', 'nadalje'
     class BROJ(Token):
-        def vrijednost(self, mem): return fractions.Fraction(self.sadržaj)
+        def vrijednost(t, mem): return fractions.Fraction(t.sadržaj)
     class TEKST(Token):
-        def vrijednost(self, mem): return self.sadržaj[1:-1]
+        def vrijednost(t, mem): return t.sadržaj[1:-1]
     class BVAR(Token):
-        def vrijednost(self, mem): return mem[self]
+        def vrijednost(t, mem): return mem[t]
     class TVAR(Token):
-        def vrijednost(self, mem): return mem[self]
+        def vrijednost(t, mem): return mem[t]
 
 
 def basic(lex):
@@ -28,14 +28,14 @@ def basic(lex):
             lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
         elif znak.isalpha():
-            lex.zvijezda(str.isalnum)
+            lex * str.isalnum
             default = T.TVAR if lex >= '$' else T.BVAR
             yield lex.literal(default, case=False)
         elif znak == ',':
-            lex.pročitaj_do("'")
+            lex - "'"
             yield lex.token(T.TEKST)
         elif znak == "'":
-            lex.pročitaj_do("'")
+            lex - "'"
             lex.zanemari()
         else: yield lex.literal(T)
 
@@ -58,105 +58,105 @@ def basic(lex):
 
 class P(Parser):
     lexer = basic
-    def start(self): return Program(self.naredbe())
+    def start(p): return Program(p.naredbe())
 
-    def naredbe(self):
+    def naredbe(p):
         lista = []
-        while True:
-            if self > {T.BVAR, T.TVAR}: lista.append(self.pridruživanje())
-            elif self > T.ZA: lista.append(self.petlja())
-            elif self > T.UNOS: lista.append(self.unos())
-            elif self > T.ISPIS: lista.append(self.ispis())
-            elif self > T.AKO: lista.append(self.grananje())
+        while ...:
+            if p > {T.BVAR, T.TVAR}: lista.append(p.pridruživanje())
+            elif p > T.ZA: lista.append(p.petlja())
+            elif p > T.UNOS: lista.append(p.unos())
+            elif p > T.ISPIS: lista.append(p.ispis())
+            elif p > T.AKO: lista.append(p.grananje())
             else: return lista
 
-    def pridruživanje(self):
-        varijabla = self >> {T.BVAR, T.TVAR}
-        self >> T.JEDNAKO
-        if varijabla ^ T.BVAR: pridruženo = self.broj()
-        elif varijabla ^ T.TVAR: pridruženo = self.tekst()
+    def pridruživanje(p):
+        varijabla = p >> {T.BVAR, T.TVAR}
+        p >> T.JEDNAKO
+        if varijabla ^ T.BVAR: pridruženo = p.broj()
+        elif varijabla ^ T.TVAR: pridruženo = p.tekst()
         return Pridruživanje(varijabla, pridruženo)
 
-    def petlja(self):
-        self >> T.ZA
-        varijabla = self >> T.BVAR
-        self >> T.JEDNAKO
-        početak = self.broj()
-        self >> T.DO
-        kraj = self.broj()
-        tijelo = self.naredbe()
-        self >> T.SLJEDEĆI
-        if varijabla != (self >> T.BVAR):
+    def petlja(p):
+        p >> T.ZA
+        varijabla = p >> T.BVAR
+        p >> T.JEDNAKO
+        početak = p.broj()
+        p >> T.DO
+        kraj = p.broj()
+        tijelo = p.naredbe()
+        p >> T.SLJEDEĆI
+        if varijabla != (p >> T.BVAR):
             raise SemantičkaGreška('Varijable u petlji se ne podudaraju')
         return Petlja(varijabla, početak, kraj, tijelo)
 
-    def unos(self):
-        self >> T.UNOS
-        return Unos(self >> {T.BVAR, T.TVAR})
+    def unos(p):
+        p >> T.UNOS
+        return Unos(p >> {T.BVAR, T.TVAR})
 
-    def ispis(self):
-        self >> T.ISPIS
-        if self > {T.BROJ, T.BVAR, T.OTV, T.UBROJ}: što = self.broj()
-        elif self > {T.TEKST, T.TVAR, T.UTEKST}: što = self.tekst()
-        else: što = self >> T.SLJEDEĆI
+    def ispis(p):
+        p >> T.ISPIS
+        if p > {T.BROJ, T.BVAR, T.OTV, T.UBROJ}: što = p.broj()
+        elif p > {T.TEKST, T.TVAR, T.UTEKST}: što = p.tekst()
+        else: što = p >> T.SLJEDEĆI
         return Ispis(što)
     
-    def grananje(self):
-        self >> T.AKO
-        uvjet = self.broj()
-        onda = self.naredbe()
+    def grananje(p):
+        p >> T.AKO
+        uvjet = p.broj()
+        onda = p.naredbe()
         inače = []
-        if self >= T.INAČE: inače = self.naredbe()
-        self >> {T.NADALJE, KRAJ}
+        if p >= T.INAČE: inače = p.naredbe()
+        p >> {T.NADALJE, KRAJ}
         return Grananje(uvjet, onda, inače)
 
-    def broj(self):
-        if self > {T.BROJ, T.BVAR, T.OTV, T.UBROJ}:
-            prvi = self.račun()
+    def broj(p):
+        if p > {T.BROJ, T.BVAR, T.OTV, T.UBROJ}:
+            prvi = p.račun()
             usporedba = {T.MANJE, T.VEĆE, T.JEDNAKO}
             manje = veće = jednako = nenavedeno
-            if self > usporedba:
-                while u := self >= usporedba:
+            if p > usporedba:
+                while u := p >= usporedba:
                     if u ^ T.MANJE: manje = u
                     elif u ^ T.VEĆE: veće = u
                     elif u ^ T.JEDNAKO: jednako = u
-                return Usporedba(prvi, self.račun(), manje, veće, jednako)
+                return Usporedba(prvi, p.račun(), manje, veće, jednako)
             else: return prvi
         else:
-            prvi = self.tekst()
-            self >> T.JEDNAKO
-            drugi = self.tekst()
+            prvi = p.tekst()
+            p >> T.JEDNAKO
+            drugi = p.tekst()
             return JednakTekst(prvi, drugi)
 
-    def račun(self):
-        t = self.član()
-        while op := self >= {T.PLUS, T.MINUS}: t = Osnovna(op, t, self.član())
+    def račun(p):
+        t = p.član()
+        while op := p >= {T.PLUS, T.MINUS}: t = Osnovna(op, t, p.član())
         return t
 
-    def član(self):
-        t = self.faktor()
-        while op := self >= {T.PUTA, T.KROZ}: t = Osnovna(op, t, self.faktor())
+    def član(p):
+        t = p.faktor()
+        while op := p >= {T.PUTA, T.KROZ}: t = Osnovna(op, t, p.faktor())
         return t
 
-    def faktor(self):
-        if self >= T.OTV:
-            u_zagradi = self.broj()
-            self >> T.ZATV
+    def faktor(p):
+        if p >= T.OTV:
+            u_zagradi = p.broj()
+            p >> T.ZATV
             return u_zagradi
-        elif self >= T.UBROJ:
-            self >> T.OTV
-            argument = self.tekst()
-            self >> T.ZATV
+        elif p >= T.UBROJ:
+            p >> T.OTV
+            argument = p.tekst()
+            p >> T.ZATV
             return TekstUBroj(argument)
-        else: return self >> {T.BROJ, T.BVAR}
+        else: return p >> {T.BROJ, T.BVAR}
 
-    def tekst(self):
-        if self >= T.UTEKST:
-            self >> T.OTV
-            trenutni = BrojUTekst(self.broj())
-            self >> T.ZATV
-        else: trenutni = self >> {T.TEKST, T.TVAR}
-        if self >= T.PLUS: return Konkatenacija(trenutni, self.tekst())
+    def tekst(p):
+        if p >= T.UTEKST:
+            p >> T.OTV
+            trenutni = BrojUTekst(p.broj())
+            p >> T.ZATV
+        else: trenutni = p >> {T.TEKST, T.TVAR}
+        if p >= T.PLUS: return Konkatenacija(trenutni, p.tekst())
         else: return trenutni
 
 
@@ -181,18 +181,18 @@ class P(Parser):
 
 class Program(AST):
     naredbe: 'naredba*'
-    def izvrši(self):
+    def izvrši(program):
         mem = Memorija()
-        for naredba in self.naredbe: naredba.izvrši(mem)
+        for naredba in program.naredbe: naredba.izvrši(mem)
 
 class Unos(AST):
     varijabla: 'BVAR|TVAR'
-    def izvrši(self, mem):
-        v = self.varijabla
+    def izvrši(unos, mem):
+        v = unos.varijabla
         prompt = f'\t{v.sadržaj}? '
         if v ^ T.TVAR: mem[v] = input(prompt)
         elif v ^ T.BVAR:
-            while True:
+            while ...:
                 t = input(prompt)
                 try: mem[v] = fractions.Fraction(t.replace('÷', '/'))
                 except ValueError: print(end='To nije racionalni broj! ')
@@ -201,10 +201,10 @@ class Unos(AST):
 
 class Ispis(AST):
     što: 'broj|tekst|SLJEDEĆI'
-    def izvrši(self, mem):
-        if self.što ^ T.SLJEDEĆI: print()
+    def izvrši(ispis, mem):
+        if ispis.što ^ T.SLJEDEĆI: print()
         else: 
-            t = self.što.vrijednost(mem)
+            t = ispis.što.vrijednost(mem)
             if isinstance(t, fractions.Fraction): t = str(t).replace('/', '÷')
             print(t, end=' ')
 
@@ -218,23 +218,23 @@ class Petlja(AST):
     početak: 'broj'
     kraj: 'broj'
     tijelo: 'naredba*'
-    def izvrši(self, mem):
-        kv = self.varijabla
-        p, k = self.početak.vrijednost(mem), self.kraj.vrijednost(mem)
+    def izvrši(petlja, mem):
+        kv = petlja.varijabla
+        p, k = petlja.početak.vrijednost(mem), petlja.kraj.vrijednost(mem)
         korak = 1 if p <= k else -1
         mem[kv] = p
         while (mem[kv] - k) * korak <= 0:
-            for naredba in self.tijelo: naredba.izvrši(mem)
+            for naredba in petlja.tijelo: naredba.izvrši(mem)
             mem[kv] += korak
 
 class Grananje(AST):
     uvjet: 'broj'
     onda: 'naredba*'
     inače: 'naredba*'
-    def izvrši(self, mem):
-        b = self.uvjet.vrijednost(mem)
-        if b == ~0: sljedeći = self.onda
-        elif b == 0: sljedeći = self.inače
+    def izvrši(grananje, mem):
+        b = grananje.uvjet.vrijednost(mem)
+        if b == ~0: sljedeći = grananje.onda
+        elif b == 0: sljedeći = grananje.inače
         else: raise GreškaIzvođenja(f'Tertium ({b}) non datur!')
         for naredba in sljedeći: naredba.izvrši(mem)
 
@@ -252,7 +252,7 @@ class Usporedba(AST):
     jednako: 'JEDNAKO?'
     def vrijednost(self, mem):
         l, d = self.lijevo.vrijednost(mem), self.desno.vrijednost(mem)
-        return -((self.manje and l < d) or (self.jednako and l == d) \
+        return -((self.manje and l < d) or (self.jednako and l == d)
                    or (self.veće and l > d) or False)
 
 class Osnovna(AST):
@@ -289,7 +289,7 @@ class Konkatenacija(AST):
         return self.lijevo.vrijednost(mem) + self.desno.vrijednost(mem)
 
 
-ast = P('''\
+ast = P('''
     ispis sljedeći ispis ,Gaußova dosjetka' ispis sljedeći
     crtice$ = ,'
     za i=1 do 16

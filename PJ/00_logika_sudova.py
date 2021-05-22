@@ -18,16 +18,16 @@ class T(TipoviTokena):
     NEG, KONJ, DISJ, OTV, ZATV = '!&|()'
     KOND, BIKOND = '->', '<->'
     class PVAR(Token):
-        def vrijednost(self, I): return I[self]
-        def optim(self): return self
+        def vrijednost(var, I): return I[var]
+        def optim(var): return var
 
 
 def ls(lex):
     for znak in lex:
         if znak == 'P':
-            prvo = lex.čitaj()
+            prvo = next(lex)
             if not prvo.isdecimal(): raise lex.greška('očekivana znamenka')
-            if prvo != '0': lex.zvijezda(str.isdigit)
+            if prvo != '0': lex * str.isdigit
             yield lex.token(T.PVAR)
         elif znak == '-':
             lex >> '>'
@@ -51,16 +51,16 @@ def ls(lex):
 
 
 class P(Parser):
-    def formula(self):
-        if varijabla := self >= T.PVAR: return varijabla
-        elif self >= T.NEG: 
-            ispod = self.formula()
+    def formula(p):
+        if varijabla := p >= T.PVAR: return varijabla
+        elif p >= T.NEG: 
+            ispod = p.formula()
             return Negacija(ispod)
-        elif self >> T.OTV:
-            lijevo = self.formula()
-            veznik = self >> {T.KONJ, T.DISJ, T.KOND, T.BIKOND}
-            desno = self.formula()
-            self >> T.ZATV
+        elif p >> T.OTV:
+            lijevo = p.formula()
+            veznik = p >> {T.KONJ, T.DISJ, T.KOND, T.BIKOND}
+            desno = p.formula()
+            p >> T.ZATV
             return Binarna(veznik, lijevo, desno)
 
     lexer = ls
@@ -70,10 +70,10 @@ class P(Parser):
 class Negacija(AST):
     ispod: 'formula'
 
-    def vrijednost(self, I): return not self.ispod.vrijednost(I)
+    def vrijednost(negacija, I): return not negacija.ispod.vrijednost(I)
 
-    def optim(self):
-        ispod_opt = self.ispod.optim()
+    def optim(negacija):
+        ispod_opt = negacija.ispod.optim()
         if ispod_opt ^ Negacija: return ispod_opt.ispod 
         else: return Negacija(ispod_opt)
 

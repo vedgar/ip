@@ -1,46 +1,60 @@
 """Framework za leksičku, sintaksnu, semantičku analizu, te izvođenje programa.
 Za više detalja pogledati šalabahter.txt."""
 
-__version__ = '1.4'
+__version__ = '2.1'
 
 
-import enum, types, collections, contextlib, itertools, functools, math
+import enum, types, collections, contextlib, itertools, functools, \
+        math, typing, dataclasses, fractions
 
 
-def identifikator(znak):
-    """Je li znak dopušten u C-ovskom imenu (slovo, znamenka ili _)?"""
-    return znak.isalnum() or znak == '_'
+def paše(znak, uvjet): 
+    if isinstance(uvjet, str):
+        assert len(uvjet) <= 1, 'Znakovi ne mogu biti duljine veće od 1!'
+        return znak == uvjet
+    elif callable(uvjet):
+        rezultat = uvjet(znak)
+        assert rezultat is True or rezultat is False, 'Uvjet nije predikat!'
+        return rezultat
+    elif isinstance(uvjet, set):
+        return any(paše(znak, disjunkt) for disjunkt in uvjet)
+
+
+#def identifikator(znak):
+#    """Je li znak dopušten u C-ovskom imenu (slovo, znamenka ili _)?"""
+#    return znak.isalnum() or znak == '_'
 
 TipoviTokena = enum.Enum
 TipTokena = enum.auto
+from typing import Optional
+
+
+class Kontekst(type):
+    def __enter__(self): pass
+    def __exit__(self, e_type, e_val, e_tb):
+        if e_type is None: raise Greška(f'{self.__name__} nije dignuta')
+        elif issubclass(e_type, self):
+            print(e_type.__name__, e_val, sep=': ')
+            return True
 
 # TODO: bolji API: Greška(poruka, pozicija ili token ili AST...)
 # ali ostaviti i lex.greška() i parser.greška() for convenience
-class Greška(Exception): """Baza za sve greške vezane uz poziciju u kodu."""
-class LeksičkaGreška(Greška): """Greška nastala prilikom leksičke analize."""
-class SintaksnaGreška(Greška): """Greška nastala prilikom sintaksne analize."""
-class SemantičkaGreška(Greška):"""Greška nastala prilikom semantičke analize."""
-class GreškaIzvođenja(Greška): """Greška nastala prilikom izvođenja."""
-
-
-#TODO maknuti potrebu za ovim: with SintaksnaGreška:... (zahtijeva metaklase)
-@contextlib.contextmanager
-def očekivano(tip_greške):
-    """Kontekst u kojem se mora pojaviti greška tip_greške, koja se ispisuje."""
-    try: yield
-    except tip_greške as e: print(type(e).__name__, e, sep=': ')
-    else: raise Greška(f'{tip_greške.__name__} nije dignuta')
+class Greška(Exception, metaclass=Kontekst): """Greška vezana uz poziciju."""
+class LeksičkaGreška(Greška): """Greška nastala u leksičkoj analizi."""
+class SintaksnaGreška(Greška): """Greška nastala u sintaksnoj analizi."""
+class SemantičkaGreška(Greška): """Greška nastala u semantičkoj analizi."""
+class GreškaIzvođenja(Greška): """Greška nastala u izvođenju."""
 
 
 class Tokenizer:
-    """Pomoćna klasa potrebna za rastavljanje niza znakova na tokene."""
+    """Klasa za rastavljanje niza znakova na tokene."""
     def __init__(self, string):
         """Inicijalizira tokenizer tako da čita string (od početka)."""
         self.pročitani, self.buffer, self.stream = [], None, iter(string)
-        self.i, self.j = 1, 0
-        self.početak = 1, 1
+        self.i = int('\n' in string and not string.startswith('\n'))
+        self.j = 0
+        self.početak = 0, 1
 
-    #TODO razmisliti o tome da i kreće od 0 za onelinere, a bez \ nakon '''
     @property
     def pozicija(self):
         """Uređeni par (redak, stupac): gdje se tokenizer trenuntno nalazi."""
@@ -48,7 +62,7 @@ class Tokenizer:
 
     @property
     def sadržaj(self):
-        """Što je tokenizer do sada pročitao (od zadnjeg prepoznatog tokena."""
+        """Što je tokenizer do sada pročitao, od zadnjeg prepoznatog tokena."""
         return ''.join(self.pročitani)
 
     def čitaj(self):
@@ -62,6 +76,8 @@ class Tokenizer:
             self.j = 0
         else: self.j += 1
         return znak
+
+    __next__ = čitaj
 
     def vrati(self):
         """Poništava čitanje zadnjeg pročitanog znaka."""
@@ -79,50 +95,60 @@ class Tokenizer:
         self.vrati()
         return znak
 
-    def slijedi(self, znak):
-        """Čita sljedeći znak ako i samo ako je jednak navedenom."""
-        assert len(znak) == 1, f'Duljina znaka {znak!r} mora biti 1'
-        return self.čitaj() == znak or self.vrati()
+    def slijedi(self, uvjet):
+        """Čita sljedeći znak ako i samo ako zadovoljava uvjet."""
+        return paše(self.čitaj(), uvjet) or self.vrati()
 
-    def __ge__(self, znak):
-        """Čita sljedeći znak ako i samo ako je jednak navedenom."""
-        return self.slijedi(znak)
+    __ge__ = slijedi
+
+    def vidi(self, uvjet):
+        """Ispituje sljedeći znak ('bez' čitanja)."""
+        return paše(self.pogledaj(), uvjet)
 
     def zvijezda(self, uvjet):
         """Čita Kleene* (nula ili više) znakova koji zadovoljavaju uvjet."""
-        while uvjet(self.čitaj()): pass
+        while paše(self.čitaj(), uvjet): pass
         self.vrati()
+
+    __mul__ = zvijezda
 
     def plus(self, uvjet):
         """Čita Kleene+ (jedan ili više) znakova koji zadovoljavaju uvjet."""
-        prvi = self.čitaj()
-        if not uvjet(prvi): raise self.greška('očekivan ' + uvjet.__name__)
+        self.pročitaj(uvjet)
         self.zvijezda(uvjet)
     
-    def pročitaj(self, znak):
-        """Čita zadani znak, ili prijavljuje leksičku grešku."""
-        if znak != self.čitaj():
-            raise self.greška(f'očekivano {znak!r}')
+    __add__ = plus
 
-    def __rshift__(self, znak):
+    def pročitaj(self, uvjet):
         """Čita zadani znak, ili prijavljuje leksičku grešku."""
-        return self.pročitaj(znak)
+        if not paše(self.čitaj(), uvjet):
+            raise self.greška(f'očekivano {uvjet!r}')
 
-    def pročitaj_do(self, znak, *, uključivo=True, više_redova=False):
-        """Čita sve znakove do zadanog znaka."""
-        assert len(znak) == 1, f'Duljina terminatora {znak!r} mora biti 1'
-        if više_redova: self.zvijezda(uvjet = lambda z: z and z != znak)
-        else: self.zvijezda(lambda z: z and z != '\n' and z != znak)
-        if self.pogledaj() != znak:
-            raise self.greška(f'{znak!r} nije pronađen')
-        if uključivo: self.pročitaj(znak)
+    __rshift__ = pročitaj
+
+    def pročitaj_do(self, uvjet, *, uključivo=True, više_redova=False):
+        """Čita sve znakove do ispunjenja uvjeta."""
+        while ...:
+            znak = self.čitaj()
+            if paše(znak, uvjet):
+                if not uključivo: self.vrati()
+                break
+            elif znak == '\n' and not više_redova:
+                raise self.greška(f'{uvjet!r} nije pronađen u retku')
+            elif not znak:
+                raise self.greška(f'{uvjet!r} nije pronađen do kraja ulaza')
+
+    __sub__ = pročitaj_do
+
+    def __lt__(self, uvjet): 
+        return self.pročitaj_do(uvjet, uključivo=False)
 
     def greška(self, info=''):
         """Konstruira leksičku grešku."""
         if self.buffer is not None: self.čitaj()
         if self.j: i, j = self.i, self.j
         else: i, j = self.i - 1, self.gornji_j + 1
-        poruka = f'Redak {i}, stupac {j}: '
+        poruka = f'Redak {i}, stupac {j}: ' if i else f'Znak #{j}: '
         zadnji = self.pročitani.pop()
         opis = f'znak {zadnji!r}' if zadnji else 'kraj ulaza'
         poruka += f'neočekivani {opis}'
@@ -145,8 +171,7 @@ class Tokenizer:
                 for e in odakle:
                     if e.value == t or getattr(e.value, 'literal', None) == t:
                         return e
-        nađen = p(odakle) or p(type(odakle))
-        if nađen: return self.token(nađen)
+        if nađen := p(odakle) or p(type(odakle)): return self.token(nađen)
         elif isinstance(type(odakle), enum.EnumMeta): return self.token(odakle)
         else: raise self.greška()
 
@@ -179,11 +204,12 @@ class Tokenizer:
 
 
 class E(TipoviTokena):  # Everywhere
-    """Često korišteni tipovi tokena, neovisno o konkretnom jeziku."""
-    KRAJ = None        # End
-    # GREŠKA = '\x00'  # Error
-    # PRAZNO = ' '     # Empty
-    # VIŠAK = ''       # Extra
+    """Često korišteni tipovi tokena, neovisni o konkretnom jeziku."""
+    KRAJ = None         # End
+    # GREŠKA = '\x00'   # Error
+    # PRAZNO = ' '      # Empty
+    # VIŠAK = '...'     # Extra
+    # KOMENTAR = '#'
 KRAJ = E.KRAJ
 
 
@@ -287,9 +313,12 @@ class Parser:
     @classmethod
     def tokeniziraj(cls, ulaz): 
         """Pregledno ispisuje pronađene tokene, za debugiranje tokenizacije."""
+        if '\n' not in ulaz: print('Tokenizacija:', ulaz)
         cls.static_lexer = staticmethod(cls.lexer)
         for token in cls.static_lexer(Tokenizer(ulaz)):
-            print(f'\t{raspon(token):23}: {token}')
+            r = raspon(token)
+            if r.startswith('Znak'): print(f'\t\t{r:15}: {token}')
+            else: print(f'\t{r:23}: {token}')
 
     def čitaj(self):
         """Čitanje sljedećeg tokena iz buffera ili inicijalnog niza."""
@@ -337,7 +366,7 @@ class NoneInAST(Exception): """U apstraktnom sintaksnom stablu se našao None.""
 
 def AST_adapt(component):
     """Pretvara komponente budućeg AST-a u oblik prikladan za AST."""
-    if isinstance(component, (Token, AST0, elementarni)): return component
+    if isinstance(component, (Token, AST, elementarni)): return component
     elif isinstance(component, (tuple, list)):
         if None in component: raise NoneInAST(component)
         return ListaAST(component)
@@ -357,14 +386,14 @@ def prikaz(objekt, dubina:int=math.inf, uvlaka:str='', ime:str=None):
     if isinstance(objekt, (Token, elementarni, Nenavedeno, enum.Enum)) \
             or not dubina:
         return print(intro, repr(objekt), sep='')
-    if isinstance(objekt, ListaAST):
+    if isinstance(objekt, (ListaAST, list)):
         print(intro, end='[...]:\n' if objekt else '[]\n')
         for vrijednost in objekt:
             prikaz(vrijednost, dubina-1, uvlaka+'. ')
-    elif isinstance(objekt, AST0):
-        print(intro + type(objekt).__name__ + ':')  # + '  ' + raspon(objekt))
-        for ime, vrijednost in objekt._asdict().items():
-            prikaz(vrijednost, dubina-1, uvlaka+' '*2, ime)
+    #elif isinstance(objekt, AST0):
+    #    print(intro + type(objekt).__name__ + ':')  # + '  ' + raspon(objekt))
+    #    for ime, vrijednost in objekt._asdict().items():
+    #        prikaz(vrijednost, dubina-1, uvlaka+' '*2, ime)
     elif isinstance(objekt, Memorija):
         print(intro + type(objekt).__name__ + ':')
         for ime, vrijednost in objekt:
@@ -377,7 +406,9 @@ def prikaz(objekt, dubina:int=math.inf, uvlaka:str='', ime:str=None):
         print(intro, end='(...):\n' if objekt else '()\n')
         for vrijednost in objekt:
             prikaz(vrijednost, dubina-1, uvlaka+', ')
-    elif isinstance(objekt, types.SimpleNamespace):
+    elif isinstance(objekt, (types.SimpleNamespace, AST)):
+        if hasattr(objekt, 'za_prikaz'): 
+            prikaz(objekt.za_prikaz(), dubina, uvlaka, ime)
         print(intro + type(objekt).__name__ + ':'*bool(vars(objekt)))
         for ime, vrijednost in vars(objekt).items():
             prikaz(vrijednost, dubina-1, uvlaka+'  ', ime)
@@ -385,32 +416,22 @@ def prikaz(objekt, dubina:int=math.inf, uvlaka:str='', ime:str=None):
 
 
 def raspon(ast):
-    """String koji kazuje odakle dokle se prostire token ili AST."""
+    """String koji kazuje odakle dokle se prostire token (ili AST)."""
+    #! Ne radi za ASTove... trebalo bi bitno drugačije organizirati kod.
     if hasattr(ast, '_početak'):
         ip, jp = ast._početak
         ik, jk = ast._kraj
         if ip == ik:
-            if jp == jk: return f'Redak {ip}, stupac {jp}'
+            if ip == 0:
+                if jp == jk: return f'Znak #{jp}'
+                else: return f'Znakovi #{jp}–#{jk}'
+            elif jp == jk: return f'Redak {ip}, stupac {jp}'
             else: return f'Redak {ip}, stupci {jp}–{jk}'
         else: return f'Redak {ip}, stupac {jp} – redak {ik}, stupac {jk}'
     else: return 'Nepoznata pozicija'
 
 
-class AST0:
-    """Bazna klasa za sva apstraktna sintaksna stabla."""
-    def __xor__(self, tip):
-        """Vraća sebe (istina) ako je zadanog tipa, inače nenavedeno (laž)."""
-        if isinstance(tip, type) and isinstance(self, tip): return self
-
-    @classmethod
-    def ili_samo(cls, lista):
-        """Konstruktor koji umjesto cls([x]) vraća samo x."""
-        if not lista or len(cls._fields) != 1:
-            raise SemantičkaGreška('Ispuštanje korijena nije dozvoljeno!')
-        return lista[0] if len(lista) == 1 else cls(lista)
-    
-
-class Atom(Token, AST0): """Atomarni token kao apstraktno stablo."""
+# class Atom(Token, AST0): """Atomarni token kao apstraktno stablo."""
 
 
 class ListaAST(tuple):
@@ -430,12 +451,6 @@ class RječnikAST(tuple):
     def __repr__(self): return repr(dict(self))
 
 
-class Nenavedeno(AST0):
-    """Atribut koji nije naveden."""
-    def __bool__(self): return False
-    def __repr__(self): return type(self).__name__.lower().join('<>')
-
-nenavedeno = Nenavedeno()
 
 
 def obuhvati(dijelovi):
@@ -444,7 +459,7 @@ def obuhvati(dijelovi):
     if d: return min(p._početak for p in d), max(p._kraj for p in d)
 
 
-def AST(atributi):
+def AST3(atributi):
     """Dinamički generirana klasa sa zadanim atributima."""
     AST2 = collections.namedtuple('AST2', atributi)
     # AST2.__new__.__defaults__ = tuple(nenavedeno for field in AST2._fields)
@@ -461,10 +476,33 @@ def AST(atributi):
             return self
     return AST1
 
+class AST:
+    """Bazna klasa za sva apstraktna sintaksna stabla."""
+    def __init_subclass__(cls): dataclasses.dataclass(cls, frozen=True)
+
+    def __xor__(self, tip):
+        """Vraća sebe (istina) ako je zadanog tipa, inače None (laž)."""
+        if isinstance(tip, type) and isinstance(self, tip): return self
+
+    @classmethod
+    def ili_samo(cls, lista):
+        """Konstruktor koji umjesto cls([x]) vraća samo x."""
+        if not lista or len(dataclasses.fields(cls)) != 1:
+            raise SemantičkaGreška('Ispuštanje korijena nije dozvoljeno!')
+        return lista[0] if len(lista) == 1 else cls(lista)
+
+
+class Nenavedeno(AST):
+    """Atribut koji nije naveden."""
+    def __bool__(self): return False
+    def __repr__(self): return type(self).__name__.lower().join('<>')
+
+nenavedeno = Nenavedeno()
+
 
 class Memorija:
     """Memorija računala, indeksirana tokenima ili njihovim sadržajima."""
-    def __init__(self, podaci={}, redefinicija=True):
+    def __init__(self, podaci={}, *, redefinicija=True):
         self.redefinicija = redefinicija
         self.podaci, self.token_sadržaja = {}, {}
         for ključ, vrijednost in podaci.items(): self[ključ] = vrijednost
@@ -513,6 +551,8 @@ class Memorija:
             yield self.token_sadržaja.get(ključ, ključ), vrijednost
 
     def __len__(self): return len(self.podaci)
+
+    #TODO: dodati Memorija.imena kao dict(Memorija).keys(), koristiti u 04_...
 
 
 cache = functools.lru_cache(maxsize=None)

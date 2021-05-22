@@ -19,9 +19,9 @@ from backend import StrojSaStogom, Python_eval
 class T(TipoviTokena):
     PLUS, PUTA, NA, OTVORENA, ZATVORENA = '+*^()'
     class BROJ(Token):
-        def vrijednost(self): return int(self.sadržaj)
-        def optim(self): return self
-        def prevedi(self): yield ['PUSH', self.vrijednost()]
+        def vrijednost(t): return int(t.sadržaj)
+        def optim(t): return t
+        def prevedi(t): yield ['PUSH', t.vrijednost()]
 
 
 def an(lex):
@@ -46,29 +46,29 @@ def an(lex):
 
 
 class P(Parser):
-    def izraz(self):
-        prvi = self.član()
-        if self >= T.PLUS:
-            drugi = self.izraz()
+    def izraz(p):
+        prvi = p.član()
+        if p >= T.PLUS:
+            drugi = p.izraz()
             return Zbroj([prvi, drugi])
         else:
             return prvi
 
-    def član(self):
-        faktor = self.faktor()
-        if self >= T.PUTA: return Umnožak([faktor, self.član()])
+    def član(p):
+        faktor = p.faktor()
+        if p >= T.PUTA: return Umnožak([faktor, p.član()])
         else: return faktor
 
-    def faktor(self):
-        baza = self.baza()
-        if self >= T.NA: return Potencija(baza, self.faktor())
+    def faktor(p):
+        baza = p.baza()
+        if p >= T.NA: return Potencija(baza, p.faktor())
         else: return baza
 
-    def baza(self):
-        if broj := self >= T.BROJ: return broj
-        elif self >> T.OTVORENA:
-            u_zagradi = self.izraz()
-            self >> T.ZATVORENA
+    def baza(p):
+        if broj := p >= T.BROJ: return broj
+        elif p >> T.OTVORENA:
+            u_zagradi = p.izraz()
+            p >> T.ZATVORENA
             return u_zagradi
 
     lexer = an

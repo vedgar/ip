@@ -29,18 +29,18 @@ class T(TipoviTokena):
 
     class NULFUNKCIJA(Token):
         literal = 'Z'
-        def mjesnost(self, symtab): return 1
-        def izračunaj(self, symtab, argument): return 0
+        def mjesnost(self, _): return 1
+        def izračunaj(self, _, argument): return 0
 
     class SLJEDBENIK(Token):
         literal = 'Sc'
-        def mjesnost(self, symtab): return 1
-        def izračunaj(self, symtab, argument): return argument + 1
+        def mjesnost(self, _): return 1
+        def izračunaj(self, _, argument): return argument + 1
 
     class KPROJEKCIJA(Token):
         """Koordinatna projekcija, mjesnosti najviše 9."""
-        def mjesnost(self, symtab): return int(self.sadržaj[2])
-        def izračunaj(self, symtab, *argumenti):
+        def mjesnost(self, _): return int(self.sadržaj[2])
+        def izračunaj(self, _, *argumenti):
             n = int(self.sadržaj[1])
             return argumenti[n - 1]
 
@@ -53,7 +53,7 @@ def pr(lex):
             if 1 <= n <= k: yield lex.token(T.KPROJEKCIJA)
             else: raise lex.greška('krivo formirani token Ink')
         elif znak.isalpha():
-            lex.zvijezda(str.isalnum)
+            lex * str.isalnum
             yield lex.literal(T.FIME)
         else: yield lex.literal(T)
 

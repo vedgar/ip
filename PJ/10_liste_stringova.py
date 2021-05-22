@@ -14,26 +14,29 @@ from vepar import *
 
 BKSL, N1, N2, NOVIRED = '\\', "'", '"', '\n'
 
-def makni(it):
-    """Miče obrnute kose crte (backslashes) iz iteratora."""
-    for znak in it:
+@cache
+def unescape(string):
+    """Interpretira obrnute kose crte (backslashes) u stringu."""
+    iterator, rezultat = iter(string), []
+    for znak in iterator:
         if znak == BKSL:
-            sljedeći = next(it)
-            if sljedeći == 'n': yield NOVIRED
-            else: yield sljedeći
-        else: yield znak
+            sljedeći = next(iterator)
+            if sljedeći == 'n': rezultat.append(NOVIRED)
+            else: rezultat.append(sljedeći)
+        else: rezultat.append(znak)
+    return ''.join(rezultat)
 
 class T(TipoviTokena):
     UOTV, UZATV, ZAREZ = '[],'
     class BROJ(Token):
         """Pozitivni prirodni broj."""
-        def vrijednost(self): return int(self.sadržaj)
+        def vrijednost(t): return int(t.sadržaj)
     class STRING1(Token):
         """String u jednostrukim navodnicima (raw string)."""
-        def vrijednost(self): return self.sadržaj[1:-1]
+        def vrijednost(t): return t.sadržaj[1:-1]
     class STRING2(Token):
         """String u dvostrukim navodnicima (backslash kao escape)."""
-        def vrijednost(self): return ''.join(makni(iter(self.sadržaj[1:-1])))
+        def vrijednost(t): return unescape(t.sadržaj[1:-1])
 
 def listlexer(lex):
     for znak in lex:
@@ -42,15 +45,15 @@ def listlexer(lex):
             lex.prirodni_broj(znak, nula=False)
             yield lex.token(T.BROJ)
         elif znak == N1:
-            lex.pročitaj_do(N1)
+            lex - N1
             yield lex.token(T.STRING1)
         elif znak == N2:
-            while True:
-                z = lex.čitaj()
-                if not z or z == NOVIRED:
+            while (znak := next(lex)) != N2:
+                if not znak:
+                    raise lex.greška('nezavršeni string do kraja ulaza!')
+                elif znak == NOVIRED:
                     raise lex.greška('nezavršeni string do kraja retka!')
-                elif z == BKSL: lex.čitaj()
-                elif z == N2: break
+                elif znak == BKSL: next(lex)
             yield lex.token(T.STRING2)
         else: yield lex.literal(T)
 

@@ -8,7 +8,6 @@ Prikazano je čitanje decimalnih brojeva, aliasi, postfiksni operatori, ..."""
 
 
 from vepar import *
-from math import pi
 
 
 class T(TipoviTokena):
@@ -29,12 +28,14 @@ def ac(lex):
         elif znak == '-': yield lex.token(T.STRELICA if lex >= '>' else T.MINUS)
         elif znak == '*': yield lex.token(T.NA if lex >= '*' else T.PUTA)
         elif znak.isdecimal():
-            lex.zvijezda(str.isdecimal)
-            if lex >= '.': lex.zvijezda(str.isdecimal)
-            if lex >= 'e': lex >= '-', lex.plus(str.isdecimal)
+            lex * str.isdecimal
+            if lex >= '.': lex * str.isdecimal
+            if lex >= 'e':
+                lex >= '-'
+                lex + str.isdecimal
             yield lex.token(T.BROJ)
         elif znak.isalpha():
-            lex.zvijezda(str.isalnum)
+            lex * str.isalnum
             yield lex.literal(T.IME)
         else: yield lex.literal(T)
 
@@ -50,36 +51,36 @@ def ac(lex):
 class P(Parser):
     lexer = ac
 
-    def start(self):
+    def start(p):
         okolina = []
-        izraz = self.izraz()
-        while self >= T.STRELICA:
-            okolina.append((self >> T.IME, izraz))
-            izraz = self.izraz()
+        izraz = p.izraz()
+        while p >= T.STRELICA:
+            okolina.append((p >> T.IME, izraz))
+            izraz = p.izraz()
         return Program(okolina, izraz)
 
-    def izraz(self):
-        t = self.član()
-        while op := self >= {T.PLUS, T.MINUS}: t = Binarna(op, t, self.član())
+    def izraz(p):
+        t = p.član()
+        while op := p >= {T.PLUS, T.MINUS}: t = Binarna(op, t, p.član())
         return t
 
-    def član(self):
-        t = self.faktor()
-        while op := self >= {T.PUTA, T.KROZ}: t = Binarna(op, t, self.faktor())
+    def član(p):
+        t = p.faktor()
+        while op := p >= {T.PUTA, T.KROZ}: t = Binarna(op, t, p.faktor())
         return t
 
-    def faktor(self):
-        if op := self >= T.MINUS: return Unarna(op, self.faktor())
-        baza = self.baza()
-        if op := self >= T.NA: return Binarna(op, baza, self.faktor())
+    def faktor(p):
+        if op := p >= T.MINUS: return Unarna(op, p.faktor())
+        baza = p.baza()
+        if op := p >= T.NA: return Binarna(op, baza, p.faktor())
         else: return baza
 
-    def baza(self):
-        if self >= T.OTV:
-            trenutni = self.izraz()
-            self >> T.ZATV
-        else: trenutni = self >> {T.BROJ, T.IME, T.I}
-        while op := self >= T.KONJ: trenutni = Unarna(op, trenutni)
+    def baza(p):
+        if p >= T.OTV:
+            trenutni = p.izraz()
+            p >> T.ZATV
+        else: trenutni = p >> {T.BROJ, T.IME, T.I}
+        while op := p >= T.KONJ: trenutni = Unarna(op, trenutni)
         return trenutni
 
 
@@ -95,10 +96,10 @@ class P(Parser):
 class Program(AST):
     okolina: '(izraz,IME)*'
     završni: 'izraz'
-    def izvrši(self):
+    def izvrši(program):
         env = Memorija()
-        for ime, izraz in self.okolina: env[ime] = izraz.vrijednost(env)
-        return self.završni.vrijednost(env)
+        for ime, izraz in program.okolina: env[ime] = izraz.vrijednost(env)
+        return program.završni.vrijednost(env)
 
 class Binarna(AST):
     op: 'T'
@@ -143,7 +144,7 @@ izračunaj(f'''
     8 -> d
     10^d -> n
     (1+1/n)^n -> e
-    {pi} -> pi
+    355/113 -> pi
     e^(i*pi) + 1 -> skoro0
     skoro0
 ''')

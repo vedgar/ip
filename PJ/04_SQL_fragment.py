@@ -36,49 +36,51 @@ class P(Parser):
         for znak in lex:
             if znak.isspace(): lex.zanemari()
             elif znak.isalnum():
-                lex.zvijezda(str.isalnum)
-                if lex.sadržaj.isdigit(): yield lex.token(T.BROJ)
+                lex * str.isalnum
+                if lex.sadržaj.isdecimal(): yield lex.token(T.BROJ)
                 else: yield lex.literal(T.IME, case=False)
             elif znak == '-':
-                lex >> '-', lex.pročitaj_do('\n'), lex.zanemari()
+                lex >> '-'
+                lex - '\n'
+                lex.zanemari()
             else: yield lex.literal(T)
 
-    def start(self):
-        naredbe = [self.naredba()]
-        while not self > KRAJ: naredbe.append(self.naredba())
+    def start(p):
+        naredbe = [p.naredba()]
+        while not p > KRAJ: naredbe.append(p.naredba())
         return Skripta(naredbe)
 
-    def select(self):
-        self >> T.SELECT
-        if self >= T.ZVJEZDICA: stupci = nenavedeno
-        elif stupac := self >> T.IME:
+    def select(p):
+        p >> T.SELECT
+        if p >= T.ZVJEZDICA: stupci = nenavedeno
+        elif stupac := p >> T.IME:
             stupci = [stupac]
-            while self >= T.ZAREZ: stupci.append(self >> T.IME)
-        self >> T.FROM
-        return Select(self >> T.IME, stupci)
+            while p >= T.ZAREZ: stupci.append(p >> T.IME)
+        p >> T.FROM
+        return Select(p >> T.IME, stupci)
 
-    def spec_stupac(self):
-        ime, tip = self >> T.IME, self >> T.IME
-        if self >= T.OTVORENA:
-            veličina = self >> T.BROJ
-            self >> T.ZATVORENA
+    def spec_stupac(p):
+        ime, tip = p >> T.IME, p >> T.IME
+        if p >= T.OTVORENA:
+            veličina = p >> T.BROJ
+            p >> T.ZATVORENA
         else: veličina = nenavedeno
         return Stupac(ime, tip, veličina)
 
-    def create(self):
-        self >> T.CREATE, self >> T.TABLE
-        tablica = self >> T.IME
-        self >> T.OTVORENA
-        stupci = [self.spec_stupac()]
-        while self >= T.ZAREZ: stupci.append(self.spec_stupac())
-        self >> T.ZATVORENA
+    def create(p):
+        p >> T.CREATE, p >> T.TABLE
+        tablica = p >> T.IME
+        p >> T.OTVORENA
+        stupci = [p.spec_stupac()]
+        while p >= T.ZAREZ: stupci.append(p.spec_stupac())
+        p >> T.ZATVORENA
         return Create(tablica, stupci)
 
-    def naredba(self):
-        if self > T.SELECT: rezultat = self.select()
-        elif self > T.CREATE: rezultat = self.create()
-        else: raise self.greška()
-        self >> T.TOČKAZAREZ
+    def naredba(p):
+        if p > T.SELECT: rezultat = p.select()
+        elif p > T.CREATE: rezultat = p.create()
+        else: raise p.greška()
+        p >> T.TOČKAZAREZ
         return rezultat
 
 
@@ -86,9 +88,9 @@ class Skripta(AST):
     """Niz naredbi SQLa, svaka završava točkazarezom."""
     naredbe: 'naredba*'
 
-    def razriješi(self):
+    def razriješi(skripta):
         imena = Memorija(redefinicija=False)
-        for naredba in self.naredbe: naredba.razriješi(imena)
+        for naredba in skripta.naredbe: naredba.razriješi(imena)
         return imena
 
 class Stupac(AST):
@@ -102,9 +104,9 @@ class Create(AST):
     tablica: 'IME'
     specifikacije: 'Stupac*'
 
-    def razriješi(self, imena):
-        pristup = imena[self.tablica] = Memorija(redefinicija=False)
-        for stupac in self.specifikacije:
+    def razriješi(naredba, imena):
+        pristup = imena[naredba.tablica] = Memorija(redefinicija=False)
+        for stupac in naredba.specifikacije:
             pristup[stupac.ime] = PristupLog(stupac)
         
 class Select(AST):
@@ -112,12 +114,11 @@ class Select(AST):
     tablica: 'IME'
     stupci: 'IME*?'
 
-    def razriješi(self, imena):
-        t = imena[self.tablica]
-        dohvaćeni = self.stupci
+    def razriješi(naredba, imena):
+        t = imena[naredba.tablica]
+        dohvaćeni = naredba.stupci
         if dohvaćeni is nenavedeno: dohvaćeni = dict(t)
         for stupac in dohvaćeni: t[stupac].pristupi()
-
 
 
 def za_indeks(skripta):

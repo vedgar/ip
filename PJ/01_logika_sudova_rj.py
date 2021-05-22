@@ -52,22 +52,22 @@ def ls(lex):
 
 
 class P(Parser):
-    def formula(self):
-        if varijabla := self >= T.PVAR: return varijabla
-        elif self >= T.NEG: 
-            ispod = self.formula()
+    def formula(p):
+        if varijabla := p >= T.PVAR: return varijabla
+        elif p >= T.NEG: 
+            ispod = p.formula()
             return Negacija(ispod)
-        elif self >> T.OTV:
-            l, klasa, d = self.formula(), self.binvez(), self.formula()
-            self >> T.ZATV
+        elif p >> T.OTV:
+            l, klasa, d = p.formula(), p.binvez(), p.formula()
+            p >> T.ZATV
             return klasa(l, d)
 
-    def binvez(self):
-        if self >= T.KONJ: return Konjunkcija
-        elif self >= T.DISJ: return Disjunkcija
-        elif self >= T.KOND: return Kondicional
-        elif self >= T.BIKOND: return Bikondicional
-        else: raise self.greška()
+    def binvez(p):
+        if p >= T.KONJ: return Konjunkcija
+        elif p >= T.DISJ: return Disjunkcija
+        elif p >= T.KOND: return Kondicional
+        elif p >= T.BIKOND: return Bikondicional
+        else: raise p.greška()
 
     lexer = ls
     start = formula
@@ -77,13 +77,13 @@ class Negacija(AST):
     ispod: 'formula'
     veznik = '¬'
 
-    def vrijednost(self, I): return not self.ispod.vrijednost(I)
+    def vrijednost(negacija, I): return not negacija.ispod.vrijednost(I)
 
-    def makni_neg(self):
-        bez_neg, pozitivna = self.ispod.makni_neg()
+    def makni_neg(negacija):
+        bez_neg, pozitivna = negacija.ispod.makni_neg()
         return bez_neg, not pozitivna
 
-    def ispis(self): return self.veznik + self.ispod.ispis()
+    def ispis(negacija): return negacija.veznik + negacija.ispod.ispis()
 
 
 class Binarna(AST):

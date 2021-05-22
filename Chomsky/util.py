@@ -210,7 +210,7 @@ def parsiraj_tablicu_KA(tablica):
     return stanja, abeceda, prijelaz, početno, završna
 
 def parsiraj_tablicu_NKA(tablica):
-    """Parsiranje tabličnog zapisa nedeterminističkog KA (Sipser page 54).
+    """Parsiranje tabličnog zapisa nedeterminističnog KA (Sipser page 54).
     Prvo stanje je početno, završna su označena znakom # na kraju reda.
     ε-prijelazi su nakon svih znak-prijelaza (stupac čije zaglavlje nema znaka).
     Izostanak prijelaza označava se znakom / na odgovarajućem mjestu.

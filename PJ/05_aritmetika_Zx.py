@@ -17,11 +17,11 @@ from backend import Polinom
 class T(TipoviTokena):
     PLUS, MINUS, PUTA, OTVORENA, ZATVORENA = '+-*()'
     class BROJ(Token):
-        def vrijednost(self): return int(self.sadržaj)
-        def prevedi(self): return Polinom.konstanta(self.vrijednost())
+        def vrijednost(t): return int(t.sadržaj)
+        def prevedi(t): return Polinom.konstanta(t.vrijednost())
     class X(Token):
         literal = 'x'
-        def prevedi(self): return Polinom.x()
+        def prevedi(t): return Polinom.x()
 
 
 def az(lex):
@@ -48,28 +48,28 @@ def az(lex):
 
 
 class P(Parser):
-    def izraz(self):
-        t = self.član()
-        while True:
-            if self >= T.PLUS: t = Zbroj(t, self.član())
-            elif self >= T.MINUS: t = Zbroj(t, Suprotan(self.član()))
+    def izraz(p):
+        t = p.član()
+        while ...:
+            if p >= T.PLUS: t = Zbroj(t, p.član())
+            elif p >= T.MINUS: t = Zbroj(t, Suprotan(p.član()))
             else: return t
 
-    def član(self):
-        trenutni = self.faktor()
-        while self >= T.PUTA or self > {T.X, T.OTVORENA}:
-            trenutni = Umnožak(trenutni, self.faktor())
+    def član(p):
+        trenutni = p.faktor()
+        while p >= T.PUTA or p > {T.X, T.OTVORENA}:
+            trenutni = Umnožak(trenutni, p.faktor())
         return trenutni
 
-    def faktor(self):
-        if self >= T.MINUS: return Suprotan(self.faktor())
-        elif broj := self >= T.BROJ: return broj
-        elif x := self >= T.X:
-            if eksponent := self >= T.BROJ: return Xna(eksponent)
+    def faktor(p):
+        if p >= T.MINUS: return Suprotan(p.faktor())
+        elif broj := p >= T.BROJ: return broj
+        elif x := p >= T.X:
+            if eksponent := p >= T.BROJ: return Xna(eksponent)
             else: return x
-        elif self >> T.OTVORENA:
-            u_zagradi = self.izraz()
-            self >> T.ZATVORENA
+        elif p >> T.OTVORENA:
+            u_zagradi = p.izraz()
+            p >> T.ZATVORENA
             return u_zagradi
 
     lexer = az
@@ -79,12 +79,13 @@ class P(Parser):
 class Zbroj(AST):
     lijevo: 'izraz'
     desno: 'izraz'
-    def prevedi(self): return self.lijevo.prevedi() + self.desno.prevedi()
+    def prevedi(zbroj): return zbroj.lijevo.prevedi() + zbroj.desno.prevedi()
     
 class Umnožak(AST):
     lijevo: 'izraz'
     desno: 'izraz'
-    def prevedi(self): return self.lijevo.prevedi() * self.desno.prevedi()
+    def prevedi(umnožak):
+        return umnožak.lijevo.prevedi() * umnožak.desno.prevedi()
 
 class Suprotan(AST):
     od: 'izraz'

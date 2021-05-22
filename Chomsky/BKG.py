@@ -35,13 +35,13 @@ class BeskontekstnaGramatika(types.SimpleNamespace):
     @classmethod
     def iz_konačnog_automata(klasa, ka):
         """Pretvorba konačnog automata u desnolinearnu gramatiku."""
-        nka = NedeterminističkiKonačniAutomat.iz_konačnog_automata(ka)
-        rezultat = klasa.iz_nedeterminističkog_konačnog_automata(nka)
+        nka = NedeterminističniKonačniAutomat.iz_konačnog_automata(ka)
+        rezultat = klasa.iz_nedeterminističnog_konačnog_automata(nka)
         assert rezultat.desnolinearna()
         return rezultat
 
     @classmethod
-    def iz_nedeterminističkog_konačnog_automata(klasa, nka):
+    def iz_nedeterminističnog_konačnog_automata(klasa, nka):
         """Pretvorba NKA u desnolinearnu gramatiku."""
         Q, Σ, Δ, q0, F = nka.komponente
         P = {(p,α,q) if α != ε else (p,q) for p,α,q in Δ} | {(q,) for q in F}
@@ -133,7 +133,7 @@ class BeskontekstnaGramatika(types.SimpleNamespace):
 
     def faza_DEL(G):
         nep = set()
-        while True:
+        while ...:
             for A, *zamjene in G.pravila:
                 if A not in nep and set(zamjene) <= nep:
                     nep.add(A)
@@ -153,7 +153,7 @@ class BeskontekstnaGramatika(types.SimpleNamespace):
 
     def faza_UNIT(G):
         maknuta = set()
-        while True:
+        while ...:
             for pravilo in G.pravila.copy():
                 if len(pravilo) == 2 and pravilo[1] in G.varijable:
                     A, B = pravilo

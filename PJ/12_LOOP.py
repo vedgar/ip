@@ -28,13 +28,14 @@ from backend import RAMStroj
 class T(TipoviTokena):
     TOČKAZ, VOTV, VZATV, INC, DEC = *';{}', 'inc', 'dec'
     class REG(Token):
-        def broj(self): return int(self.sadržaj[1:])
+        def broj(t): return int(t.sadržaj[1:])
 
 def loop(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
-        elif znak.casefold() in 'id':
-            lex.čitaj(), lex.čitaj()  # ('N' ili 'E'), 'C'
+        elif znak.casefold() in {'i', 'd'}:
+            next(lex)  # 'N' ili 'E', case insensitive
+            next(lex)  # 'C'        , case insensitive
             yield lex.literal(T, case=False)
         elif znak == 'R':
             lex.prirodni_broj('')
@@ -53,20 +54,20 @@ def loop(lex):
 
 
 class P(Parser):
-    def program(self):
-        naredbe = [self.naredba()]
-        while not self > {KRAJ, T.VZATV}: naredbe.append(self.naredba())
+    def program(p):
+        naredbe = [p.naredba()]
+        while not p > {KRAJ, T.VZATV}: naredbe.append(p.naredba())
         return Program(naredbe)
 
-    def naredba(self):
-        if smjer := self >= {T.INC, T.DEC}:
-            stablo = Promjena(smjer, self >> T.REG)
-            self >> T.TOČKAZ
+    def naredba(p):
+        if smjer := p >= {T.INC, T.DEC}:
+            stablo = Promjena(smjer, p >> T.REG)
+            p >> T.TOČKAZ
             return stablo
-        elif reg := self >> T.REG:
-            self >> T.VOTV
-            tijelo = self.program()
-            self >> T.VZATV
+        elif reg := p >> T.REG:
+            p >> T.VOTV
+            tijelo = p.program()
+            p >> T.VZATV
             return Petlja(reg, tijelo)
 
     lexer = loop
@@ -75,24 +76,24 @@ class P(Parser):
 
 class Program(AST):
     naredbe: 'naredba*'
-    def izvrši(self, stroj):
-        for naredba in self.naredbe: naredba.izvrši(stroj)
+    def izvrši(program, stroj):
+        for naredba in program.naredbe: naredba.izvrši(stroj)
 
 class Promjena(AST):
     op: 'INC|DEC'
     registar: 'REG'
-    def izvrši(self, stroj):
-        j = self.registar.broj()
-        if self.op ^ T.INC: stroj.inc(j)
-        elif self.op ^ T.DEC: stroj.dec(j)
-        else: assert False, f'Nepoznata operacija {self.op}'
+    def izvrši(promjena, stroj):
+        j = promjena.registar.broj()
+        if promjena.op ^ T.INC: stroj.inc(j)
+        elif promjena.op ^ T.DEC: stroj.dec(j)
+        else: assert False, f'Nepoznata operacija {promjena.op}'
 
 class Petlja(AST):
     registar: 'REG'
     tijelo: 'Program'
-    def izvrši(self, stroj):
-        n = stroj.registri[self.registar.broj()]
-        for ponavljanje in range(n): self.tijelo.izvrši(stroj)
+    def izvrši(petlja, stroj):
+        n = stroj.registri[petlja.registar.broj()]
+        for ponavljanje in range(n): petlja.tijelo.izvrši(stroj)
 
 
 def računaj(program, *ulazi):
@@ -117,9 +118,9 @@ print(baza:=3, '^', eksponent:=7, '=', računaj(power, baza, eksponent))
 
 # DZ: napišite multiply i add (mnogo su jednostavniji od power)
 # DZ: Primitivno rekurzivne funkcije predstavljaju funkcijski programski jezik
-# **  u kojem postoje inicijalne funkcije [nul Z(x)=0, sljedbenik Sc(x)=x+1, te
-#     koordinatne projekcije Ink(x1,...,xk)=xn za sve prirodne 1 <= n <= k].
-#     Također postoje operatori kompozicije [f(xs)=h(g1(xs),...,gl(xs))]
+# ~~  u kojem postoje inicijalne funkcije [nul Z(x)=0, sljedbenik Sc(x)=x+1, te
+# rj  koordinatne projekcije Ink(x1,...,xk)=xn za sve prirodne 1 <= n <= k].
+# 13  Također postoje operatori kompozicije [f(xs)=h(g1(xs),...,gl(xs))]
 #     i primitivne rekurzije [f(xs,0)=g(xs); f(xs,y+1)=h(xs,y,f(xs,y))].
-#     Napišite kompajler jezika primitivno rekurzivnih funkcija u LOOP.
-#     (Uputa: prvo položite, ili barem odslušajte, Izračunljivost!;)
+# **  Napišite kompajler jezika primitivno rekurzivnih funkcija u LOOP.
+#     (Uputa: prvo položite, ili barem odslušajte, kolegij Izračunljivost!)

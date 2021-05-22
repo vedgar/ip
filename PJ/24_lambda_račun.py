@@ -6,15 +6,15 @@ from vepar import *
 class Λ(enum.Enum):
     LAMBDA, TOČKA, OTV, ZATV = 'λ.()'
     class SLOVO(Token):
-        def slobodne(self): return {self}
+        def slobodne(t): return {t}
 
 def λex(l):
     for znak in l:
         if znak.isspace(): l.zanemari()
         elif znak in {'λ', '^'}:
             yield l.token(Λ.LAMBDA)
-            if l.čitaj().isalpha(): yield l.token(Λ.SLOVO)
-            else: raise l.greška('iza λ mora ići slovo bez razmaka')
+            l >> str.isalpha  # iza λ mora ići slovo bez razmaka
+            yield l.token(Λ.SLOVO)
         elif znak.isalpha(): yield l.token(Λ.SLOVO)
         else: yield l.literal(Λ)
 
@@ -27,25 +27,25 @@ def λex(l):
 # Oneliner BKG: start -> (LAMBDA SLOVO+ TOČKA)* (OTV start ZATV | SLOVO)+
 
 class λ(Parser):
-    def izraz(self):
-        if self >= Λ.LAMBDA: return self.aps()
-        return self.član()
+    def izraz(p):
+        if p >= Λ.LAMBDA: return p.aps()
+        return p.član()
 
-    def aps(self):
-        if self >= Λ.TOČKA: return self.izraz()
-        return Apstrakcija(self >> Λ.SLOVO, self.aps())
+    def aps(p):
+        if p >= Λ.TOČKA: return p.izraz()
+        return Apstrakcija(p >> Λ.SLOVO, p.aps())
 
-    def član(self):
-        f = self.faktor()
-        while self > {Λ.OTV, Λ.SLOVO}: f = Aplikacija(f, self.faktor())
+    def član(p):
+        f = p.faktor()
+        while p > {Λ.OTV, Λ.SLOVO}: f = Aplikacija(f, p.faktor())
         return f
 
-    def faktor(self):
-        if self >= Λ.OTV:
-            u_zagradi = self.izraz()
-            self >> Λ.ZATV
+    def faktor(p):
+        if p >= Λ.OTV:
+            u_zagradi = p.izraz()
+            p >> Λ.ZATV
             return u_zagradi
-        else: return self >> Λ.SLOVO
+        else: return p >> Λ.SLOVO
 
     start = izraz
     lexer = λex
@@ -58,12 +58,14 @@ class λ(Parser):
 class Apstrakcija(AST):
     varijabla: 'SLOVO'
     doseg: 'izraz'
-    def slobodne(self): return self.doseg.slobodne() - self.varijabla.slobodne()
+    def slobodne(apstrakcija):
+        return apstrakcija.doseg.slobodne() - apstrakcija.varijabla.slobodne()
 
 class Aplikacija(AST):
     funkcija: 'izraz'
     argument: 'izraz'
-    def slobodne(self): return self.funkcija.slobodne()|self.argument.slobodne()
+    def slobodne(aplikacija):
+        return aplikacija.funkcija.slobodne()|aplikacija.argument.slobodne()
 
 def kombinator(l): return not λ(l).slobodne()
 
@@ -71,3 +73,4 @@ prikaz(λ('(^x.xx)(^x.xx)'), 3)
 print(λ('^xy.x') == λ('^x.^y.x'))
 print(kombinator('(^yx.(x))x'))
 with SintaksnaGreška: λ('^x.x^y.y')
+with LeksičkaGreška: λ('λ x.x')

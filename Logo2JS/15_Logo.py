@@ -14,7 +14,7 @@ class T(TipoviTokena):
     class PENUP(Token): literal, opkod = 'penup', 'move'
     class PENDOWN(Token): literal, opkod = 'pendown', 'line'
     class BROJ(Token):
-        def vrijednost(self): return int(self.sadržaj)
+        def vrijednost(t): return int(t.sadržaj)
 
 alias = {'fd': T.FORWARD, 'fw': T.FORWARD,
          'bk': T.BACKWARD, 'back': T.BACKWARD, 'bw': T.BACKWARD,
@@ -27,10 +27,9 @@ def logo(lex):
             lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
         elif znak.isalpha():
-            lex.zvijezda(str.isalpha)
-            s = lex.sadržaj.casefold()
-            if s in alias: yield lex.token(alias[s])
-            else: yield lex.literal(T, case=False)
+            lex * str.isalpha
+            try: yield lex.token(alias[lex.sadržaj.casefold()])
+            except KeyError: yield lex.literal(T, case=False)
         else: yield lex.literal(T)
 
 
@@ -49,29 +48,29 @@ def logo(lex):
 class P(Parser):
     lexer = logo
 
-    def start(self):
-        naredbe = [self.naredba()]
-        while not self > KRAJ: naredbe.append(self.naredba())
+    def start(p):
+        naredbe = [p.naredba()]
+        while not p > KRAJ: naredbe.append(p.naredba())
         return Program(naredbe)
 
-    def naredba(self):
-        if smjer := self >= {T.FORWARD, T.BACKWARD}:
-            return Pomak(smjer, self >> T.BROJ)
-        elif smjer := self >= {T.LEFT, T.RIGHT}:
-            return Okret(smjer, self >> T.BROJ)
-        elif položaj := self >= {T.PENUP, T.PENDOWN}:
+    def naredba(p):
+        if smjer := p >= {T.FORWARD, T.BACKWARD}:
+            return Pomak(smjer, p >> T.BROJ)
+        elif smjer := p >= {T.LEFT, T.RIGHT}:
+            return Okret(smjer, p >> T.BROJ)
+        elif položaj := p >= {T.PENUP, T.PENDOWN}:
             return Olovka(položaj)
-        elif self >> T.REPEAT:
-            koliko = self >> T.BROJ
-            self >> T.OTV
-            tijelo = [self.naredba()]
-            while not self >= T.ZATV: tijelo.append(self.naredba())
+        elif p >> T.REPEAT:
+            koliko = p >> T.BROJ
+            p >> T.OTV
+            tijelo = [p.naredba()]
+            while not p >= T.ZATV: tijelo.append(p.naredba())
             return Ponavljanje(koliko, tijelo)
 
 
 class Program(AST):
     naredbe: 'naredba*'
-    def js(self):
+    def js(program):
         repeat_br = itertools.count(1)
         yield from [
             "var canvas = document.getElementById('output');",
@@ -80,35 +79,35 @@ class Program(AST):
             'var to = ctx.lineTo;',
             'ctx.moveTo(x, y);',
         ]
-        for naredba in self.naredbe: yield from naredba.js(repeat_br)
+        for naredba in program.naredbe: yield from naredba.js(repeat_br)
         yield 'ctx.stroke();'
 
 class Pomak(AST):
     smjer: 'FORWARD|BACKWARD'
     pikseli: 'BROJ'
-    def js(self, repeat_br):
-        d = self.smjer.predznak * self.pikseli.vrijednost()
+    def js(pomak, repeat_br):
+        d = pomak.smjer.predznak * pomak.pikseli.vrijednost()
         yield f'to.apply(ctx, [x-=Math.sin(h)*{d}, y-=Math.cos(h)*{d}]);'
 
 class Okret(AST):
     smjer: 'LEFT|RIGHT'
     stupnjevi: 'BROJ'
-    def js(self, repeat_br):
-        φ = self.smjer.predznak * self.stupnjevi.vrijednost()
+    def js(okret, repeat_br):
+        φ = okret.smjer.predznak * okret.stupnjevi.vrijednost()
         yield f'h += {math.radians(φ)};'
 
 class Ponavljanje(AST):
     koliko: 'BROJ'
     naredbe: 'naredba*'
-    def js(self, repeat_br):
-        i, n = next(repeat_br), self.koliko.vrijednost()
+    def js(petlja, repeat_br):
+        i, n = next(repeat_br), petlja.koliko.vrijednost()
         yield f'for (var r{i} = 0; r{i} < {n}; r{i} ++) ' + '{'
-        for naredba in self.naredbe: yield from naredba.js(repeat_br)
+        for naredba in petlja.naredbe: yield from naredba.js(repeat_br)
         yield '}'
 
 class Olovka(AST):
     položaj: 'PENUP|PENDOWN'
-    def js(self, repeat_br): yield f'to = ctx.{self.položaj.opkod}To'
+    def js(olovka, repeat_br): yield f'to = ctx.{olovka.položaj.opkod}To'
 
 
 direktorij = pathlib.Path(__file__).parent

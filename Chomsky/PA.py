@@ -31,8 +31,8 @@ class PotisniAutomat(types.SimpleNamespace):
         return klasa.iz_komponenti(*parsiraj_tablicu_PA(tablica))
 
     @classmethod
-    def iz_nedeterminističkog_konačnog_automata(klasa, nka):
-        """Pretvorba iz nedeterminističkog konačnog automata u potisni."""
+    def iz_nedeterminističnog_konačnog_automata(klasa, nka):
+        """Pretvorba iz nedeterminističnog konačnog automata u potisni."""
         Q, Σ, Δ, q0, F = nka.komponente
         ΔP = {(q, α, ε, p, ε) for (q, α, p) in Δ}
         return klasa.iz_komponenti(Q, Σ, set(), ΔP, q0, F)

@@ -68,7 +68,7 @@ class P(Parser):
 
     def faktor(self):
         trenutni = self.element()
-        while True:
+        while ...:
             if self >= T.ZVIJEZDA: trenutni = RI.Zvijezda(trenutni)
             elif self >= T.PLUS: trenutni = RI.Plus(trenutni)
             elif self >= T.UPITNIK: trenutni = RI.Upitnik(trenutni)
