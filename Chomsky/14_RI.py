@@ -27,7 +27,7 @@ def ri(lex):
         if znak in specijalni: yield lex.literal(T)
         elif znak == '/':
             lex.zanemari()
-            sljedeći = lex.čitaj()
+            sljedeći = next(lex)
             if not sljedeći: raise lex.greška('/ na kraju stringa')
             elif sljedeći == '0': yield lex.token(T.PRAZAN)
             elif sljedeći == '1': yield lex.token(T.EPSILON)

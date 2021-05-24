@@ -15,7 +15,7 @@ def js(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak.isalpha() or znak == '$':
-            lex * identifikator
+            lex * {str.isalpha, '_'}
             yield lex.literal(T.IME)
         elif znak == '/':
             if lex >= '/':

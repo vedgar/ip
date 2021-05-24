@@ -1,7 +1,7 @@
 """Framework za leksičku, sintaksnu, semantičku analizu, te izvođenje programa.
 Za više detalja pogledati šalabahter.txt."""
 
-__version__ = '2.1'
+__version__ = '2.2'
 
 
 import enum, types, collections, contextlib, itertools, functools, \
@@ -14,7 +14,7 @@ def paše(znak, uvjet):
         return znak == uvjet
     elif callable(uvjet):
         rezultat = uvjet(znak)
-        assert rezultat is True or rezultat is False, 'Uvjet nije predikat!'
+        assert isinstance(rezultat, bool), 'Uvjet nije predikat!'
         return rezultat
     elif isinstance(uvjet, set):
         return any(paše(znak, disjunkt) for disjunkt in uvjet)
@@ -104,6 +104,8 @@ class Tokenizer:
     def vidi(self, uvjet):
         """Ispituje sljedeći znak ('bez' čitanja)."""
         return paše(self.pogledaj(), uvjet)
+
+    __gt__ = vidi
 
     def zvijezda(self, uvjet):
         """Čita Kleene* (nula ili više) znakova koji zadovoljavaju uvjet."""
