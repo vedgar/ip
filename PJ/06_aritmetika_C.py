@@ -4,7 +4,8 @@ Ulaz je nula ili više naredbi pridruživanja izraz -> ime,
     nakon kojih slijedi izraz čija vrijednost se računa i vraća.
     Svaki izraz može koristiti sva prethodno definirana imena.
 
-Prikazano je čitanje decimalnih brojeva, aliasi, postfiksni operatori, ..."""
+Prikazano je čitanje decimalnih brojeva, aliasi, postfiksni operatori, ...
+Također imamo kompajliranje u jednostavni TAC (two/three-address code)."""
 
 
 from vepar import *
@@ -15,12 +16,20 @@ class T(TipoviTokena):
     STRELICA = '->'
     class BROJ(Token):
         def vrijednost(self, _): return complex(self.sadržaj)
+        def tac(self, reg):
+            yield [r:=next(reg), '=', float(self.sadržaj)]
+            return r
     class I(Token):
         literal = 'i'
         def vrijednost(self, _): return 1j
+        def tac(self, reg):
+            yield [r:=next(reg), '=', self.literal]
+            return r
     class IME(Token):
         def vrijednost(self, okolina): return okolina[self]
-
+        def tac(self, reg):
+            yield [r:=next(reg), '=', self.sadržaj]
+            return r
 
 def ac(lex):
     for znak in lex:
@@ -96,17 +105,28 @@ class P(Parser):
 class Program(AST):
     okolina: '(izraz,IME)*'
     završni: 'izraz'
+
     def izvrši(program):
         env = Memorija()
         for ime, izraz in program.okolina: env[ime] = izraz.vrijednost(env)
         return program.završni.vrijednost(env)
 
+    def kompajliraj(program):
+        reg = Registri()
+        for ime, izraz in program.okolina:
+            r = yield from izraz.tac(reg)
+            yield [ime.sadržaj, '=', r]
+        r = yield from program.završni.tac(reg)
+        yield ['OUT', r]
+
 class Binarna(AST):
     op: 'T'
     lijevo: 'izraz'
     desno: 'izraz'
+
     def vrijednost(self, env):
-        o,x,y = self.op, self.lijevo.vrijednost(env), self.desno.vrijednost(env)
+        o = self.op
+        x, y = self.lijevo.vrijednost(env), self.desno.vrijednost(env)
         try:
             if o ^ T.PLUS: return x + y
             elif o ^ T.MINUS: return x - y
@@ -116,20 +136,32 @@ class Binarna(AST):
             else: assert False, f'nepokriveni slučaj binarnog operatora {o}'
         except ArithmeticError as ex: raise o.iznimka(ex)
 
+    def tac(self, reg):
+        r1 = yield from self.lijevo.tac(reg)
+        r2 = yield from self.desno.tac(reg)
+        yield [r:=next(reg), '=', r1, self.op.tip.value, r2]
+        return r
+
 class Unarna(AST):
     op: 'T'
     ispod: 'izraz'
+
     def vrijednost(self, env):
         o, z = self.op, self.ispod.vrijednost(env)
         if o ^ T.MINUS: return -z
         elif o ^ T.KONJ: return z.conjugate()
         else: assert False, f'nepokriveni slučaj unarnog operatora {o}'
 
+    def tac(self, reg):
+        r1 = yield from self.ispod.tac(reg)
+        yield [r:=next(reg), '=', self.op.tip.value, r1]
+        return r
 
 def izračunaj(string): 
     print('-' * 60)
-    prikaz(stablo := P(string))
-    print(string.rstrip(), '=', stablo.izvrši())
+    prikaz(program := P(string))
+    for instrukcija in program.kompajliraj(): print('\t\t', '|', *instrukcija)
+    print(string.rstrip(), '=', program.izvrši())
 
 izračunaj('2+2*3')
 izračunaj('(1+6*i)/(3*i-4)~^2~')

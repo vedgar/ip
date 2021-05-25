@@ -33,7 +33,7 @@ def cpp(lex):
         elif znak == '<': yield lex.token(T.MMANJE if lex >= '<' else T.MANJE)
         elif znak == '=':
             yield lex.token(T.JJEDNAKO if lex >= '=' else T.JEDNAKO)
-        elif znak.isalpha():
+        elif znak.isalpha() or znak == '_':
             lex * {str.isalnum, '_'}
             yield lex.literal(T.IME)
         elif znak.isdecimal():

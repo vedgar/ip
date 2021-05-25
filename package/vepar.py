@@ -560,6 +560,11 @@ class Memorija:
 cache = functools.lru_cache(maxsize=None)
 
 
+def Registri(prefiks='_t', start=0):
+    for i in itertools.count(start):
+        yield prefiks + str(i)
+
+
 class NelokalnaKontrolaToka(Exception):
     """Bazna klasa koja služi za implementaciju nelokalne kontrole toka."""
     @property
