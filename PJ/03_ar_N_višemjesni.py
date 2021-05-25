@@ -84,7 +84,6 @@ class Umnožak(AST('faktori')):
 def testiraj(izraz):
     print('-' * 60)
     stablo = P(izraz)
-    izraz = izraz.strip()
     prikaz(stablo, 3)
     opt = stablo.optim()
     prikaz(opt, 2)
