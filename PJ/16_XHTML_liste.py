@@ -40,7 +40,7 @@ def html(lex):
 class P(Parser):
     lexer = html
 
-    def start(p):
+    def start(p) -> 'Dokument':
         p >> T.HTML, p >> T.HEAD
         zaglavlje = p.tekst()
         p >> T.ZHEAD, p >> T.BODY
@@ -49,12 +49,12 @@ class P(Parser):
         p >> T.ZHTML
         return Dokument(zaglavlje, tijelo)
         
-    def tekst(p):
+    def tekst(p) -> 'Tekst':
         dijelovi = [p >> T.TEKST]
         while tekst := p >= T.TEKST: dijelovi.append(tekst)
         return Tekst(dijelovi)
 
-    def element(p):
+    def element(p) -> 'Lista|tekst':
         if vrsta := p >= {T.OL, T.UL}:
             stavke = [p.stavka()]
             while p > T.LI: stavke.append(p.stavka())
@@ -64,7 +64,7 @@ class P(Parser):
             return Lista(vrsta, stavke)
         else: return p.tekst()
 
-    def stavka(p):
+    def stavka(p) -> 'element':
         p >> T.LI
         rezultat = p.element()
         p >> T.ZLI

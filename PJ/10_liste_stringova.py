@@ -71,7 +71,7 @@ def listlexer(lex):
 
 
 class P(Parser):
-    def element(self):
+    def element(self) -> 'Lista|BROJ|STRING1|STRING2':
         if self >= T.UOTV:
             if self >= T.UZATV: return Lista([])
             el = [self.element()]

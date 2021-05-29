@@ -31,18 +31,18 @@ def an(lex):
 
 
 class P(Parser):
-    def izraz(p):
+    def izraz(p) -> 'Zbroj|član':
         trenutni = [p.član()]
         while p >= T.PLUS: trenutni.append(p.član())
         return Zbroj.ili_samo(trenutni)
 
-    def član(p):
+    def član(p) -> 'Umnožak|faktor':
         trenutni = [p.faktor()]
         while p >= T.PUTA or p > T.OTVORENA:
             trenutni.append(p.faktor())
         return Umnožak.ili_samo(trenutni)
 
-    def faktor(p):
+    def faktor(p) -> 'BROJ|izraz':
         if broj := p >= T.BROJ: return broj
         elif p >> T.OTVORENA:
             u_zagradi = p.izraz()

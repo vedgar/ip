@@ -60,7 +60,7 @@ def ac(lex):
 class P(Parser):
     lexer = ac
 
-    def start(p):
+    def start(p) -> 'Program':
         okolina = []
         izraz = p.izraz()
         while p >= T.STRELICA:
@@ -68,23 +68,23 @@ class P(Parser):
             izraz = p.izraz()
         return Program(okolina, izraz)
 
-    def izraz(p):
+    def izraz(p) -> 'član|Binarna':
         t = p.član()
         while op := p >= {T.PLUS, T.MINUS}: t = Binarna(op, t, p.član())
         return t
 
-    def član(p):
+    def član(p) -> 'faktor|Binarna':
         t = p.faktor()
         while op := p >= {T.PUTA, T.KROZ}: t = Binarna(op, t, p.faktor())
         return t
 
-    def faktor(p):
+    def faktor(p) -> 'Unarna|baza|Binarna':
         if op := p >= T.MINUS: return Unarna(op, p.faktor())
         baza = p.baza()
         if op := p >= T.NA: return Binarna(op, baza, p.faktor())
         else: return baza
 
-    def baza(p):
+    def baza(p) -> 'izraz|BROJ|IME|I|Unarna':
         if p >= T.OTV:
             trenutni = p.izraz()
             p >> T.ZATV

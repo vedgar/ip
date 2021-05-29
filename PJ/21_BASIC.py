@@ -2,7 +2,6 @@
 
 
 from vepar import *
-import fractions
 
 
 class T(TipoviTokena):
@@ -29,8 +28,7 @@ def basic(lex):
             yield lex.token(T.BROJ)
         elif znak.isalpha():
             lex * str.isalnum
-            default = T.TVAR if lex >= '$' else T.BVAR
-            yield lex.literal(default, case=False)
+            yield lex.literal(T.TVAR if lex >= '$' else T.BVAR, case=False)
         elif znak == ',':
             lex - "'"
             yield lex.token(T.TEKST)
@@ -58,9 +56,9 @@ def basic(lex):
 
 class P(Parser):
     lexer = basic
-    def start(p): return Program(p.naredbe())
+    def start(p) -> 'Program': return Program(p.naredbe())
 
-    def naredbe(p):
+    def naredbe(p) -> '(pridruživanje|petlja|unos|ispis|grananje)*':
         lista = []
         while ...:
             if p > {T.BVAR, T.TVAR}: lista.append(p.pridruživanje())
@@ -70,14 +68,14 @@ class P(Parser):
             elif p > T.AKO: lista.append(p.grananje())
             else: return lista
 
-    def pridruživanje(p):
+    def pridruživanje(p) -> 'Pridruživanje':
         varijabla = p >> {T.BVAR, T.TVAR}
         p >> T.JEDNAKO
         if varijabla ^ T.BVAR: pridruženo = p.broj()
         elif varijabla ^ T.TVAR: pridruženo = p.tekst()
         return Pridruživanje(varijabla, pridruženo)
 
-    def petlja(p):
+    def petlja(p) -> 'Petlja':
         p >> T.ZA
         varijabla = p >> T.BVAR
         p >> T.JEDNAKO
@@ -90,18 +88,18 @@ class P(Parser):
             raise SemantičkaGreška('Varijable u petlji se ne podudaraju')
         return Petlja(varijabla, početak, kraj, tijelo)
 
-    def unos(p):
+    def unos(p) -> 'Unos':
         p >> T.UNOS
         return Unos(p >> {T.BVAR, T.TVAR})
 
-    def ispis(p):
+    def ispis(p) -> 'Ispis':
         p >> T.ISPIS
         if p > {T.BROJ, T.BVAR, T.OTV, T.UBROJ}: što = p.broj()
         elif p > {T.TEKST, T.TVAR, T.UTEKST}: što = p.tekst()
         else: što = p >> T.SLJEDEĆI
         return Ispis(što)
     
-    def grananje(p):
+    def grananje(p) -> 'Grananje':
         p >> T.AKO
         uvjet = p.broj()
         onda = p.naredbe()
@@ -110,7 +108,7 @@ class P(Parser):
         p >> {T.NADALJE, KRAJ}
         return Grananje(uvjet, onda, inače)
 
-    def broj(p):
+    def broj(p) -> 'Usporedba|račun|JednakTekst':
         if p > {T.BROJ, T.BVAR, T.OTV, T.UBROJ}:
             prvi = p.račun()
             usporedba = {T.MANJE, T.VEĆE, T.JEDNAKO}
@@ -128,17 +126,17 @@ class P(Parser):
             drugi = p.tekst()
             return JednakTekst(prvi, drugi)
 
-    def račun(p):
+    def račun(p) -> 'član|Osnovna':
         t = p.član()
         while op := p >= {T.PLUS, T.MINUS}: t = Osnovna(op, t, p.član())
         return t
 
-    def član(p):
+    def član(p) -> 'faktor|Osnovna':
         t = p.faktor()
         while op := p >= {T.PUTA, T.KROZ}: t = Osnovna(op, t, p.faktor())
         return t
 
-    def faktor(p):
+    def faktor(p) -> 'broj|TekstUBroj|BROJ|BVAR':
         if p >= T.OTV:
             u_zagradi = p.broj()
             p >> T.ZATV
@@ -150,7 +148,7 @@ class P(Parser):
             return TekstUBroj(argument)
         else: return p >> {T.BROJ, T.BVAR}
 
-    def tekst(p):
+    def tekst(p) -> 'BrojUTekst|TEKST|TVAR|Konkatenacija':
         if p >= T.UTEKST:
             p >> T.OTV
             trenutni = BrojUTekst(p.broj())

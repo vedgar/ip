@@ -57,12 +57,12 @@ def cpp(lex):
 class P(Parser):
     lexer = cpp
 
-    def start(p):
+    def start(p) -> 'Program':
         naredbe = [p.naredba()]
         while not p > KRAJ: naredbe.append(p.naredba())
         return Program(naredbe)
 
-    def naredba(p):
+    def naredba(p) -> 'petlja|ispis|grananje|BREAK':
         if p > T.FOR: return p.petlja()
         elif p > T.COUT: return p.ispis()
         elif p > T.IF: return p.grananje()
@@ -70,7 +70,7 @@ class P(Parser):
             p >> T.TOČKAZ
             return br
 
-    def petlja(p):
+    def petlja(p) -> 'Petlja':
         kriva_varijabla = SemantičkaGreška(
             'Sva tri dijela for-petlje moraju imati istu varijablu.')
         p >> T.FOR, p >> T.OOTV
@@ -95,7 +95,7 @@ class P(Parser):
         else: blok = [p.naredba()]
         return Petlja(i, početak, granica, inkrement, blok)
         
-    def ispis(p):
+    def ispis(p) -> 'Ispis':
         p >> T.COUT
         varijable, novired = [], nenavedeno
         while p >= T.MMANJE:
@@ -106,7 +106,7 @@ class P(Parser):
         p >> T.TOČKAZ
         return Ispis(varijable, novired)
 
-    def grananje(p):
+    def grananje(p) -> 'Grananje':
         p >> T.IF, p >> T.OOTV
         lijevo = p >> T.IME
         p >> T.JJEDNAKO
@@ -128,6 +128,7 @@ class Prekid(NelokalnaKontrolaToka): """Signal koji šalje naredba break."""
 
 class Program(AST):
     naredbe: 'naredba*'
+
     def izvrši(program):
         mem = Memorija()
         try:  # break izvan petlje je zapravo sintaksna greška - kompliciranije
@@ -140,6 +141,7 @@ class Petlja(AST):
     granica: 'BROJ'
     inkrement: 'BROJ?'
     blok: 'naredba*'
+
     def izvrši(petlja, mem):
         kv = petlja.varijabla  # kontrolna varijabla petlje
         mem[kv] = petlja.početak.vrijednost(mem)
@@ -155,6 +157,7 @@ class Petlja(AST):
 class Ispis(AST):
     varijable: 'IME*'
     novired: 'ENDL?'
+
     def izvrši(ispis, mem):
         for var in ispis.varijable: print(var.vrijednost(mem), end=' ')
         if ispis.novired ^ T.ENDL: print()
@@ -163,6 +166,7 @@ class Grananje(AST):
     lijevo: 'IME'
     desno: 'BROJ'
     onda: 'naredba'
+
     def izvrši(grananje, mem):
         if grananje.lijevo.vrijednost(mem) == grananje.desno.vrijednost(mem):
             grananje.onda.izvrši(mem)

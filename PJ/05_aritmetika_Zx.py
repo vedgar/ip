@@ -48,20 +48,20 @@ def az(lex):
 
 
 class P(Parser):
-    def izraz(p):
+    def izraz(p) -> 'Zbroj|član':
         t = p.član()
         while ...:
             if p >= T.PLUS: t = Zbroj(t, p.član())
             elif p >= T.MINUS: t = Zbroj(t, Suprotan(p.član()))
             else: return t
 
-    def član(p):
+    def član(p) -> 'Umnožak|faktor':
         trenutni = p.faktor()
         while p >= T.PUTA or p > {T.X, T.OTVORENA}:
             trenutni = Umnožak(trenutni, p.faktor())
         return trenutni
 
-    def faktor(p):
+    def faktor(p) -> 'Suprotan|BROJ|Xna|X|izraz':
         if p >= T.MINUS: return Suprotan(p.faktor())
         elif broj := p >= T.BROJ: return broj
         elif x := p >= T.X:

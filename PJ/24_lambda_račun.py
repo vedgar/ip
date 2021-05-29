@@ -27,20 +27,20 @@ def λex(l):
 # Oneliner BKG: start -> (LAMBDA SLOVO+ TOČKA)* (OTV start ZATV | SLOVO)+
 
 class λ(Parser):
-    def izraz(p):
+    def izraz(p) -> 'aps|član':
         if p >= Λ.LAMBDA: return p.aps()
         return p.član()
 
-    def aps(p):
+    def aps(p) -> 'izraz|Apstrakcija':
         if p >= Λ.TOČKA: return p.izraz()
         return Apstrakcija(p >> Λ.SLOVO, p.aps())
 
-    def član(p):
+    def član(p) -> 'faktor|Aplikacija':
         f = p.faktor()
         while p > {Λ.OTV, Λ.SLOVO}: f = Aplikacija(f, p.faktor())
         return f
 
-    def faktor(p):
+    def faktor(p) -> 'izraz|SLOVO':
         if p >= Λ.OTV:
             u_zagradi = p.izraz()
             p >> Λ.ZATV

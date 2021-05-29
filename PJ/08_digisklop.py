@@ -26,17 +26,17 @@ def ds(lex):
 
 
 class P(Parser):
-    def sklop(p):
+    def sklop(p) -> 'Or|disjunkt':
         disjunkti = [p.disjunkt()]
         while p >= T.ILI: disjunkti.append(p.disjunkt())
         return Or.ili_samo(disjunkti)
 
-    def disjunkt(p):
+    def disjunkt(p) -> 'And|faktor':
         konjunkti = [p.faktor()]
         while p > {T.SLOVO, T.OOTV, T.UOTV}: konjunkti.append(p.faktor())
         return And.ili_samo(konjunkti)
 
-    def faktor(p):
+    def faktor(p) -> 'sklop|Not|SLOVO':
         if p >= T.OOTV:
             trenutni = p.sklop()
             p >> T.OZATV

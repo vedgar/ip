@@ -19,7 +19,8 @@ specijalni = '()|*+?'
 
 class T(TipoviTokena):
     OTV, ZATV, ILI, ZVIJEZDA, PLUS, UPITNIK = specijalni
-    PRAZAN, EPSILON, ZNAK = '/0', '/1', TipTokena()
+    PRAZAN, EPSILON = '/0', '/1'
+    class ZNAK(Token): pass
 
 
 def ri(lex):
@@ -43,7 +44,7 @@ def ri(lex):
 # faktor -> element | faktor ZVIJEZDA | faktor PLUS | faktor UPITNIK
 # element -> PRAZAN | EPSILON | ZNAK | OTV rx ZATV
 
-### Umjesto ASTova koristimo klase iz modula RI
+### Kao ASTove koristimo klase iz modula RI
 # rx: prazan
 #     epsilon
 #     Elementaran: znak:str (duljine 1)
@@ -55,18 +56,18 @@ def ri(lex):
 
 
 class P(Parser):
-    def rx(self):
+    def rx(self) -> 'disjunkt|Unija':
         disjunkt = self.disjunkt()
         if self >= T.ILI: return RI.Unija(disjunkt, self.rx())
         else: return disjunkt
 
-    def disjunkt(self):
+    def disjunkt(self) -> 'faktor|Konkatenacija':
         faktor = self.faktor()
         if self > {T.PRAZAN, T.EPSILON, T.ZNAK, T.OTV}:
             return RI.Konkatenacija(faktor, self.disjunkt())
         else: return faktor
 
-    def faktor(self):
+    def faktor(self) -> 'element|Zvijezda|Plus|Upitnik':
         trenutni = self.element()
         while ...:
             if self >= T.ZVIJEZDA: trenutni = RI.Zvijezda(trenutni)
@@ -74,7 +75,7 @@ class P(Parser):
             elif self >= T.UPITNIK: trenutni = RI.Upitnik(trenutni)
             else: return trenutni
 
-    def element(self):
+    def element(self) -> 'Prazan|Epsilon|Elementaran|rx':
         if self >= T.PRAZAN: return RI.prazan
         elif self >= T.EPSILON: return RI.epsilon
         elif znak := self >= T.ZNAK: return RI.Elementaran(znak.sadržaj)

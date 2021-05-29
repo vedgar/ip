@@ -46,7 +46,7 @@ def an(lex):
 
 
 class P(Parser):
-    def izraz(p):
+    def izraz(p) -> 'Zbroj|član':
         prvi = p.član()
         if p >= T.PLUS:
             drugi = p.izraz()
@@ -54,17 +54,17 @@ class P(Parser):
         else:
             return prvi
 
-    def član(p):
+    def član(p) -> 'Umnožak|faktor':
         faktor = p.faktor()
         if p >= T.PUTA: return Umnožak([faktor, p.član()])
         else: return faktor
 
-    def faktor(p):
+    def faktor(p) -> 'Potencija|baza':
         baza = p.baza()
         if p >= T.NA: return Potencija(baza, p.faktor())
         else: return baza
 
-    def baza(p):
+    def baza(p) -> 'BROJ|izraz':
         if broj := p >= T.BROJ: return broj
         elif p >> T.OTVORENA:
             u_zagradi = p.izraz()

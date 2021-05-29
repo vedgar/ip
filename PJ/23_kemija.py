@@ -43,12 +43,12 @@ def kemija(lex):
 
 
 class spoj(Parser):
-    def formula(p):
+    def formula(p) -> 'Formula':
         l = [p.skupina()]
         while p > {T.ATOM, T.OOTV, T.UOTV}: l.append(p.skupina())
         return Formula(l)
 
-    def skupina(p):
+    def skupina(p) -> 'Skupina':
         if p >= T.OOTV:
             što = p.formula()
             p >> T.OZATV

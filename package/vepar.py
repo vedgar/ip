@@ -25,8 +25,8 @@ def paše(znak, uvjet):
 #    return znak.isalnum() or znak == '_'
 
 TipoviTokena = enum.Enum
-TipTokena = enum.auto
-from typing import Optional
+#TipTokena = enum.auto
+#from typing import Optional
 
 
 class Kontekst(type):

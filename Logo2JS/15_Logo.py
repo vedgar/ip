@@ -48,12 +48,12 @@ def logo(lex):
 class P(Parser):
     lexer = logo
 
-    def start(p):
+    def start(p) -> 'Program':
         naredbe = [p.naredba()]
         while not p > KRAJ: naredbe.append(p.naredba())
         return Program(naredbe)
 
-    def naredba(p):
+    def naredba(p) -> 'Pomak|Okret|Olovka|Ponavljanje':
         if smjer := p >= {T.FORWARD, T.BACKWARD}:
             return Pomak(smjer, p >> T.BROJ)
         elif smjer := p >= {T.LEFT, T.RIGHT}:

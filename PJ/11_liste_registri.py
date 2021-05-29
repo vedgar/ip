@@ -64,12 +64,12 @@ def list_lexer(lex):
 class P(Parser):
     lexer = list_lexer
 
-    def start(self):
+    def start(self) -> 'Program':
         naredbe = []
         while not self > KRAJ: naredbe.append(self.naredba())
         return Program(naredbe)
 
-    def naredba(self):
+    def naredba(self) -> 'Ubaci|Deklaracija|Provjera|Izbaci|Dohvati|Duljina':
         if self >= T.UBACI: return Ubaci(self >> T.ID, 
             self >> {T.BROJ,T.MINUSBROJ}, self >> T.BROJ)
         elif self >= T.LISTA: return Deklaracija(self >> T.ID)

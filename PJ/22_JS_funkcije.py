@@ -8,7 +8,7 @@ from vepar import *
 class T(TipoviTokena):
     FUNCTION, VAR, NAREDBA, KOMENTAR = 'function', 'var', 'naredba', '//'
     O_OTV, O_ZATV, V_OTV, V_ZATV, KOSACRTA, ZAREZ, TOČKAZAREZ = '(){}/,;'
-    IME = TipTokena()
+    class IME(Token): pass
 
 
 def js(lex):
@@ -34,7 +34,7 @@ def js(lex):
 class P(Parser):
     lexer = js
 
-    def funkcija(p):
+    def funkcija(p) -> 'Funkcija':
         p >> T.FUNCTION
         ime = p >> T.IME
         p >> T.O_OTV
@@ -45,7 +45,7 @@ class P(Parser):
         p >> T.O_ZATV
         return Funkcija(ime, argumenti, p.tijelo())
 
-    def tijelo(p):
+    def tijelo(p) -> 'naredba*':
         p >> T.V_OTV
         while p >= T.KOMENTAR: pass
         naredbe = []
@@ -57,16 +57,16 @@ class P(Parser):
             elif p >> T.V_ZATV: break
         return naredbe
 
-    def start(p):
+    def start(p) -> 'Program':
         funkcije = [p.funkcija()]
         while not p > KRAJ: funkcije.append(p.funkcija())
         return Program(funkcije)
 
-    def argument(p):
+    def argument(p) -> 'IME':
         p >> T.VAR
         return p >> T.IME
 
-    def naredba(p): return p >> T.NAREDBA
+    def naredba(p) -> 'NAREDBA': return p >> T.NAREDBA
 
 
 ### AST

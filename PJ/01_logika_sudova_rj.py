@@ -52,7 +52,8 @@ def ls(lex):
 
 
 class P(Parser):
-    def formula(p):
+    def formula(p) -> \
+            'PVAR|Negacija|Konjunkcija|Disjunkcija|Kondicional|Bikondicional':
         if varijabla := p >= T.PVAR: return varijabla
         elif p >= T.NEG: 
             ispod = p.formula()

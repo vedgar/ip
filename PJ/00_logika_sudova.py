@@ -43,7 +43,6 @@ def ls(lex):
 # formula -> NEG formula | PVAR | OTV formula binvez formula ZATV
 # binvez -> KONJ | DISJ | KOND | BIKOND
 
-
 ### Apstraktna sintaksna stabla (i njihovi atributi):
 # formula: PVAR: Token
 #          Negacija: ispod:formula
@@ -51,7 +50,7 @@ def ls(lex):
 
 
 class P(Parser):
-    def formula(p):
+    def formula(p) -> 'PVAR|Negacija|Binarna':
         if varijabla := p >= T.PVAR: return varijabla
         elif p >= T.NEG: 
             ispod = p.formula()

@@ -70,7 +70,7 @@ def pr(lex):
 
 
 class P(Parser):
-    def program(self):
+    def program(self) -> 'Memorija':
         symtab = Memorija(redefinicija=False)
         while not self > KRAJ:
             imef = self >> T.FIME
@@ -80,15 +80,15 @@ class P(Parser):
         if not symtab: raise SemantičkaGreška('Prazan program')
         return symtab
 
-    def funkcija(self):
+    def funkcija(self) -> 'PRekurzija|komponenta':
         baza = self.komponenta()
         if self >= T.PR: return PRekurzija(baza, self.komponenta())
         else: return baza
 
-    def osnovna(self):
+    def osnovna(self) -> 'FIME|NULFUNKCIJA|SLJEDBENIK|KPROJEKCIJA':
         return self >> {T.FIME, T.NULFUNKCIJA, T.SLJEDBENIK, T.KPROJEKCIJA}
 
-    def komponenta(self):
+    def komponenta(self) -> 'funkcija|osnovna|Kompozicija':
         if self >= T.OTV:
             t = self.funkcija()
             self >> T.ZATV
@@ -96,7 +96,7 @@ class P(Parser):
         while self >= T.KOMPOZICIJA: t = Kompozicija(t, tuple(self.desno()))
         return t
 
-    def desno(self):
+    def desno(self) -> 'funkcija*|osnovna*':
         if self >= T.OTV:
             rezultat = [self.funkcija()]
             while self >= T.ZAREZ: rezultat.append(self.funkcija())
@@ -170,7 +170,7 @@ prikaz(operacije := P('''
         mul2 = Z PR add2 o (I13, I33)
         pow = Sc o Z PR mul2 o (I13, I33)
 '''))
-print(izračunaj(konstante, 'C11', 5))
+print('C11(5) =', izračunaj(konstante, 'C11', 5))
 print(b:=3, '^', e:=7, '=', izračunaj(operacije, 'pow', b, e))
 
 # DZ**: dokažite ekvivalentnost ovog sustava i programskog jezika LOOP

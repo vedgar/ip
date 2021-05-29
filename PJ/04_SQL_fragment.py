@@ -12,16 +12,17 @@ from backend import PristupLog
 class T(TipoviTokena):
     SELECT, FROM, CREATE, TABLE = 'select', 'from', 'create', 'table'
     OTVORENA, ZATVORENA, ZVJEZDICA, ZAREZ, TOČKAZAREZ = '()*,;'
-    IME, BROJ = TipTokena(), TipTokena()
+    class IME(Token): pass
+    class BROJ(Token): pass
 
 
 ### Beskontekstna gramatika:
 # start -> naredba start | naredba
 # naredba -> select TOČKAZAREZ | create TOČKAZAREZ
 # select -> SELECT ZVJEZDICA FROM IME | SELECT stupci FROM IME
-# stupci -> IME ZAREZ stupci | IME
+# stupci -> stupci ZAREZ IME | IME
 # create -> CREATE TABLE IME OTVORENA spec_stupci ZATVORENA
-# spec_stupci -> spec_stupac ZAREZ spec_stupci | spec_stupac
+# spec_stupci -> spec_stupci ZAREZ spec_stupac | spec_stupac
 # spec_stupac -> IME IME | IME IME OTVORENA BROJ ZATVORENA
 
 ### Apstraktna sintaksna stabla:
@@ -45,12 +46,12 @@ class P(Parser):
                 lex.zanemari()
             else: yield lex.literal(T)
 
-    def start(p):
+    def start(p) -> 'Skripta':
         naredbe = [p.naredba()]
         while not p > KRAJ: naredbe.append(p.naredba())
         return Skripta(naredbe)
 
-    def select(p):
+    def select(p) -> 'Select':
         p >> T.SELECT
         if p >= T.ZVJEZDICA: stupci = nenavedeno
         elif stupac := p >> T.IME:
@@ -59,7 +60,7 @@ class P(Parser):
         p >> T.FROM
         return Select(p >> T.IME, stupci)
 
-    def spec_stupac(p):
+    def spec_stupac(p) -> 'Stupac':
         ime, tip = p >> T.IME, p >> T.IME
         if p >= T.OTVORENA:
             veličina = p >> T.BROJ
@@ -67,7 +68,7 @@ class P(Parser):
         else: veličina = nenavedeno
         return Stupac(ime, tip, veličina)
 
-    def create(p):
+    def create(p) -> 'Create':
         p >> T.CREATE, p >> T.TABLE
         tablica = p >> T.IME
         p >> T.OTVORENA
@@ -76,7 +77,7 @@ class P(Parser):
         p >> T.ZATVORENA
         return Create(tablica, stupci)
 
-    def naredba(p):
+    def naredba(p) -> 'select|create':
         if p > T.SELECT: rezultat = p.select()
         elif p > T.CREATE: rezultat = p.create()
         else: raise p.greška()

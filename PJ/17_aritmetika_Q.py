@@ -3,7 +3,6 @@ Po uzoru na https://web.math.pmf.unizg.hr/~veky/B/IP.k2p.17-09-08.pdf."""
 
 
 from vepar import *
-import fractions  # kao backend
 
 
 class T(TipoviTokena):
@@ -44,7 +43,7 @@ def aq(lex):
 class P(Parser):
     lexer = aq
 
-    def start(p):
+    def start(p) -> 'Program':
         pridruživanja = []
         while ime := p >= T.IME:
             p >> T.JEDNAKO
@@ -52,17 +51,17 @@ class P(Parser):
             p >> T.NOVIRED
         return Program(pridruživanja)
 
-    def izraz(p):
+    def izraz(p) -> 'član|Op':
         t = p.član()
         while op := p >= {T.PLUS, T.MINUS}: t = Op(op, t, p.član())
         return t
 
-    def član(p):
+    def član(p) -> 'faktor|Op':
         t = p.faktor()
         while op := p >= {T.PUTA, T.KROZ}: t = Op(op, t, p.faktor())
         return t
 
-    def faktor(p):
+    def faktor(p) -> 'Op|IME|BROJ|izraz':
         if op := p >= T.MINUS: return Op(op, nenavedeno, p.faktor())
         if elementarni := p >= {T.IME, T.BROJ}: return elementarni
         elif p >> T.OTV:

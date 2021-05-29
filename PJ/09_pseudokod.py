@@ -92,16 +92,16 @@ def pseudokod_lexer(lex):
 # argument -> aritm |! log  [KONTEKST!]
 
 class P(Parser):
-    def program(p):
+    def program(p) -> 'Memorija':
         p.funkcije = Memorija(redefinicija=False)
         while not p > KRAJ:
             funkcija = p.funkcija()
             p.funkcije[funkcija.ime] = funkcija
         return p.funkcije
 
-    def ime(p): return p >> {T.AIME, T.LIME}
+    def ime(p) -> 'AIME|LIME': return p >> {T.AIME, T.LIME}
 
-    def naredba(p):
+    def naredba(p) -> 'grananje|petlja|blok|Vrati|Pridruživanje':
         if p > T.AKO: return p.grananje()
         elif p > T.DOK: return p.petlja()
         elif p > T.OTV: return p.blok()
@@ -111,7 +111,7 @@ class P(Parser):
             p >> T.JEDNAKO
             return Pridruživanje(ime, p.tipa(ime))
 
-    def blok(p):
+    def blok(p) -> 'Blok|naredba':
         p >> T.OTV
         if p >= T.ZATV: return Blok([])
         n = [p.naredba()]
@@ -119,11 +119,11 @@ class P(Parser):
         p >> T.ZATV
         return Blok.ili_samo(n)
 
-    def petlja(p):
+    def petlja(p) -> 'Petlja':
         p >> T.DOK
         return Petlja(p >> {T.JE, T.NIJE}, p.log(), p.naredba())
 
-    def grananje(p):
+    def grananje(p) -> 'Grananje':
         p >> T.AKO
         je = p > T.JE
         atributi = p >> {T.JE, T.NIJE}, p.log(), p.naredba()
@@ -131,12 +131,12 @@ class P(Parser):
         else: inače = Blok([])
         return Grananje(*atributi, inače)
 
-    def funkcija(p):
+    def funkcija(p) -> 'Funkcija':
         atributi = p.imef, p.parametrif = p.ime(), p.parametri()
         p >> T.JEDNAKO
         return Funkcija(*atributi, p.naredba())
 
-    def parametri(p):
+    def parametri(p) -> 'ime*':
         p >> T.OTV
         if p >= T.ZATV: return []
         param = [p.ime()]
@@ -144,16 +144,16 @@ class P(Parser):
         p >> T.ZATV
         return param
 
-    def log(p):
+    def log(p) -> 'Disjunkcija|disjunkt':
         disjunkti = [p.disjunkt()]
         while p >= T.ILI: disjunkti.append(p.disjunkt())
         return Disjunkcija.ili_samo(disjunkti)
 
-    def disjunkt(p):
+    def disjunkt(p) -> 'možda_poziv|Usporedba':
         if log := p >= {T.ISTINA, T.LAŽ, T.LIME}: return p.možda_poziv(log)
         return Usporedba(p.aritm(), p >> {T.JEDNAKO, T.MANJE}, p.aritm())
 
-    def možda_poziv(p, ime):
+    def možda_poziv(p, ime) -> 'Poziv|ime':
         if ime in p.funkcije:
             funkcija = p.funkcije[ime]
             return Poziv(funkcija, p.argumenti(funkcija.parametri))
@@ -161,7 +161,7 @@ class P(Parser):
             return Poziv(nenavedeno, p.argumenti(p.parametrif))
         else: return ime
 
-    def argumenti(p, parametri):
+    def argumenti(p, parametri) -> 'tipa*':
         arg = []
         p >> T.OTV
         for i, parametar in enumerate(parametri):
@@ -170,24 +170,24 @@ class P(Parser):
         p >> T.ZATV
         return arg
     
-    def tipa(p, ime):
+    def tipa(p, ime) -> 'aritm|log':
         if ime ^ T.AIME: return p.aritm()
         elif ime ^ T.LIME: return p.log()
         else: assert False, f'Nepoznat tip od {ime}'
         
-    def aritm(p):
+    def aritm(p) -> 'Zbroj|član':
         članovi = [p.član()]
         while ...:
             if p >= T.PLUS: članovi.append(p.član())
             elif p >= T.MINUS: članovi.append(Suprotan(p.član()))
             else: return Zbroj.ili_samo(članovi)
 
-    def član(p):
+    def član(p) -> 'Umnožak|faktor':
         faktori = [p.faktor()]
         while p >= T.ZVJEZDICA: faktori.append(p.faktor())
         return Umnožak.ili_samo(faktori)
 
-    def faktor(p):
+    def faktor(p) -> 'Suprotan|možda_poziv|aritm|BROJ':
         if p >= T.MINUS: return Suprotan(p.faktor())
         elif aritm := p >= T.AIME: return p.možda_poziv(aritm)
         elif p >= T.OTV:
@@ -205,11 +205,11 @@ def izvrši(funkcije, *argv):
 
 
 ### AST
-# Funkcija: ime:IME parametri:[IME] tijelo:naredba
+# Funkcija: ime:AIME|LIME parametri:[IME] tijelo:naredba
 # naredba: Grananje: istinitost:JE|NIJE uvjet:log onda:naredba inače:naredba
 #          Petlja: istinitost:JE|NIJE uvjet:log tijelo:naredba
 #          Blok: naredbe:[naredba]
-#          Pridruživanje: ime:IME pridruženo:izraz
+#          Pridruživanje: ime:AIME|LIME pridruženo:izraz
 #          Vrati: što:izraz
 # izraz: log: Disjunkcija: disjunkti:[log]
 #             Usporedba: lijevo:aritm relacija:MANJE|JEDNAKO desno:aritm

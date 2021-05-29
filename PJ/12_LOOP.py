@@ -54,16 +54,16 @@ def loop(lex):
 
 
 class P(Parser):
-    def program(p):
+    def program(p) -> 'Program':
         naredbe = [p.naredba()]
         while not p > {KRAJ, T.VZATV}: naredbe.append(p.naredba())
         return Program(naredbe)
 
-    def naredba(p):
+    def naredba(p) -> 'Promjena|Petlja':
         if smjer := p >= {T.INC, T.DEC}:
-            stablo = Promjena(smjer, p >> T.REG)
+            instrukcija = Promjena(smjer, p >> T.REG)
             p >> T.TOČKAZ
-            return stablo
+            return instrukcija
         elif reg := p >> T.REG:
             p >> T.VOTV
             tijelo = p.program()

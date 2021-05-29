@@ -9,7 +9,7 @@ from vepar import *
 class T(TipoviTokena):
     NAT, INT, RAT, DIV, MOD = 'nat', 'int', 'rat', 'div', 'mod'
     PLUS, MINUS, PUTA, KROZ, NA, OTV, ZATV, JEDNAKO, UPIT = '+-*/^()=?'
-    NOVIRED = TipTokena()
+    NOVIRED = '\n'
     class IME(Token):
         def provjeri_tip(t, symtab): return symtab[t]
     class BROJ(Token):
@@ -18,7 +18,7 @@ class T(TipoviTokena):
 
 def aq(lex):
     for znak in lex:
-        if znak == '\n': yield lex.token(T.NOVIRED)
+        if znak == '\n': yield lex.literal(T)
         elif znak.isspace(): lex.zanemari()
         elif znak.isdecimal():
             lex.prirodni_broj(znak)
@@ -52,7 +52,7 @@ class Tip(enum.Enum):
 class P(Parser):
     lexer = aq
 
-    def start(self):
+    def start(self) -> 'Program':
         self >= T.NOVIRED
         self.symtab, naredbe = Memorija(), []
         while not self > KRAJ:
@@ -60,31 +60,31 @@ class P(Parser):
             self >> {T.NOVIRED, KRAJ}
         return Program(naredbe, self.symtab)
 
-    def naredba(self):
+    def naredba(self) -> 'izraz|Pridruživanje':
         if self >= T.UPIT: return self.izraz()
         token_za_tip = self >= {T.NAT, T.INT, T.RAT}
         ažuriraj(varijabla := self >> T.IME, token_za_tip, self.symtab)
         self >> T.JEDNAKO
         return Pridruživanje(varijabla, token_za_tip, self.izraz())
 
-    def izraz(self):
+    def izraz(self) -> 'član|Op':
         t = self.član()
         while op := self >= {T.PLUS, T.MINUS}: t = Op(op, t, self.član())
         return t
 
-    def član(self):
+    def član(self) -> 'faktor|Op':
         trenutni = self.faktor()
         while operator := self >= {T.PUTA, T.KROZ, T.DIV, T.MOD}:
             trenutni = Op(operator, trenutni, self.faktor())
         return trenutni
 
-    def faktor(self):
+    def faktor(self) -> 'baza|Op':
         if op := self >= T.MINUS: return Op(op, nenavedeno, self.faktor())
         baza = self.baza()
         if op := self >= T.NA: return Op(op, baza, self.faktor())
         else: return baza
 
-    def baza(self):
+    def baza(self) -> 'BROJ|IME|izraz':
         if broj := self >= T.BROJ: return broj
         elif varijabla := self >= T.IME:
             varijabla.provjeri_tip(self.symtab)  # zapravo provjeri deklaraciju
