@@ -129,7 +129,6 @@ class Kompozicija(AST):
         if any(G.mjesnost(symtab) != k for G in ostale): raise kriva_mjesnost
         return k
 
-    @cache
     def izračunaj(self, symtab, *argumenti):
         međurezultati = (G.izračunaj(symtab, *argumenti) for G in self.desne)
         return self.lijeva.izračunaj(symtab, *međurezultati)
@@ -144,7 +143,6 @@ class PRekurzija(AST):
         if self.korak.mjesnost(symtab) != k + 2: raise kriva_mjesnost
         return k + 1
 
-    @cache
     def izračunaj(self, symtab, *argumenti):
         *xevi, y = argumenti
         z = self.baza.izračunaj(symtab, *xevi)

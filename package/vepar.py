@@ -5,7 +5,7 @@ __version__ = '2.2'
 
 
 import enum, types, collections, contextlib, itertools, functools, \
-        math, typing, dataclasses, fractions
+        math, typing, dataclasses, fractions, textwrap
 
 
 def paše(znak, uvjet): 
@@ -19,6 +19,22 @@ def paše(znak, uvjet):
     elif isinstance(uvjet, set):
         return any(paše(znak, disjunkt) for disjunkt in uvjet)
 
+def omotaj(metoda):
+    @functools.wraps(metoda)
+    def omotano(self, *args, **kw):
+        početak = self.pogledaj()._početak
+        pvr = metoda(self, *args, **kw)
+        kraj = self.zadnji._kraj
+        if pvr is None: raise NoneInAST(textwrap.dedent(f'''
+            Sve metode parsera moraju vratiti vrijednost!
+            Provjerite metodu {metoda.__name__}.
+            Umjesto None vratite nenavedeno.'''))
+        if isinstance(pvr, AST): pvr._početak, pvr._kraj = početak, kraj
+        # elif not isinstance(pvr, (Token, list)):
+        #    print(metoda, 'vratila', pvr)
+        #    input()
+        return pvr
+    return omotano
 
 #def identifikator(znak):
 #    """Je li znak dopušten u C-ovskom imenu (slovo, znamenka ili _)?"""
@@ -297,7 +313,6 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
 class Parser:
     def __new__(cls, ulaz):
         """(Tokenizira i) parsira ulaz u apstraktno sintaksno stablo."""
-        cls.static_lexer = staticmethod(cls.lexer)
         self = super().__new__(cls)
         self.buffer = self.zadnji = None
         self.KRAJ = Token.kraj()
@@ -312,11 +327,18 @@ class Parser:
             self >> KRAJ
             return rezultat
 
+    def __init_subclass__(cls):
+        for ime, metoda in vars(cls).items():
+            if ime == 'lexer' or ime.startswith('__') and ime.endswith('__'):
+                continue
+            if not isinstance(metoda, types.FunctionType): continue
+            setattr(cls, ime, omotaj(metoda))
+        cls.static_lexer = staticmethod(cls.lexer)
+
     @classmethod
     def tokeniziraj(cls, ulaz): 
         """Pregledno ispisuje pronađene tokene, za debugiranje tokenizacije."""
         if '\n' not in ulaz: print('Tokenizacija:', ulaz)
-        cls.static_lexer = staticmethod(cls.lexer)
         for token in cls.static_lexer(Tokenizer(ulaz)):
             r = raspon(token)
             if r.startswith('Znak'): print(f'\t\t{r:15}: {token}')
@@ -409,17 +431,20 @@ def prikaz(objekt, dubina:int=math.inf, uvlaka:str='', ime:str=None):
         for vrijednost in objekt:
             prikaz(vrijednost, dubina-1, uvlaka+', ')
     elif isinstance(objekt, (types.SimpleNamespace, AST)):
-        if hasattr(objekt, 'za_prikaz'): 
-            prikaz(objekt.za_prikaz(), dubina, uvlaka, ime)
-        print(intro + type(objekt).__name__ + ':'*bool(vars(objekt)))
-        for ime, vrijednost in vars(objekt).items():
-            prikaz(vrijednost, dubina-1, uvlaka+'  ', ime)
+        header = intro + type(objekt).__name__ + ':'*bool(vars(objekt))
+        r = raspon(objekt)
+        if r != 'Nepoznata pozicija': header += '  @[' + r + ']'
+        print(header)
+        try: d, t = objekt.za_prikaz(), '~ '
+        except AttributeError: d, t = vars(objekt), '  '
+        for ime, vrijednost in d.items():
+            if not ime.startswith('_'):
+                prikaz(vrijednost, dubina - 1, uvlaka + t, ime)
     else: assert False, f'Ne znam lijepo prikazati {objekt}'
 
 
 def raspon(ast):
     """String koji kazuje odakle dokle se prostire token (ili AST)."""
-    #! Ne radi za ASTove... trebalo bi bitno drugačije organizirati kod.
     if hasattr(ast, '_početak'):
         ip, jp = ast._početak
         ik, jk = ast._kraj
@@ -429,6 +454,9 @@ def raspon(ast):
                 else: return f'Znakovi #{jp}–#{jk}'
             elif jp == jk: return f'Redak {ip}, stupac {jp}'
             else: return f'Redak {ip}, stupci {jp}–{jk}'
+        elif ik == 'zadnji':
+            if ip == 0: return f'Znakovi #{jp}–kraj'
+            else: return f'Redak {ip}, stupac {jp} – kraj'
         else: return f'Redak {ip}, stupac {jp} – redak {ik}, stupac {jk}'
     else: return 'Nepoznata pozicija'
 
@@ -480,7 +508,7 @@ def AST3(atributi):
 
 class AST:
     """Bazna klasa za sva apstraktna sintaksna stabla."""
-    def __init_subclass__(cls): dataclasses.dataclass(cls, frozen=True)
+    def __init_subclass__(cls): dataclasses.dataclass(cls, frozen=False)
 
     def __xor__(self, tip):
         """Vraća sebe (istina) ako je zadanog tipa, inače None (laž)."""
