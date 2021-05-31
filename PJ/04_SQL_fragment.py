@@ -20,7 +20,7 @@ class T(TipoviTokena):
 # select -> SELECT ZVJEZDICA FROM IME | SELECT stupci FROM IME
 # stupci -> stupci ZAREZ IME | IME
 # create -> CREATE TABLE IME OTVORENA spec_stupci ZATVORENA
-# spec_stupci -> spec_stupac ZAREZ spec_stupci | spec_stupac
+# spec_stupci -> spec_stupci ZAREZ spec_stupac | spec_stupac
 # spec_stupac -> IME IME | IME IME OTVORENA BROJ ZATVORENA
 
 ### Apstraktna sintaksna stabla:

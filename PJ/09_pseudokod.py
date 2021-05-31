@@ -73,7 +73,7 @@ def pseudokod_lexer(lex):
 ### ne sasvim BKG
 # program -> funkcija | funkcija program
 # funkcija -> ime OTV parametri? ZATV JEDNAKO naredba
-# parametri -> ime | IME ZAREZ parametri
+# parametri -> ime | ime ZAREZ parametri
 # ime -> AIME | LIME
 # naredba -> pridruži | OTV ZATV | OTV naredbe ZATV | VRATI argument
 #            | DOK JE log naredba | DOK NIJE log naredba
@@ -99,7 +99,20 @@ class P(Parser):
             self.funkcije[funkcija.ime] = funkcija
         return self.funkcije
 
+    def funkcija(self):
+        atributi = self.imef, self.parametrif = self.ime(), self.parametri()
+        self >> T.JEDNAKO
+        return Funkcija(*atributi, self.naredba())
+
     def ime(self): return self >> {T.AIME, T.LIME}
+
+    def parametri(self):
+        self >> T.OTV
+        if self >= T.ZATV: return []
+        param = [self.ime()]
+        while self >= T.ZAREZ: param.append(self.ime())
+        self >> T.ZATV
+        return param
 
     def naredba(self):
         if self > T.AKO: return self.grananje()
@@ -111,18 +124,11 @@ class P(Parser):
             self >> T.JEDNAKO
             return Pridruživanje(ime, self.tipa(ime))
 
-    def blok(self):
-        self >> T.OTV
-        if self >= T.ZATV: return Blok([])
-        n = [self.naredba()]
-        while self >= T.ZAREZ and not self > T.ZATV: n.append(self.naredba())
-        self >> T.ZATV
-        return Blok.ili_samo(n)
-
-    def petlja(self):
-        self >> T.DOK
-        return Petlja(self >> {T.JE, T.NIJE}, self.log(), self.naredba())
-
+    def tipa(self, ime):
+        if ime ^ T.AIME: return self.aritm()
+        elif ime ^ T.LIME: return self.log()
+        else: assert False, f'Nepoznat tip od {ime}'
+        
     def grananje(self):
         self >> T.AKO
         je = self > T.JE
@@ -131,18 +137,17 @@ class P(Parser):
         else: inače = Blok([])
         return Grananje(*atributi, inače)
 
-    def funkcija(self):
-        atributi = self.imef, self.parametrif = self.ime(), self.parametri()
-        self >> T.JEDNAKO
-        return Funkcija(*atributi, self.naredba())
+    def petlja(self):
+        self >> T.DOK
+        return Petlja(self >> {T.JE, T.NIJE}, self.log(), self.naredba())
 
-    def parametri(self):
+    def blok(self):
         self >> T.OTV
-        if self >= T.ZATV: return []
-        param = [self.ime()]
-        while self >= T.ZAREZ: param.append(self.ime())
+        if self >= T.ZATV: return Blok([])
+        n = [self.naredba()]
+        while self >= T.ZAREZ and not self > T.ZATV: n.append(self.naredba())
         self >> T.ZATV
-        return param
+        return Blok.ili_samo(n)
 
     def log(self):
         disjunkti = [self.disjunkt()]
@@ -170,11 +175,6 @@ class P(Parser):
         self >> T.ZATV
         return arg
     
-    def tipa(self, ime):
-        if ime ^ T.AIME: return self.aritm()
-        elif ime ^ T.LIME: return self.log()
-        else: assert False, f'Nepoznat tip od {ime}'
-        
     def aritm(self):
         članovi = [self.član()]
         while True:
