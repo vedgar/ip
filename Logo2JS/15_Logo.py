@@ -71,7 +71,7 @@ class P(Parser):
 class Program(AST):
     naredbe: 'naredba*'
     def js(program):
-        repeat_br = itertools.count(1)
+        rt.repeat = Registri(prefiks='r', start=1)
         yield from [
             "var canvas = document.getElementById('output');",
             "var ctx = canvas.getContext('2d');",
@@ -79,35 +79,36 @@ class Program(AST):
             'var to = ctx.lineTo;',
             'ctx.moveTo(x, y);',
         ]
-        for naredba in program.naredbe: yield from naredba.js(repeat_br)
+        for naredba in program.naredbe: yield from naredba.js()
         yield 'ctx.stroke();'
 
 class Pomak(AST):
     smjer: 'FORWARD|BACKWARD'
     pikseli: 'BROJ'
-    def js(pomak, repeat_br):
+    def js(pomak):
         d = pomak.smjer.predznak * pomak.pikseli.vrijednost()
         yield f'to.apply(ctx, [x-=Math.sin(h)*{d}, y-=Math.cos(h)*{d}]);'
 
 class Okret(AST):
     smjer: 'LEFT|RIGHT'
     stupnjevi: 'BROJ'
-    def js(okret, repeat_br):
+    def js(okret):
         φ = okret.smjer.predznak * okret.stupnjevi.vrijednost()
         yield f'h += {math.radians(φ)};'
 
 class Ponavljanje(AST):
     koliko: 'BROJ'
     naredbe: 'naredba*'
-    def js(petlja, repeat_br):
-        i, n = next(repeat_br), petlja.koliko.vrijednost()
-        yield f'for (var r{i} = 0; r{i} < {n}; r{i} ++) ' + '{'
-        for naredba in petlja.naredbe: yield from naredba.js(repeat_br)
+    def js(petlja):
+        r, n = next(rt.repeat), petlja.koliko.vrijednost()
+        yield f'for (var {r} = 0; {r} < {n}; {r} ++) '
+        yield '{'
+        for naredba in petlja.naredbe: yield from naredba.js()
         yield '}'
 
 class Olovka(AST):
     položaj: 'PENUP|PENDOWN'
-    def js(olovka, repeat_br): yield f'to = ctx.{olovka.položaj.opkod}To'
+    def js(olovka): yield f'to = ctx.{olovka.položaj.opkod}To'
 
 
 direktorij = pathlib.Path(__file__).parent

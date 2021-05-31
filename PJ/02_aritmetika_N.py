@@ -155,7 +155,7 @@ def testiraj(izraz):
     if mi == Python: print(izraz, '==', mi, 'OK')
     else: 
         print(izraz, 'mi:', mi, 'Python:', Python, 'krivo')
-        raise ArithmeticError
+        raise ArithmeticError('Python se ne slaže s nama')
 
 
 P.tokeniziraj('(2+3)*4^1')

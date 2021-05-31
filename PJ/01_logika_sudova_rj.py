@@ -18,7 +18,7 @@ subskript = str.maketrans('0123456789', '₀₁₂₃₄₅₆₇₈₉')
 class T(TipoviTokena):
     NEG, KONJ, DISJ, OTV, ZATV, KOND, BIKOND = *'!&|()', '->', '<->'
     class PVAR(Token):
-        def vrijednost(self, I): return I[self]
+        def vrijednost(self): return rt.interpretacija[self]
         def makni_neg(self): return self, True
         def ispis(self): return self.sadržaj.translate(subskript)
 
@@ -78,7 +78,7 @@ class Negacija(AST):
     ispod: 'formula'
     veznik = '¬'
 
-    def vrijednost(negacija, I): return not negacija.ispod.vrijednost(I)
+    def vrijednost(negacija): return not negacija.ispod.vrijednost()
 
     def makni_neg(negacija):
         bez_neg, pozitivna = negacija.ispod.makni_neg()
@@ -91,9 +91,9 @@ class Binarna(AST):
     lijevo: 'formula'
     desno: 'formula'
 
-    def vrijednost(self, I):
+    def vrijednost(self):
         klasa = type(self)
-        l, d = self.lijevo.vrijednost(I), self.desno.vrijednost(I)
+        l, d = self.lijevo.vrijednost(), self.desno.vrijednost()
         return klasa.tablica(l, d)
 
     def makni_neg(self):
@@ -151,7 +151,8 @@ def optim(formula):
     else: return Negacija(bez_neg)
 
 def istinitost(formula, **interpretacija):
-    return formula.vrijednost(Memorija(interpretacija))
+    rt.interpretacija = Memorija(interpretacija)
+    return formula.vrijednost()
 
 
 for ulaz in '!(P5&!!(P3->P0))', '(!P0&(!P1<->!P5))':

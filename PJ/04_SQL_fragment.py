@@ -90,9 +90,9 @@ class Skripta(AST):
     naredbe: 'naredba*'
 
     def razriješi(skripta):
-        imena = Memorija(redefinicija=False)
-        for naredba in skripta.naredbe: naredba.razriješi(imena)
-        return imena
+        rt.imena = Memorija(redefinicija=False)
+        for naredba in skripta.naredbe: naredba.razriješi()
+        return rt.imena
 
 class Stupac(AST):
     """Specifikacija stupca u tablici."""
@@ -105,8 +105,8 @@ class Create(AST):
     tablica: 'IME'
     specifikacije: 'Stupac*'
 
-    def razriješi(naredba, imena):
-        pristup = imena[naredba.tablica] = Memorija(redefinicija=False)
+    def razriješi(naredba):
+        pristup = rt.imena[naredba.tablica] = Memorija(redefinicija=False)
         for stupac in naredba.specifikacije:
             pristup[stupac.ime] = PristupLog(stupac)
         
@@ -115,8 +115,8 @@ class Select(AST):
     tablica: 'IME'
     stupci: 'IME*?'
 
-    def razriješi(naredba, imena):
-        t = imena[naredba.tablica]
+    def razriješi(naredba):
+        t = rt.imena[naredba.tablica]
         dohvaćeni = naredba.stupci
         if dohvaćeni is nenavedeno: dohvaćeni = dict(t)
         for stupac in dohvaćeni: t[stupac].pristupi()

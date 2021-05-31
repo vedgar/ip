@@ -53,6 +53,13 @@ class Kontekst(type):
             print(e_type.__name__, e_val, sep=': ')
             return True
 
+class Runtime(types.SimpleNamespace):
+    """Globalni objekt za pamćenje runtime konteksta (npr. memorije)."""
+    def __delattr__(self, atribut):
+        with contextlib.suppress(AttributeError): super().__delattr__(atribut)
+
+rt = Runtime()
+
 # TODO: bolji API: Greška(poruka, pozicija ili token ili AST...)
 # ali ostaviti i lex.greška() i parser.greška() for convenience
 class Greška(Exception, metaclass=Kontekst): """Greška vezana uz poziciju."""
@@ -289,8 +296,9 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
 
     def iznimka(self, info):
         """Konstruira grešku izvođenja iz poruke ili Pythonove iznimke."""
-        if isinstance(info, BaseException): info = info.args[0]
-        poruka = raspon(self) + f': {self!r}: {info}'
+        if isinstance(info, BaseException):
+            info = type(info).__name__ + ': ' + info.args[0]
+        poruka = raspon(self) + f':\n\t{self!r}:  {info}'
         return GreškaIzvođenja(poruka)
 
     def krivi_tip(self, *tipovi):
@@ -513,6 +521,8 @@ class AST:
     def __xor__(self, tip):
         """Vraća sebe (istina) ako je zadanog tipa, inače None (laž)."""
         if isinstance(tip, type) and isinstance(self, tip): return self
+
+    iznimka = Token.iznimka
 
     @classmethod
     def ili_samo(cls, lista):

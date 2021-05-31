@@ -15,20 +15,20 @@ class T(TipoviTokena):
     PLUS, MINUS, PUTA, KROZ, NA, OTV, ZATV, KONJ = '+-*/^()~'
     STRELICA = '->'
     class BROJ(Token):
-        def vrijednost(self, _): return complex(self.sadržaj)
-        def tac(self, reg):
-            yield [r:=next(reg), '=', float(self.sadržaj)]
+        def vrijednost(self): return complex(self.sadržaj)
+        def tac(self):
+            yield [r:=next(rt.reg), '=', float(self.sadržaj)]
             return r
     class I(Token):
         literal = 'i'
-        def vrijednost(self, _): return 1j
-        def tac(self, reg):
-            yield [r:=next(reg), '=', self.literal]
+        def vrijednost(self): return 1j
+        def tac(self):
+            yield [r:=next(rt.reg), '=', self.literal]
             return r
     class IME(Token):
-        def vrijednost(self, okolina): return okolina[self]
-        def tac(self, reg):
-            yield [r:=next(reg), '=', self.sadržaj]
+        def vrijednost(self): return rt.okolina[self]
+        def tac(self):
+            yield [r:=next(rt.reg), '=', self.sadržaj]
             return r
 
 def ac(lex):
@@ -61,12 +61,12 @@ class P(Parser):
     lexer = ac
 
     def start(p) -> 'Program':
-        okolina = []
+        definicije = []
         izraz = p.izraz()
         while p >= T.STRELICA:
-            okolina.append((p >> T.IME, izraz))
+            definicije.append((p >> T.IME, izraz))
             izraz = p.izraz()
-        return Program(okolina, izraz)
+        return Program(definicije, izraz)
 
     def izraz(p) -> 'član|Binarna':
         t = p.član()
@@ -94,7 +94,7 @@ class P(Parser):
 
 
 ### Apstraktna sintaksna stabla
-# Program: okolina:[(izraz,IME)] završni:izraz
+# Program: definicije:[(izraz,IME)] završni:izraz
 # izraz: BROJ: Token
 #        I: Token
 #        IME: Token
@@ -103,20 +103,21 @@ class P(Parser):
 
 
 class Program(AST):
-    okolina: '(izraz,IME)*'
+    definicije: '(izraz,IME)*'
     završni: 'izraz'
 
     def izvrši(program):
-        env = Memorija()
-        for ime, izraz in program.okolina: env[ime] = izraz.vrijednost(env)
-        return program.završni.vrijednost(env)
+        rt.okolina = Memorija()
+        for ime, izraz in program.definicije:
+            rt.okolina[ime] = izraz.vrijednost()
+        return program.završni.vrijednost()
 
     def kompajliraj(program):
-        reg = Registri()
-        for ime, izraz in program.okolina:
-            r = yield from izraz.tac(reg)
+        rt.reg = Registri()
+        for ime, izraz in program.definicije:
+            r = yield from izraz.tac()
             yield [ime.sadržaj, '=', r]
-        r = yield from program.završni.tac(reg)
+        r = yield from program.završni.tac()
         yield ['OUT', r]
 
 class Binarna(AST):
@@ -124,9 +125,9 @@ class Binarna(AST):
     lijevo: 'izraz'
     desno: 'izraz'
 
-    def vrijednost(self, env):
+    def vrijednost(self):
         o = self.op
-        x, y = self.lijevo.vrijednost(env), self.desno.vrijednost(env)
+        x, y = self.lijevo.vrijednost(), self.desno.vrijednost()
         try:
             if o ^ T.PLUS: return x + y
             elif o ^ T.MINUS: return x - y
@@ -134,27 +135,27 @@ class Binarna(AST):
             elif o ^ T.KROZ: return x / y
             elif o ^ T.NA: return x ** y
             else: assert False, f'nepokriveni slučaj binarnog operatora {o}'
-        except ArithmeticError as ex: raise o.iznimka(ex)
+        except ArithmeticError as ex: raise self.iznimka(ex)
 
-    def tac(self, reg):
-        r1 = yield from self.lijevo.tac(reg)
-        r2 = yield from self.desno.tac(reg)
-        yield [r:=next(reg), '=', r1, self.op.tip.value, r2]
+    def tac(self):
+        r1 = yield from self.lijevo.tac()
+        r2 = yield from self.desno.tac()
+        yield [r:=next(rt.reg), '=', r1, self.op.tip.value, r2]
         return r
 
 class Unarna(AST):
     op: 'T'
     ispod: 'izraz'
 
-    def vrijednost(self, env):
-        o, z = self.op, self.ispod.vrijednost(env)
+    def vrijednost(self):
+        o, z = self.op, self.ispod.vrijednost()
         if o ^ T.MINUS: return -z
         elif o ^ T.KONJ: return z.conjugate()
         else: assert False, f'nepokriveni slučaj unarnog operatora {o}'
 
-    def tac(self, reg):
-        r1 = yield from self.ispod.tac(reg)
-        yield [r:=next(reg), '=', self.op.tip.value, r1]
+    def tac(self):
+        r1 = yield from self.ispod.tac()
+        yield [r:=next(rt.reg), '=', self.op.tip.value, r1]
         return r
 
 def izračunaj(string): 

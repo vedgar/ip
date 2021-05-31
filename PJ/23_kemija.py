@@ -11,13 +11,15 @@ class T(TipoviTokena):
 
     class N(Token):
         literal = 'n'
-        def vrijednost(t, tablica): return tablica[t]
+        def vrijednost(t): 
+            try: return rt.n
+            except AttributeError: raise t.nedeklaracija('n nije naveden')
 
     class ATOM(Token):
-        def masa(t, tablica): return tablica[t]
+        def masa(t): return rt.tablica[t]
 
     class BROJ(Token):
-        def vrijednost(t, _): return int(t.sadržaj)
+        def vrijednost(t): return int(t.sadržaj)
 
 
 def kemija(lex):
@@ -70,25 +72,29 @@ class spoj(Parser):
 class Formula(AST):
     skupine: 'Skupina*'
 
-    def masa(spoj, tablica):
-        return sum(skupina.ukupno(tablica) for skupina in spoj.skupine)
+    def masa(spoj):
+        return sum(skupina.ukupno() for skupina in spoj.skupine)
 
     def Mr(spoj, **mase):
-        return spoj.masa(Memorija(referentne_atomske_mase | mase))
+        del rt.n
+        if 'n' in mase: rt.n = mase.pop('n')
+        rt.tablica = Memorija(referentne_atomske_mase | mase)
+        return spoj.masa()
 
 
 class Skupina(AST):
     čega: 'ATOM|Formula'
     koliko: '(BROJ|N)?'
 
-    def ukupno(skupina, tablica):
-        m = skupina.čega.masa(tablica)
-        if skupina.koliko: m *= skupina.koliko.vrijednost(tablica)
+    def ukupno(skupina):
+        m = skupina.čega.masa()
+        if skupina.koliko: m *= skupina.koliko.vrijednost()
         return m
 
 
 natrijev_trikarbonatokobaltat = spoj('Na3[Co(CO3)3]')
 prikaz(natrijev_trikarbonatokobaltat)
+print(natrijev_trikarbonatokobaltat.Mr())
 for krivo in 'SnABcdefG', 'O Be', 'Es(n)':
     with LeksičkaGreška: spoj.tokeniziraj(krivo)
     print()

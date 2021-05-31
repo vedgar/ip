@@ -15,32 +15,35 @@ pomoću dva operatora:
 from vepar import *
 
 
+kriva_mjesnost = SemantičkaGreška('Mjesnosti ne odgovaraju')
+
+
 class T(TipoviTokena):
     ZAREZ, OTV, ZATV, KOMPOZICIJA, JEDNAKO = ',()o='
     PR = 'PR'
 
     class FIME(Token):
         """Ime primitivno rekurzivne funkcije."""
-        def mjesnost(self, symtab): return symtab[self][0]
-        def izračunaj(self, symtab, *argumenti):
-            k, f = symtab[self]
-            assert k == len(argumenti)
-            return f.izračunaj(symtab, *argumenti)
+        def mjesnost(self): return rt.symtab[self][0]
+        def izračunaj(self, *argumenti):
+            k, f = rt.symtab[self]
+            assert k == self.mjesnost() == len(argumenti)
+            return f.izračunaj(*argumenti)
 
     class NULFUNKCIJA(Token):
         literal = 'Z'
-        def mjesnost(self, _): return 1
-        def izračunaj(self, _, argument): return 0
+        def mjesnost(self): return 1
+        def izračunaj(self, _): return 0
 
     class SLJEDBENIK(Token):
         literal = 'Sc'
-        def mjesnost(self, _): return 1
-        def izračunaj(self, _, argument): return argument + 1
+        def mjesnost(self): return 1
+        def izračunaj(self, argument): return argument + 1
 
     class KPROJEKCIJA(Token):
         """Koordinatna projekcija, mjesnosti najviše 9."""
-        def mjesnost(self, _): return int(self.sadržaj[2])
-        def izračunaj(self, _, *argumenti):
+        def mjesnost(self): return int(self.sadržaj[2])
+        def izračunaj(self, *argumenti):
             n = int(self.sadržaj[1])
             return argumenti[n - 1]
 
@@ -70,39 +73,39 @@ def pr(lex):
 
 
 class P(Parser):
-    def program(self) -> 'Memorija':
-        symtab = Memorija(redefinicija=False)
-        while not self > KRAJ:
-            imef = self >> T.FIME
-            self >> T.JEDNAKO
-            f = self.funkcija()
-            symtab[imef] = (f.mjesnost(symtab), f)
-        if not symtab: raise SemantičkaGreška('Prazan program')
-        return symtab
+    def program(p) -> 'Memorija':
+        rt.symtab = Memorija(redefinicija=False)
+        while not p > KRAJ:
+            imef = p >> T.FIME
+            p >> T.JEDNAKO
+            f = p.funkcija()
+            rt.symtab[imef] = (f.mjesnost(), f)
+        if not rt.symtab: raise SemantičkaGreška('Prazan program')
+        return rt.symtab
 
-    def funkcija(self) -> 'PRekurzija|komponenta':
-        baza = self.komponenta()
-        if self >= T.PR: return PRekurzija(baza, self.komponenta())
+    def funkcija(p) -> 'PRekurzija|komponenta':
+        baza = p.komponenta()
+        if p >= T.PR: return PRekurzija(baza, p.komponenta())
         else: return baza
 
-    def osnovna(self) -> 'FIME|NULFUNKCIJA|SLJEDBENIK|KPROJEKCIJA':
-        return self >> {T.FIME, T.NULFUNKCIJA, T.SLJEDBENIK, T.KPROJEKCIJA}
+    def osnovna(p) -> 'FIME|NULFUNKCIJA|SLJEDBENIK|KPROJEKCIJA':
+        return p >> {T.FIME, T.NULFUNKCIJA, T.SLJEDBENIK, T.KPROJEKCIJA}
 
-    def komponenta(self) -> 'funkcija|osnovna|Kompozicija':
-        if self >= T.OTV:
-            t = self.funkcija()
-            self >> T.ZATV
-        else: t = self.osnovna()
-        while self >= T.KOMPOZICIJA: t = Kompozicija(t, tuple(self.desno()))
+    def komponenta(p) -> 'funkcija|osnovna|Kompozicija':
+        if p >= T.OTV:
+            t = p.funkcija()
+            p >> T.ZATV
+        else: t = p.osnovna()
+        while p >= T.KOMPOZICIJA: t = Kompozicija(t, p.desno())
         return t
 
-    def desno(self) -> 'funkcija*|osnovna*':
-        if self >= T.OTV:
-            rezultat = [self.funkcija()]
-            while self >= T.ZAREZ: rezultat.append(self.funkcija())
-            self >> T.ZATV
+    def desno(p) -> 'funkcija*|osnovna*':
+        if p >= T.OTV:
+            rezultat = [p.funkcija()]
+            while p >= T.ZAREZ: rezultat.append(p.funkcija())
+            p >> T.ZATV
             return rezultat
-        else: return [self.osnovna()]
+        else: return [p.osnovna()]
 
     start = program
     lexer = pr
@@ -114,61 +117,58 @@ class P(Parser):
 #           PRekurzija: baza:funkcija korak:funkcija
 
 
-kriva_mjesnost = SemantičkaGreška('Mjesnosti ne odgovaraju')
-
-
 class Kompozicija(AST):
     lijeva: 'funkcija'
     desne: 'funkcija*'
 
-    def mjesnost(self, symtab):
-        l = self.lijeva.mjesnost(symtab)
+    def mjesnost(self):
+        l = self.lijeva.mjesnost()
         if len(self.desne) != l: raise kriva_mjesnost
         G1, *ostale = self.desne
-        k = G1.mjesnost(symtab)
-        if any(G.mjesnost(symtab) != k for G in ostale): raise kriva_mjesnost
+        k = G1.mjesnost()
+        if any(G.mjesnost() != k for G in ostale): raise kriva_mjesnost
         return k
 
-    def izračunaj(self, symtab, *argumenti):
-        međurezultati = (G.izračunaj(symtab, *argumenti) for G in self.desne)
-        return self.lijeva.izračunaj(symtab, *međurezultati)
+    def izračunaj(self, *argumenti):
+        međurezultati = (G.izračunaj(*argumenti) for G in self.desne)
+        return self.lijeva.izračunaj(*međurezultati)
 
 
 class PRekurzija(AST):
     baza: 'funkcija'
     korak: 'funkcija'
 
-    def mjesnost(self, symtab):
-        k = self.baza.mjesnost(symtab)
-        if self.korak.mjesnost(symtab) != k + 2: raise kriva_mjesnost
+    def mjesnost(self):
+        k = self.baza.mjesnost()
+        if self.korak.mjesnost() != k + 2: raise kriva_mjesnost
         return k + 1
 
-    def izračunaj(self, symtab, *argumenti):
+    def izračunaj(self, *argumenti):
         *xevi, y = argumenti
-        z = self.baza.izračunaj(symtab, *xevi)
-        for i in range(y): z = self.korak.izračunaj(symtab, *xevi, i, z)
+        z = self.baza.izračunaj(*xevi)
+        for i in range(y): z = self.korak.izračunaj(*xevi, i, z)
         return z
 
 
-def izračunaj(memorija, imef, *argumenti):
-    k, f = memorija[imef]
-    if len(argumenti) == k: return f.izračunaj(memorija, *argumenti)
+def izračunaj(imef, *argumenti):
+    k, f = rt.symtab[imef]
+    if len(argumenti) == k: return f.izračunaj(*argumenti)
     else: raise kriva_mjesnost
 
 
-prikaz(konstante := P('''
+prikaz(P('''
         C01 = Z
         C11 = Sc o C01
         C21 = Sc o C11
         C23 = C21 o I13
         C58 = Sc o Sc o Sc o Sc o Sc o Z o I18
 '''))
-prikaz(operacije := P('''
+print('C11(5) =', izračunaj('C11', 5))
+prikaz(P('''
         add2 = I11 PR Sc o I33
         mul2 = Z PR add2 o (I13, I33)
         pow = Sc o Z PR mul2 o (I13, I33)
 '''))
-print('C11(5) =', izračunaj(konstante, 'C11', 5))
-print(b:=3, '^', e:=7, '=', izračunaj(operacije, 'pow', b, e))
+print(b:=3, '^', e:=7, '=', izračunaj('pow', b, e))
 
 # DZ**: dokažite ekvivalentnost ovog sustava i programskog jezika LOOP

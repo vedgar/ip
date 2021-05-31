@@ -74,10 +74,11 @@ class P(Parser):
     def element(self) -> 'Lista|BROJ|STRING1|STRING2':
         if self >= T.UOTV:
             if self >= T.UZATV: return Lista([])
-            el = [self.element()]
-            while self>=T.ZAREZ and not self>T.UZATV: el.append(self.element())
+            elementi = [self.element()]
+            while self >= T.ZAREZ and not self > T.UZATV:
+                elementi.append(self.element())
             self >> T.UZATV
-            return Lista(el)
+            return Lista(elementi)
         else: return self >> {T.BROJ, T.STRING1, T.STRING2}
     
     lexer = listlexer 

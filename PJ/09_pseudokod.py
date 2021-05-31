@@ -23,8 +23,9 @@ Tipovi varijabli (i povratni tipovi funkcija) se reprezentiraju leksički:
     * malo početno slovo označava aritmetički tip (u Pythonu int)
 Minimalni kontekst je potreban da bismo zapamtili jesmo li trenutno u definiciji
     aritmetičke ili logičke funkcije, kako bi naredba "vrati" znala što očekuje.
-Dozvoljeni su i (ne uzajamno) rekurzivni pozivi, tako da se za vrijeme 
-    parsiranja i izvršavanja prati u kojoj smo funkciji."""
+Dozvoljeni su i (ne uzajamno!) rekurzivni pozivi, tako da se za vrijeme 
+    parsiranja i izvršavanja prati u kojoj smo funkciji.
+Memorija se također dinamički preoblikuje: svaka funkcija ima svoj prostor."""
 
 
 from vepar import *

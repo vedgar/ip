@@ -17,11 +17,11 @@ class T(TipoviTokena):
     PLUSP, PLUSJ, MMANJE, JJEDNAKO = '++', '+=', '<<', '=='
     class BREAK(Token):
         literal = 'break'
-        def izvrši(self, mem): raise Prekid
+        def izvrši(self): raise Prekid
     class BROJ(Token):
-        def vrijednost(self, mem): return int(self.sadržaj)
+        def vrijednost(self): return int(self.sadržaj)
     class IME(Token):
-        def vrijednost(self, mem): return mem[self]
+        def vrijednost(self): return rt.mem[self]
 
 def cpp(lex):
     for znak in lex:
@@ -130,9 +130,9 @@ class Program(AST):
     naredbe: 'naredba*'
 
     def izvrši(program):
-        mem = Memorija()
+        rt.mem = Memorija()
         try:  # break izvan petlje je zapravo sintaksna greška - kompliciranije
-            for naredba in program.naredbe: naredba.izvrši(mem)
+            for naredba in program.naredbe: naredba.izvrši()
         except Prekid: raise SemantičkaGreška('nedozvoljen break izvan petlje')
 
 class Petlja(AST):
@@ -142,24 +142,23 @@ class Petlja(AST):
     inkrement: 'BROJ?'
     blok: 'naredba*'
 
-    def izvrši(petlja, mem):
+    def izvrši(petlja):
         kv = petlja.varijabla  # kontrolna varijabla petlje
-        mem[kv] = petlja.početak.vrijednost(mem)
-        while mem[kv] < petlja.granica.vrijednost(mem):
+        rt.mem[kv] = petlja.početak.vrijednost()
+        while rt.mem[kv] < petlja.granica.vrijednost():
             try:
-                for naredba in petlja.blok: naredba.izvrši(mem)
+                for naredba in petlja.blok: naredba.izvrši()
             except Prekid: break
             inkr = petlja.inkrement
-            if inkr is nenavedeno: inkr = 1
-            else: inkr = inkr.vrijednost(mem)
-            mem[kv] += inkr 
+            rt.mem[kv] += inkr.vrijednost() if inkr else 1
 
 class Ispis(AST):
     varijable: 'IME*'
     novired: 'ENDL?'
 
-    def izvrši(ispis, mem):
-        for var in ispis.varijable: print(var.vrijednost(mem), end=' ')
+    def izvrši(ispis):
+        for varijabla in ispis.varijable:
+            print(varijabla.vrijednost(), end=' ')
         if ispis.novired ^ T.ENDL: print()
 
 class Grananje(AST):
@@ -167,9 +166,9 @@ class Grananje(AST):
     desno: 'BROJ'
     onda: 'naredba'
 
-    def izvrši(grananje, mem):
-        if grananje.lijevo.vrijednost(mem) == grananje.desno.vrijednost(mem):
-            grananje.onda.izvrši(mem)
+    def izvrši(grananje):
+        if grananje.lijevo.vrijednost() == grananje.desno.vrijednost():
+            grananje.onda.izvrši()
 
 
 def očekuj(greška, kôd):
@@ -177,11 +176,13 @@ def očekuj(greška, kôd):
     with greška: P(kôd).izvrši()
 
 prikaz(cpp := P('''
-    for ( i = 8 ; i < 13 ; i += 2 )
-        for(j=0; j<3; j++) {
-            cout<<i<<j<<endl;
+    for ( i = 8 ; i < 13 ; i += 2 ) {
+        for(j=0; j<5; j++) {
+            cout<<i<<j;
             if(i == 10) if (j == 1) break;
         }
+        cout<<i<<endl;
+    }
 '''), 8)
 cpp.izvrši()
 prikaz(P('cout;'))

@@ -11,9 +11,9 @@ class T(TipoviTokena):
     PLUS, MINUS, PUTA, KROZ, NA, OTV, ZATV, JEDNAKO, UPIT = '+-*/^()=?'
     NOVIRED = '\n'
     class IME(Token):
-        def provjeri_tip(t, symtab): return symtab[t]
+        def provjeri_tip(t): return rt.symtab[t]
     class BROJ(Token):
-        def provjeri_tip(t, symtab): return Tip.N
+        def provjeri_tip(t): return Tip.N
 
 
 def aq(lex):
@@ -54,16 +54,16 @@ class P(Parser):
 
     def start(self) -> 'Program':
         self >= T.NOVIRED
-        self.symtab, naredbe = Memorija(), []
+        rt.symtab, naredbe = Memorija(), []
         while not self > KRAJ:
             naredbe.append(self.naredba())
             self >> {T.NOVIRED, KRAJ}
-        return Program(naredbe, self.symtab)
+        return Program(naredbe)
 
     def naredba(self) -> 'izraz|Pridruživanje':
         if self >= T.UPIT: return self.izraz()
         token_za_tip = self >= {T.NAT, T.INT, T.RAT}
-        ažuriraj(varijabla := self >> T.IME, token_za_tip, self.symtab)
+        ažuriraj(varijabla := self >> T.IME, token_za_tip)
         self >> T.JEDNAKO
         return Pridruživanje(varijabla, token_za_tip, self.izraz())
 
@@ -87,7 +87,7 @@ class P(Parser):
     def baza(self) -> 'BROJ|IME|izraz':
         if broj := self >= T.BROJ: return broj
         elif varijabla := self >= T.IME:
-            varijabla.provjeri_tip(self.symtab)  # zapravo provjeri deklaraciju
+            varijabla.provjeri_tip()  # zapravo provjeri deklaraciju
             return varijabla
         elif self >> T.OTV:
             u_zagradi = self.izraz()
@@ -96,48 +96,47 @@ class P(Parser):
 
 
 ### Apstraktna sintaksna stabla
-# Program: naredbe:[naredba] symtab:Memorija
+# Program: naredbe:[naredba]  # rt.symtab:Memorija
 # Pridruživanje: varijabla:IME tip:T? vrijednost:izraz
 # Suprotan: operand:izraz
 # Op: operator:T lijevo:izraz desno:izraz
 
 
-def ažuriraj(var, token_za_tip, symtab):
+def ažuriraj(var, token_za_tip):
     if token_za_tip:
         tip = Tip(token_za_tip)
-        if var in symtab:
-            pravi = var.provjeri_tip(symtab)
+        if var in rt.symtab:
+            pravi = var.provjeri_tip()
             if tip == pravi: raise var.redeklaracija()
             else: raise var.krivi_tip(tip, pravi)
-        symtab[var] = tip
-    return var.provjeri_tip(symtab)
+        rt.symtab[var] = tip
+    return var.provjeri_tip()
 
 
 class Program(AST):
     naredbe: 'naredba*'
-    symtab: 'Memorija'
     def provjeri_tipove(self):
         for naredba in self.naredbe:
-            tip = naredba.provjeri_tip(self.symtab)
+            tip = naredba.provjeri_tip()
             if tip: print(tip)
 
 class Pridruživanje(AST):
     varijabla: 'IME'
     tip: 'Tip?'
     vrijednost: 'izraz'
-    def provjeri_tip(self, symtab):
-        lijevo = self.varijabla.provjeri_tip(symtab)
-        desno = self.vrijednost.provjeri_tip(symtab)
+    def provjeri_tip(self):
+        lijevo = self.varijabla.provjeri_tip()
+        desno = self.vrijednost.provjeri_tip()
         if not desno <= lijevo: raise self.varijabla.krivi_tip(lijevo, desno)
 
 class Op(AST):
     operator: 'T'
     lijevo: 'izraz'
     desno: 'izraz'
-    def provjeri_tip(self, symtab):
+    def provjeri_tip(self):
         if self.lijevo is nenavedeno: prvi = Tip.N  # -x = 0 - x
-        else: prvi = self.lijevo.provjeri_tip(symtab)
-        drugi = self.desno.provjeri_tip(symtab)
+        else: prvi = self.lijevo.provjeri_tip()
+        drugi = self.desno.provjeri_tip()
         o = self.operator
         greška = o.krivi_tip(prvi, drugi)
         if o ^ T.KROZ: return Tip.Q

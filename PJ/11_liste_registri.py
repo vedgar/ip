@@ -84,51 +84,51 @@ class Program(AST):
     """Program u jeziku listâ."""
     naredbe: 'naredba*'
     def izvrši(self):
-        mem = Memorija(redefinicija=False)
-        for nar in self.naredbe: print(nar, nar.izvrši(mem), sep='  -->  ')
+        rt.mem = Memorija(redefinicija=False)
+        for nar in self.naredbe: print(nar, nar.izvrši(), sep='  -->  ')
 
 class Deklaracija(AST):
     """Deklaracija liste."""
     lista: 'ID'
-    def izvrši(self, memorija): memorija[self.lista] = []
+    def izvrši(self): rt.mem[self.lista] = []
 
 class Provjera(AST):
     """Je li lista prazna?"""
     lista: 'ID'
-    def izvrši(self, memorija): return not memorija[self.lista]
+    def izvrši(self): return not rt.mem[self.lista]
 
 class Duljina(AST):
     """Broj elemenata u listi."""
     lista: 'ID'
-    def izvrši(self, memorija): return len(memorija[self.lista])
+    def izvrši(self): return len(rt.mem[self.lista])
 
 class Dohvati(AST):
     """Element zadanog indeksa (brojeći od 0). Prevelik indeks javlja grešku."""
     lista: 'ID'
     indeks: 'BROJ'
-    def izvrši(self, memorija):
-        l, i = memorija[self.lista], self.indeks.vrijednost()
+    def izvrši(self):
+        l, i = rt.mem[self.lista], self.indeks.vrijednost()
         if i < len(l): return l[i]
-        else: raise self.indeks.iznimka('Prevelik indeks')
+        else: raise self.iznimka('Prevelik indeks')
         
 class Izbaci(AST):
     """Izbacuje element zadanog indeksa iz liste ili javlja grešku izvođenja."""
     lista: 'ID'
     indeks: 'BROJ'
-    def izvrši(self, memorija):
-        l, i = memorija[self.lista], self.indeks.vrijednost()
+    def izvrši(self):
+        l, i = rt.mem[self.lista], self.indeks.vrijednost()
         if i < len(l): del l[i]
-        else: raise self.indeks.iznimka('Prevelik indeks')
+        else: raise self.iznimka('Prevelik indeks')
 
 class Ubaci(AST):
     """Ubacuje vrijednost u listu na zadanom indeksu, ili javlja grešku."""
     lista: 'ID'
     element: 'BROJ|MINUSBROJ'
     indeks: 'BROJ'
-    def izvrši(self, memorija):
-        l, i = memorija[self.lista], self.indeks.vrijednost()
+    def izvrši(self):
+        l, i = rt.mem[self.lista], self.indeks.vrijednost()
         if i <= len(l): l.insert(i, self.element.vrijednost())
-        else: raise self.indeks.iznimka('Prevelik indeks')
+        else: raise self.iznimka('Prevelik indeks')
 
 
 P.tokeniziraj('lista L1 prazna ubaci-2345izbaci L9 dohvati 3 koliko')
@@ -145,3 +145,4 @@ with LeksičkaGreška: P.tokeniziraj('L0')
 with SintaksnaGreška: P('ubaci L5 6 -2')
 with SemantičkaGreška: P('ubaci L7 5 0').izvrši()
 with LeksičkaGreška: P.tokeniziraj('ubaci L3 5 -0')
+with GreškaIzvođenja: P('lista L1 ubaci L1 7 3').izvrši()

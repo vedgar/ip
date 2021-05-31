@@ -8,11 +8,11 @@ from vepar import *
 class T(TipoviTokena):
     PLUS, MINUS, PUTA, KROZ, JEDNAKO, OTV, ZATV, NOVIRED = '+-*/=()\n'
     class BROJ(Token):
-        def izračunaj(t, mem, v): return fractions.Fraction(t.sadržaj)
+        def izračunaj(t): return fractions.Fraction(t.sadržaj)
     class IME(Token):
-        def izračunaj(t, mem, v):
-            if t in mem: return mem[t]
-            else: raise t.nedeklaracija(f'pri pridruživanju {v}')
+        def izračunaj(t):
+            if t in rt.memorija: return rt.memorija[t]
+            else: raise t.nedeklaracija(f'pri pridruživanju {rt.pridruženo}')
 
 def aq(lex):
     for znak in lex:
@@ -73,25 +73,28 @@ class P(Parser):
 class Program(AST):
     pridruživanja: '(IME,izraz)*'
     def izvrši(program):
-        memorija = Memorija()
+        rt.memorija = Memorija()
         for ime, vrijednost in program.pridruživanja:
-            memorija[ime] = vrijednost.izračunaj(memorija, ime)
-        return memorija
+            rt.pridruženo = ime
+            rt.memorija[ime] = vrijednost.izračunaj()
+            del rt.pridruženo
+        return rt.memorija
 
 
 class Op(AST):
     op: 'T'
     lijevo: 'izraz?'
     desno: 'izraz'
-    def izračunaj(self, memorija, v):
+    def izračunaj(self):
         if self.lijevo is nenavedeno: l = 0  # unarni minus: -x = 0-x
-        else: l = self.lijevo.izračunaj(memorija, v)
-        o, d = self.op, self.desno.izračunaj(memorija, v)
+        else: l = self.lijevo.izračunaj()
+        o, d = self.op, self.desno.izračunaj()
         if o ^ T.PLUS: return l + d
         elif o ^ T.MINUS: return l - d
         elif o ^ T.PUTA: return l * d
         elif d: return l / d
-        else: raise o.iznimka(f'dijeljenje nulom pri pridruživanju {v}')
+        else: raise self.iznimka(
+                f'dijeljenje nulom pri pridruživanju {rt.pridruženo}')
 
 
 # Moramo staviti backslash na početak jer inače program počinje novim redom.

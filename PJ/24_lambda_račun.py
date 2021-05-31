@@ -65,7 +65,7 @@ class Aplikacija(AST):
     funkcija: 'izraz'
     argument: 'izraz'
     def slobodne(aplikacija):
-        return aplikacija.funkcija.slobodne()|aplikacija.argument.slobodne()
+        return aplikacija.funkcija.slobodne() | aplikacija.argument.slobodne()
 
 def kombinator(l): return not λ(l).slobodne()
 

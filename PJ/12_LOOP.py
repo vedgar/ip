@@ -76,30 +76,30 @@ class P(Parser):
 
 class Program(AST):
     naredbe: 'naredba*'
-    def izvrši(program, stroj):
-        for naredba in program.naredbe: naredba.izvrši(stroj)
+    def izvrši(program):
+        for naredba in program.naredbe: naredba.izvrši()
 
 class Promjena(AST):
     op: 'INC|DEC'
     registar: 'REG'
-    def izvrši(promjena, stroj):
+    def izvrši(promjena):
         j = promjena.registar.broj()
-        if promjena.op ^ T.INC: stroj.inc(j)
-        elif promjena.op ^ T.DEC: stroj.dec(j)
+        if promjena.op ^ T.INC: rt.stroj.inc(j)
+        elif promjena.op ^ T.DEC: rt.stroj.dec(j)
         else: assert False, f'Nepoznata operacija {promjena.op}'
 
 class Petlja(AST):
     registar: 'REG'
     tijelo: 'Program'
-    def izvrši(petlja, stroj):
-        n = stroj.registri[petlja.registar.broj()]
-        for ponavljanje in range(n): petlja.tijelo.izvrši(stroj)
+    def izvrši(petlja):
+        n = rt.stroj.registri[petlja.registar.broj()]
+        for ponavljanje in range(n): petlja.tijelo.izvrši()
 
 
 def računaj(program, *ulazi):
-    stroj = RAMStroj(*ulazi)
-    program.izvrši(stroj)
-    return stroj.rezultat
+    rt.stroj = RAMStroj(*ulazi)
+    program.izvrši()
+    return rt.stroj.rezultat
 
 
 with LeksičkaGreška: P.tokeniziraj('inc R00')
