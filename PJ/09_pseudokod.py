@@ -84,7 +84,7 @@ def pseudokod_lexer(lex):
 # log -> log ILI disjunkt | disjunkt
 # disjunkt -> aritm MANJE aritm | aritm JEDNAKO aritm 
 #             | ISTINA | LAŽ | LIME | LIME poziv | OTV log ZATV
-# aritm -> aritm PLUS član | aritm MINUS član
+# aritm -> aritm PLUS član | aritm MINUS član | član
 # član -> član ZVJEZDICA faktor | faktor
 # faktor -> BROJ | AIME | AIME poziv | OTV aritm ZATV | MINUS faktor
 # poziv -> OTV ZATV | OTV argumenti ZATV
