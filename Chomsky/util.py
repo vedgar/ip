@@ -167,7 +167,7 @@ class Kontraprimjer(Exception):
         self.args = "Jezik {}sadrži {!r}".format('ne '*bool(spec), test),
 
 
-class PrazanString(str):
+class PrazniString(str):
     """Klasa koja određuje ponašanje objekta ε."""
 
     def __add__(self, other):
@@ -184,7 +184,7 @@ class PrazanString(str):
 
     __radd__, __rmul__, __str__ = __add__, __mul__, __repr__
 
-ε = PrazanString()
+ε = PrazniString()
 
 
 def parsiraj_tablicu_KA(tablica):

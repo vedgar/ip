@@ -27,13 +27,10 @@ def ri(lex):
     for znak in lex:
         if znak in specijalni: yield lex.literal(T)
         elif znak == '/':
-            lex.zanemari()
             sljedeći = next(lex)
             if not sljedeći: raise lex.greška('/ na kraju stringa')
-            elif sljedeći == '0': yield lex.token(T.PRAZAN)
-            elif sljedeći == '1': yield lex.token(T.EPSILON)
-            elif sljedeći == '/': yield lex.token(T.ZNAK)  # // kao /
-            elif sljedeći in specijalni: yield lex.token(T.ZNAK)
+            elif sljedeći in {'/', *specijalni}: yield lex.token(T.ZNAK)
+            elif sljedeći in {'0', '1'}: yield lex.literal(T)
             else: raise lex.greška('nedefinirana /-sekvenca')
         else: yield lex.token(T.ZNAK)
 
@@ -47,7 +44,7 @@ def ri(lex):
 ### Kao ASTove koristimo klase iz modula RI
 # rx: prazan
 #     epsilon
-#     Elementaran: znak:str (duljine 1)
+#     Elementarni: znak:str (duljine 1)
 #     Unija: r1:rx r2:rx
 #     Konkatenacija: r1:rx r2:rx
 #     Zvijezda: r:rx
@@ -75,10 +72,13 @@ class P(Parser):
             elif self >= T.UPITNIK: trenutni = RI.Upitnik(trenutni)
             else: return trenutni
 
-    def element(self) -> 'Prazan|Epsilon|Elementaran|rx':
+    def element(self) -> 'Prazan|Epsilon|Elementarni|rx':
         if self >= T.PRAZAN: return RI.prazan
         elif self >= T.EPSILON: return RI.epsilon
-        elif znak := self >= T.ZNAK: return RI.Elementaran(znak.sadržaj)
+        elif znak := self >= T.ZNAK:
+            t = znak.sadržaj
+            if t.startswith('/'): kosa_crta, t = t
+            return RI.Elementarni(t)
         elif self >> T.OTV:
             u_zagradi = self.rx()
             self >> T.ZATV

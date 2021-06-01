@@ -45,7 +45,7 @@ def ac(lex):
             yield lex.token(T.BROJ)
         elif znak.isalpha():
             lex * str.isalnum
-            yield lex.literal(T.IME)
+            yield lex.literal_ili(T.IME)
         else: yield lex.literal(T)
 
 

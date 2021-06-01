@@ -18,14 +18,14 @@ class T(TipoviTokena):
 
 def aq(lex):
     for znak in lex:
-        if znak == '\n': yield lex.literal(T)
+        if znak == '\n': yield lex.literal(T)  # prije provjere isspace!
         elif znak.isspace(): lex.zanemari()
         elif znak.isdecimal():
             lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
         elif znak.isalpha():
             lex * {str.isalpha, '_'}
-            yield lex.literal(T.IME, case=False)
+            yield lex.literal_ili(T.IME, case=False)
         else: yield lex.literal(T)
 
 

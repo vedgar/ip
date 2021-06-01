@@ -16,7 +16,7 @@ def js(lex):
         if znak.isspace(): lex.zanemari()
         elif znak.isalpha() or znak == '$':
             lex * {str.isalpha, '_'}
-            yield lex.literal(T.IME)
+            yield lex.literal_ili(T.IME)
         elif znak == '/':
             if lex >= '/':
                 lex - '\n'

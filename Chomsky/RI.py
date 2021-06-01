@@ -66,13 +66,13 @@ class RegularniIzraz(types.SimpleNamespace, abc.ABC):
         return znakovi
 
 
-class Inicijalan(RegularniIzraz, abc.ABC):
+class Inicijalni(RegularniIzraz, abc.ABC):
     """Inicijalni jezik: ∅, ε, ili elementarni jezik."""
 
     def konačan(self): return True
 
 
-class Prazan(Inicijalan):
+class Prazni(Inicijalni):
     """Prazni jezik: ne sadrži nijednu riječ."""
 
     def __str__(self): return '∅'
@@ -89,7 +89,7 @@ class Prazan(Inicijalan):
     def enumerator(self): yield from set()
 
 
-class Epsilon(Inicijalan):
+class Epsilon(Inicijalni):
     """Jezik ε: sadrži točno jednu riječ, i to praznu."""
 
     def __str__(self): return 'ε'
@@ -106,8 +106,8 @@ class Epsilon(Inicijalan):
     def enumerator(self): yield ε
 
 
-class Elementaran(Inicijalan):
-    """Elementaran(α) je jezik od točno 1 riječi, koja ima točno 1 znak α."""
+class Elementarni(Inicijalni):
+    """Elementarni(α) je jezik od točno 1 riječi, koja ima točno 1 znak α."""
 
     def __init__(self, znak):
         assert isinstance(znak, str) and len(znak) == 1
@@ -128,12 +128,12 @@ class Elementaran(Inicijalan):
     def enumerator(self): yield self.znak
 
 
-prazan, epsilon = Prazan(), Epsilon()
-a, b, c = Elementaran('a'), Elementaran('b'), Elementaran('c')
-nula, jedan = Elementaran('0'), Elementaran('1')
+prazni, epsilon = Prazni(), Epsilon()
+a, b, c = Elementarni('a'), Elementarni('b'), Elementarni('c')
+nula, jedan = Elementarni('0'), Elementarni('1')
 
 
-class Binaran(RegularniIzraz, abc.ABC):
+class Binarni(RegularniIzraz, abc.ABC):
     """Zajednička natklasa za binarne operacije: uniju i konkatenaciju."""
 
     def __init__(self, r1, r2):
@@ -147,7 +147,7 @@ class Binaran(RegularniIzraz, abc.ABC):
         return ri.prazan() or ri.lijevo.trivijalan() and ri.desno.trivijalan()
 
 
-class Unija(Binaran):
+class Unija(Binarni):
     """L ∪ M = {w : w ∈ L ∨ w ∈ M}"""
 
     def __str__(self): return f'({self.lijevo}|{self.desno})'
@@ -173,7 +173,7 @@ class Unija(Binaran):
                 yield desno
 
 
-class Konkatenacija(Binaran):
+class Konkatenacija(Binarni):
     """LM = {uv : u ∈ L ∧ v ∈ M}"""
 
     def __str__(self): return f'({self.lijevo}{self.desno})'

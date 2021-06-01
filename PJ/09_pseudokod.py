@@ -58,10 +58,10 @@ def pseudokod_lexer(lex):
         if znak.isspace(): lex.zanemari()
         elif znak.islower():
             lex * str.isalnum
-            yield lex.literal(T.AIME)
+            yield lex.literal_ili(T.AIME)
         elif znak.isupper():
             lex * str.isalnum
-            yield lex.literal(T.LIME)
+            yield lex.literal_ili(T.LIME)
         elif znak.isdecimal():
             lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)

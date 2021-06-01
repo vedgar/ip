@@ -39,7 +39,7 @@ class P(Parser):
             elif znak.isalnum():
                 lex * str.isalnum
                 if lex.sadržaj.isdecimal(): yield lex.token(T.BROJ)
-                else: yield lex.literal(T.IME, case=False)
+                else: yield lex.literal_ili(T.IME, case=False)
             elif znak == '-':
                 lex >> '-'
                 lex - '\n'

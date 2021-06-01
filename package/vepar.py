@@ -188,17 +188,21 @@ class Tokenizer:
         self.zanemari()
         return t
 
-    def literal(self, odakle, case=True):
-        """Konstruira doslovni token ako ga nađe ili vrstu zadanu argumentom."""
+    def literal(self, odakle, *, case=True):
+        """Doslovni token s pročitanim sadržajem, ili leksička greška."""
         t = self.sadržaj if case else self.sadržaj.casefold()
-        def p(odakle):
-            if isinstance(odakle, enum.EnumMeta):
-                for e in odakle:
-                    if e.value == t or getattr(e.value, 'literal', None) == t:
-                        return e
-        if nađen := p(odakle) or p(type(odakle)): return self.token(nađen)
-        elif isinstance(type(odakle), enum.EnumMeta): return self.token(odakle)
+        for e in odakle:
+            if e.value == t or getattr(e.value, 'literal', None) == t:
+                return self.token(e)
         else: raise self.greška()
+
+    def literal_ili(self, inače, *, case=True):
+        """Doslovni token ako je nađen po sadržaju, ili token tipa inače."""
+        t = self.sadržaj if case else self.sadržaj.casefold()
+        for e in type(inače):
+            if e.value == t or getattr(e.value, 'literal', None) == t:
+                return self.token(e)
+        else: return self.token(inače)
 
     def zanemari(self):
         """Resetira pročitano (pretvara se da nije ništa pročitano)."""

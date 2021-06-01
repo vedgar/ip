@@ -28,7 +28,7 @@ def basic(lex):
             yield lex.token(T.BROJ)
         elif znak.isalpha():
             lex * str.isalnum
-            yield lex.literal(T.TVAR if lex >= '$' else T.BVAR, case=False)
+            yield lex.literal_ili(T.TVAR if lex >= '$' else T.BVAR, case=False)
         elif znak == ',':
             lex - "'"
             yield lex.token(T.TEKST)

@@ -57,7 +57,7 @@ def pr(lex):
             else: raise lex.greška('krivo formirani token Ink')
         elif znak.isalpha():
             lex * str.isalnum
-            yield lex.literal(T.FIME)
+            yield lex.literal_ili(T.FIME)
         else: yield lex.literal(T)
 
 

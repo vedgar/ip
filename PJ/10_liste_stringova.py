@@ -99,4 +99,5 @@ print(ast.vrijednost())
 
 
 # DZ: omogućite razne druge \-escape sekvence (npr. \u za znakove Unikoda)
-# DZ: omogućite izraze umjesto literala: polimorfni + za zbrajanje/konkatenaciju
+# DZ: omogućite izraze umjesto samih konstantnih vrijednosti:
+#         implementirajte polimorfni + za zbrajanje/konkatenaciju

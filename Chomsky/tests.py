@@ -263,9 +263,9 @@ if test(24):  # page 65 example 1.53
     print(r9.početak())
     r10 = nula.u * jedan.u
     print(r10.konačan(), r10.početak())
-    r11 = jedan.z * prazan
+    r11 = jedan.z * prazni
     print(r11.prazan())
-    r12 = prazan.z
+    r12 = prazni.z
     print(r12.prazan(), r12.trivijalan())
 
 
@@ -589,6 +589,6 @@ if test(90):  # 2019-k1-z3
     deterministični = rješenje.optimizirana_partitivna_konstrukcija()
     razlika = deterministični.optimizirana_simetrična_razlika(službeni_KA)
     nedet = NedeterminističniKonačniAutomat.iz_konačnog_automata(razlika)
-    prazni = nedet.optimizirana_partitivna_konstrukcija()
-    prazni.prirodni().crtaj()
-    print(prazni.završna)
+    je_li_prazan = nedet.optimizirana_partitivna_konstrukcija()
+    je_li_prazan.prirodni().crtaj()
+    print(je_li_prazan.završna)

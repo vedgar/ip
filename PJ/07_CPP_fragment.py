@@ -35,7 +35,7 @@ def cpp(lex):
             yield lex.token(T.JJEDNAKO if lex >= '=' else T.JEDNAKO)
         elif znak.isalpha() or znak == '_':
             lex * {str.isalnum, '_'}
-            yield lex.literal(T.IME)
+            yield lex.literal_ili(T.IME)
         elif znak.isdecimal():
             lex.prirodni_broj(znak)
             yield lex.token(T.BROJ)
