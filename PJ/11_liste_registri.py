@@ -85,7 +85,7 @@ class Program(AST):
     naredbe: 'naredba*'
     def izvrši(self):
         rt.mem = Memorija(redefinicija=False)
-        for nar in self.naredbe: print(nar, nar.izvrši(), sep='  -->  ')
+        for nar in self.naredbe: print(nar, ' --> ', nar.izvrši())
 
 class Deklaracija(AST):
     """Deklaracija liste."""
@@ -133,14 +133,13 @@ class Ubaci(AST):
 
 P.tokeniziraj('lista L1 prazna ubaci-2345izbaci L9 dohvati 3 koliko')
 source = '''
-    lista L1  lista L3
-    ubaci L3 45 0  dohvati L3 0
-    koliko L1  koliko L3
-    prazna L1  prazna L3
+    lista L1  lista L3  ubaci L3 45 0  dohvati L3 0
+    koliko L1  koliko L3  prazna L1  prazna L3
     Lista L5  ubaci L5 6 0  ubaci L5 -7 1  ubaci L5 8 1  ubaci L5 9 0
-    dohvati L5 0  dohvati L5 1  dohvati L5 2  dohvati L5 3  koliko L5
-    izbaci L5 1  dohvati L5 0 dohvati L5 1 dohvati L5 2  koliko L5'''
+    koliko L5  dohvati L5 0  dohvati L5 1  dohvati L5 2  dohvati L5 3
+    izbaci L5 1  koliko L5 dohvati L5 0 dohvati L5 1 dohvati L5 2'''
 P(source).izvrši()
+for ime, lista in rt.mem: print(ime, '=', lista)
 with LeksičkaGreška: P.tokeniziraj('L0')
 with SintaksnaGreška: P('ubaci L5 6 -2')
 with SemantičkaGreška: P('ubaci L7 5 0').izvrši()

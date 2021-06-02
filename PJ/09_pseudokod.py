@@ -217,7 +217,7 @@ def izvrši(funkcije, *argv):
 #        aritm: Zbroj: pribrojnici:[aritm]
 #               Suprotan: od:aritm
 #               Umnožak: faktori:[aritm]
-#        Poziv: funkcija:Funkcija argumenti:[izraz]
+#        Poziv: funkcija:Funkcija? argumenti:[izraz]
 
 class Funkcija(AST):
     ime: 'IME'
@@ -230,7 +230,7 @@ class Funkcija(AST):
         else: raise GreškaIzvođenja(f'{funkcija.ime} nije ništa vratila')
 
 class Poziv(AST):
-    funkcija: 'Funkcija'
+    funkcija: 'Funkcija?'
     argumenti: 'izraz*'
     def vrijednost(poziv, mem, unutar):
         pozvana = poziv.funkcija
