@@ -9,6 +9,7 @@ import enum, types, collections, contextlib, itertools, functools, \
 
 
 def paše(znak, uvjet): 
+    """Zadovoljava li znak zadani uvjet (funkcija, znak ili skup)."""
     if isinstance(uvjet, str):
         assert len(uvjet) <= 1, 'Znakovi ne mogu biti duljine veće od 1!'
         return znak == uvjet
@@ -19,7 +20,9 @@ def paše(znak, uvjet):
     elif isinstance(uvjet, set):
         return any(paše(znak, disjunkt) for disjunkt in uvjet)
 
+
 def omotaj(metoda):
+    """Jednostavni wrapper za metode parsera."""
     @functools.wraps(metoda)
     def omotano(self, *args, **kw):
         početak = self.pogledaj()._početak
@@ -30,22 +33,15 @@ def omotaj(metoda):
             Provjerite metodu {metoda.__name__}.
             Umjesto None vratite nenavedeno.'''))
         if isinstance(pvr, AST): pvr._početak, pvr._kraj = početak, kraj
-        # elif not isinstance(pvr, (Token, list)):
-        #    print(metoda, 'vratila', pvr)
-        #    input()
         return pvr
     return omotano
 
-#def identifikator(znak):
-#    """Je li znak dopušten u C-ovskom imenu (slovo, znamenka ili _)?"""
-#    return znak.isalnum() or znak == '_'
 
 TipoviTokena = enum.Enum
-#TipTokena = enum.auto
-#from typing import Optional
 
 
 class Kontekst(type):
+    """Metaklasa za upravitelj konteksta (with) za očekivanu grešku."""
     def __enter__(self): pass
     def __exit__(self, e_type, e_val, e_tb):
         if e_type is None: raise Greška(f'{self.__name__} nije dignuta')
@@ -53,12 +49,14 @@ class Kontekst(type):
             print(e_type.__name__, e_val, sep=': ')
             return True
 
+
 class Runtime(types.SimpleNamespace):
     """Globalni objekt za pamćenje runtime konteksta (npr. memorije)."""
     def __delattr__(self, atribut):
         with contextlib.suppress(AttributeError): super().__delattr__(atribut)
 
 rt = Runtime()
+
 
 # TODO: bolji API: Greška(poruka, pozicija ili token ili AST...)
 # ali ostaviti i lex.greška() i parser.greška() for convenience
