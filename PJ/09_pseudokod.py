@@ -77,20 +77,18 @@ def pseudokod_lexer(lex):
 # parametri -> ime | IME ZAREZ parametri
 # ime -> AIME | LIME
 # naredba -> pridruži | OTV ZATV | OTV naredbe ZATV | VRATI argument
-#            | DOK JE log naredba | DOK NIJE log naredba
-#            | AKO JE log naredba | AKO NIJE log naredba
-#            | AKO JE log naredba INAČE naredba
-# naredbe -> naredba | naredba ZAREZ naredbe
+#         | (AKO|DOK) (JE|NIJE) log naredba | AKO JE log naredba INAČE naredba
+# naredbe -> naredba | naredbe ZAREZ naredba
 # pridruži -> AIME JEDNAKO aritm | LIME JEDNAKO log
-# log -> log ILI disjunkt | disjunkt
+# log -> disjunkt | log ILI disjunkt
 # disjunkt -> aritm MANJE aritm | aritm JEDNAKO aritm 
-#             | ISTINA | LAŽ | LIME | LIME poziv | OTV log ZATV
+#         | ISTINA | LAŽ | LIME | LIME poziv | OTV log ZATV
 # aritm -> aritm PLUS član | aritm MINUS član
-# član -> član ZVJEZDICA faktor | faktor
+# član -> faktor | član ZVJEZDICA faktor
 # faktor -> BROJ | AIME | AIME poziv | OTV aritm ZATV | MINUS faktor
 # poziv -> OTV ZATV | OTV argumenti ZATV
-# argumenti -> argument | argument ZAREZ argumenti
-# argument -> aritm |! log  [KONTEKST!]
+# argumenti -> argument | argumenti ZAREZ argument
+# argument -> aritm |! log  [!KONTEKST]
 
 class P(Parser):
     def program(p) -> 'Memorija':

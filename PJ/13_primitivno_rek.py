@@ -1,4 +1,4 @@
-"""Funkcijski jezik primitivno rekurzivnih simboličkih definicija funkcija.
+"""Funkcijski jezik simboličkih definicija primitivno rekurzivnih funkcija.
 
 Slažemo funkcije od osnovnih (tzv. inicijalnih) funkcija:
     nulfunkcija: Z(x) := 0
@@ -62,14 +62,14 @@ def pr(lex):
 
 
 ### BKG
-# program -> definicija | definicija program
+# program -> definicija | program definicija
 # definicija -> FIME JEDNAKO funkcija
 # funkcija -> komponenta | komponenta PR komponenta
 # komponenta -> lijevo | komponenta KOMPOZICIJA desno
 # lijevo -> osnovna | OTV funkcija ZATV
 # desno -> osnovna | OTV funkcije ZATV
 # osnovna -> FIME | NULFUNKCIJA | SLJEDBENIK | KPROJEKCIJA
-# funkcije -> funkcija | funkcija ZAREZ funkcije
+# funkcije -> funkcija | funkcije ZAREZ funkcija
 
 
 class P(Parser):

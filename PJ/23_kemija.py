@@ -1,4 +1,4 @@
-"""Kemijske formule: zadatak s kolokvija 2018.
+"""Računanje molarne mase kemijskog spoja: po uzoru na kolokvij 7. rujna 2018.
 https://web.math.pmf.unizg.hr/~veky/B/IP.k2p.18-09-07.pdf"""
 
 
@@ -39,7 +39,7 @@ def kemija(lex):
 
 
 ### BKG
-# formula -> skupina | skupina formula
+# formula -> skupina | formula skupina
 # skupina -> ATOM | ATOM BROJ | zagrade | zagrade BROJ | zagrade N
 # zagrade -> OOTV formula OZATV | UOTV formula UZATV
 

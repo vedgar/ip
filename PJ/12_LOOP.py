@@ -44,11 +44,11 @@ def loop(lex):
 
 
 ### Beskontekstna gramatika:
-# program -> naredba | naredba program
+# program -> naredba | program naredba
 # naredba -> INC REG TOČKAZ | DEC REG TOČKAZ | REG VOTV program VZATV
 
 ### Apstraktna sintaksna stabla:
-# naredba: Petlja: registar:REG, tijelo:Program
+# naredba: Petlja: registar:REG tijelo:Program
 #          Promjena: op:INC|DEC registar:REG
 # Program: naredbe:[naredba]
 

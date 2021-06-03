@@ -1,4 +1,4 @@
-"""Regularni izrazi kao beskontekstni jezik.
+"""Regularni izrazi kao beskontekstni jezik. (Po kolokviju 10. veljače 2017.)
 
 Izgrađeni su od osnovnih (inicijalnih) regularnih izraza:
     /0  prazan jezik
@@ -36,8 +36,8 @@ def ri(lex):
 
 
 ### Beskontekstna gramatika
-# rx -> disjunkt ILI rx | disjunkt
-# disjunkt -> faktor disjunkt | faktor
+# rx -> disjunkt | disjunkt ILI rx
+# disjunkt -> faktor | faktor disjunkt
 # faktor -> element | faktor ZVIJEZDA | faktor PLUS | faktor UPITNIK
 # element -> PRAZAN | EPSILON | ZNAK | OTV rx ZATV
 

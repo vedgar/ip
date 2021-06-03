@@ -33,10 +33,10 @@ def az(lex):
 
 
 ### Beskontekstna gramatika:
-# izraz -> izraz PLUS član | izraz MINUS član | član
-# član -> član PUTA faktor | faktor | član faktorxz
-# faktorxz -> X | X BROJ | OTVORENA izraz ZATVORENA
+# izraz -> član | izraz PLUS član | izraz MINUS član
+# član -> faktor | član PUTA faktor | član faktorxz
 # faktor -> MINUS faktor | BROJ | faktorxz
+# faktorxz -> X | X BROJ | OTVORENA izraz ZATVORENA
 
 ### Apstraktna sintaksna stabla:
 # izraz: BROJ: Token

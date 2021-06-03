@@ -27,11 +27,11 @@ def aq(lex):
 
 
 ### BKG
-# program -> '' | naredba | naredba program
+# program -> '' | naredba | program naredba
 # naredba -> IME JEDNAKO izraz NOVIRED
 # izraz -> član | izraz PLUS član | izraz MINUS član
 # član -> faktor | član PUTA faktor | član KROZ faktor
-# faktor -> MINUS faktor | BROJ | IME | OTV izraz ZATV
+# faktor -> BROJ | IME | MINUS faktor | OTV izraz ZATV
 
 ### AST
 # Program: pridruživanja:[(IME,izraz)]

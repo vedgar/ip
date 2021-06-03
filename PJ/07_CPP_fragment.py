@@ -5,7 +5,9 @@
 
 Tijelo petlje može biti i blok u vitičastim zagradama.
 Podržana je i naredba break za izlaz iz unutarnje petlje:
-    nelokalna kontrola toka realizirana je pomoću izuzetka Prekid."""
+    nelokalna kontrola toka realizirana je pomoću izuzetka Prekid.
+
+Prema zadatku s kolokvija 16. veljače 2015. (Puljić)."""
 
 
 from vepar import *
@@ -43,15 +45,15 @@ def cpp(lex):
 
 
 ## Beskontekstna gramatika
-# start -> naredba naredbe
-# naredbe -> '' | naredba naredbe
+# start -> naredbe naredba
+# naredbe -> '' | naredbe naredba
 # naredba -> petlja | grananje | ispis TOČKAZ | BREAK TOČKAZ
 # for -> FOR OOTV IME# JEDNAKO BROJ TOČKAZ IME# MANJE BROJ TOČKAZ
 # 	     IME# inkrement OZATV
 # petlja -> for naredba | for VOTV naredbe VZATV
 # inkrement -> PLUSP | PLUSJ BROJ
 # ispis -> COUT varijable | COUT varijable MMANJE ENDL
-# varijable -> '' | MMANJE IME varijable
+# varijable -> '' | varijable MMANJE IME
 # grananje -> IF OOTV IME JJEDNAKO BROJ OZATV naredba
  
 class P(Parser):

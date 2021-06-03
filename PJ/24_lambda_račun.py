@@ -1,4 +1,4 @@
-"""Lambda-račun: zadatak s kolokvija 2019.
+"""Lambda-račun: zadatak s kolokvija 28. lipnja 2019.
 https://web.math.pmf.unizg.hr/~veky/B/IP.k2.19-06-28.pdf"""
 
 from vepar import *
@@ -19,9 +19,9 @@ def λex(l):
         else: yield l.literal(Λ)
 
 ### Beskontekstna gramatika:
-# izraz -> LAMBDA slova TOČKA izraz | član
+# izraz -> član | LAMBDA slova TOČKA izraz
 # slova -> SLOVO | SLOVO slova
-# član -> član faktor | faktor
+# član -> faktor | član faktor
 # faktor -> OTV izraz ZATV | SLOVO
 
 # Oneliner BKG: start -> (LAMBDA SLOVO+ TOČKA)* (OTV start ZATV | SLOVO)+

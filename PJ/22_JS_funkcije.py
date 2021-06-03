@@ -1,34 +1,45 @@
 """Leksički i sintaksni analizator za JavaScriptove funkcije.
-Kolokvij 19. siječnja 2012. (Puljić)"""
+Po uzoru na kolokvij 19. siječnja 2012. (Puljić).
+
+Lexer nije sasvim regularan jer broji slojeve vitičastih zagrada
+kako bi znao predstavlja li niz znakova (koji može početi znakom $
+u skladu s tradicijom JavaScripta) ime parametra funkcije ili naredba."""
 
 
 from vepar import *
 
 
 class T(TipoviTokena):
-    FUNCTION, VAR, NAREDBA, KOMENTAR = 'function', 'var', 'naredba', '//'
+    FUNCTION, VAR, KOMENTAR = 'function', 'var', '//'
     O_OTV, O_ZATV, V_OTV, V_ZATV, KOSACRTA, ZAREZ, TOČKAZAREZ = '(){}/,;'
     class IME(Token): pass
+    class NAREDBA(Token): pass
 
 
 def js(lex):
+    ugniježđenost = 0
     for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak.isalpha() or znak == '$':
             lex * {str.isalpha, '_'}
-            yield lex.literal_ili(T.IME)
+            default = T.NAREDBA if ugniježđenost else T.IME
+            yield lex.literal_ili(default)
         elif znak == '/':
             if lex >= '/':
                 lex - '\n'
                 yield lex.token(T.KOMENTAR)
             else: yield lex.token(T.KOSACRTA)
-        else: yield lex.literal(T)
+        else:
+            token = lex.literal(T)
+            if token ^ T.V_OTV: ugniježđenost += 1
+            elif token ^ T.V_ZATV: ugniježđenost -= 1
+            yield token
 
 
 ### Beskontekstna gramatika
 # start -> fun | start fun
 # fun -> FUNCTION IME O_OTV argumenti? O_ZATV V_OTV KOMENTAR* nar V_ZATV
-# argumenti -> VAR IME ZAREZ argumenti | VAR IME
+# argumenti -> VAR IME | argumenti ZAREZ VAR IME
 # nar -> NAREDBA TOČKAZAREZ nar | NAREDBA KOMENTAR+ nar | NAREDBA | ''
 
 class P(Parser):
@@ -50,7 +61,7 @@ class P(Parser):
         while p >= T.KOMENTAR: pass
         naredbe = []
         while not p >= T.V_ZATV:
-            naredbe.append(p.naredba())
+            naredbe.append(p >> T.NAREDBA)
             if p >= T.TOČKAZAREZ: pass
             elif p > T.KOMENTAR:
                 while p >= T.KOMENTAR: pass
@@ -65,8 +76,6 @@ class P(Parser):
     def argument(p) -> 'IME':
         p >> T.VAR
         return p >> T.IME
-
-    def naredba(p) -> 'NAREDBA': return p >> T.NAREDBA
 
 
 ### AST
@@ -85,11 +94,13 @@ class Program(AST):
 prikaz(P('''
     function ime (var x, var y, var z) {
         //neke naredbe odvojene s ; ili komentarima
-        naredba; naredba //kom 
-        naredba
+        naredba; druga_naredba //kom 
+        još_jedna_naredba
     }
     function ništa(){}
-    function $trivijalna(var hmmm){naredba// komm/
+    function $trivijalna(var hmmm){n// komm/
     //
     }
 '''), 3)
+
+with SintaksnaGreška: P('function n(){naredba naredba;}')

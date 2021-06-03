@@ -41,7 +41,7 @@ class Tip(enum.Enum):
 
 ### Beskontekstna gramatika
 # start -> NOVIRED? niz_naredbi NOVIRED?
-# niz_naredbi -> naredba | naredba NOVIRED niz_naredbi
+# niz_naredbi -> naredba | niz_naredbi NOVIRED naredba
 # naredba -> UPIT izraz | (NAT|INT|RAT) IME JEDNAKO izraz
 # izraz -> član | izraz (PLUS|MINUS) član
 # član -> faktor | član (PUTA|KROZ|DIV|MOD) faktor

@@ -17,12 +17,12 @@ class T(TipoviTokena):
 
 
 ### Beskontekstna gramatika:
-# start -> naredba start | naredba
+# start -> naredba | start naredba
 # naredba -> select TOČKAZAREZ | create TOČKAZAREZ
 # select -> SELECT ZVJEZDICA FROM IME | SELECT stupci FROM IME
-# stupci -> stupci ZAREZ IME | IME
+# stupci -> IME | stupci ZAREZ IME
 # create -> CREATE TABLE IME OTVORENA spec_stupci ZATVORENA
-# spec_stupci -> spec_stupci ZAREZ spec_stupac | spec_stupac
+# spec_stupci -> spec_stupac | spec_stupci ZAREZ spec_stupac
 # spec_stupac -> IME IME | IME IME OTVORENA BROJ ZATVORENA
 
 ### Apstraktna sintaksna stabla:

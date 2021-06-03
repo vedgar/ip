@@ -24,8 +24,8 @@ def an(lex):
 
 
 ### Beskontekstna gramatika
-# izraz -> izraz PLUS član | član
-# član -> član PUTA faktor | faktor | član zagrade
+# izraz -> član | izraz PLUS član
+# član -> faktor | član PUTA faktor | član zagrade
 # faktor -> BROJ | zagrade
 # zagrade -> OTVORENA izraz ZATVORENA
 

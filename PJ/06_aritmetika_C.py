@@ -50,10 +50,10 @@ def ac(lex):
 
 
 ### Beskontekstna gramatika
-# start -> izraz STRELICA IME start | izraz
-# izraz -> izraz PLUS član | izraz MINUS član | član
-# član -> član PUTA faktor | član KROZ faktor | faktor
-# faktor -> baza NA faktor | baza | MINUS faktor 
+# start -> izraz | izraz STRELICA IME start
+# izraz -> član | izraz PLUS član | izraz MINUS član
+# član -> faktor | član PUTA faktor | član KROZ faktor
+# faktor -> baza | baza NA faktor | MINUS faktor 
 # baza -> BROJ | IME | I | OTV izraz ZATV | baza KONJ
 
 

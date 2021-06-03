@@ -39,7 +39,7 @@ def basic(lex):
 
 
 ### BKG
-# start = naredbe -> naredba*
+# start = naredbe -> naredba | naredbe naredba
 # naredba -> pridruživanje | petlja | unos | ispis | grananje
 # pridruživanje -> BVAR JEDNAKO broj | TVAR JEDNAKO tekst
 # broj -> račun usporedba+ račun | račun | tekst JEDNAKO tekst

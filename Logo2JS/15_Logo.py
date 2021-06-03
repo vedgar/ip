@@ -1,4 +1,4 @@
-﻿"""Transpiler Logo -> JavaScript"""
+﻿"""Transpiler Logo -> JavaScript, prema kolokviju 24. veljače 2017."""
 
 
 from vepar import *
@@ -34,9 +34,9 @@ def logo(lex):
 
 
 ### Beskontekstna gramatika
-# start -> start naredba | naredba
-# naredba -> nar1 BROJ | PENUP | PENDOWN | REPEAT BROJ OTV program ZATV
-# nar1 -> FORWARD | BACKWARD | LEFT | RIGHT
+# start -> naredba | start naredba
+# naredba -> naredba1 BROJ | PENUP | PENDOWN | REPEAT BROJ OTV program ZATV
+# naredba1 -> FORWARD | BACKWARD | LEFT | RIGHT
 
 ### Apstraktna sintaksna stabla
 # Program: naredbe:[naredba]

@@ -42,7 +42,7 @@ def list_lexer(lex):
 
 
 ### Beskontekstna gramatika (jezik je regularan!)
-# start -> naredba start | ''
+# start -> '' | start naredba
 # naredba -> deklaracija | provjera | ubaci | izbaci | dohvati | duljina
 # deklaracija -> LISTA ID
 # provjera -> PRAZNA ID

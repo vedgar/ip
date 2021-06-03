@@ -59,9 +59,8 @@ def listlexer(lex):
 
 
 ## Beskontekstna gramatika
-# element -> BROJ | STRING1 | STRING2 | lista
-# lista -> UOTV elementi UZATV
-# elementi -> element | element ZAREZ elementi | ''
+# element -> BROJ | STRING1 | STRING2 | UOTV elementi UZATV
+# elementi -> element | elementi ZAREZ element | ''
 
 ## AST:
 # element: Lista: elementi:[element]

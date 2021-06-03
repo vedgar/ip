@@ -20,8 +20,8 @@ def ds(lex):
 
 
 ### Beskontekstna gramatika
-# sklop -> sklop ILI disjunkt | disjunkt
-# disjunkt -> disjunkt faktor | faktor
+# sklop -> disjunkt | sklop ILI disjunkt
+# disjunkt -> faktor | disjunkt faktor
 # faktor -> SLOVO | faktor NE | OOTV sklop OZATV | UOTV sklop UZATV
 
 
