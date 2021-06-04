@@ -1,6 +1,7 @@
 """Framework za leksičku, sintaksnu, semantičku analizu, te izvođenje programa.
 Za više detalja pogledati šalabahter.txt."""
 
+
 __version__ = '2.2'
 
 
@@ -65,6 +66,28 @@ class LeksičkaGreška(Greška): """Greška nastala u leksičkoj analizi."""
 class SintaksnaGreška(Greška): """Greška nastala u sintaksnoj analizi."""
 class SemantičkaGreška(Greška): """Greška nastala u semantičkoj analizi."""
 class GreškaIzvođenja(Greška): """Greška nastala u izvođenju."""
+
+
+class E(TipoviTokena): KRAJ = None
+KRAJ = E.KRAJ
+
+
+class NoneInAST(Exception): """U apstraktnom sintaksnom stablu se našao None."""
+
+
+cache = functools.lru_cache(maxsize=None)
+
+
+def Registri(prefiks='_t', start=0):
+    for i in itertools.count(start): yield prefiks + str(i)
+
+
+class NelokalnaKontrolaToka(Exception):
+    """Bazna klasa koja služi za implementaciju nelokalne kontrole toka."""
+    @property
+    def preneseno(self):
+        """Vrijednost koja je prenesena "unatrag" prema korijenu."""
+        return self.args[0] if self.args else nenavedeno
 
 
 class Tokenizer:
@@ -216,10 +239,6 @@ class Tokenizer:
     __sub__ = __le__ = pročitaj_do
 
 
-class E(TipoviTokena): KRAJ = None
-KRAJ = E.KRAJ
-
-
 class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
     """Leksičke jedinice ulaza čiji tipovi upravljaju sintaksnom analizom."""
     def __new__(cls, tip, sadržaj=None):
@@ -294,8 +313,6 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         t.razriješen = False
         return t
 
-    def prikaz(self, dubina): print(self)
-
 
 class Parser:
     def __new__(cls, ulaz):
@@ -367,17 +384,11 @@ class Parser:
         return self.zadnji.neočekivan()
 
 
-elementarni = str, int, bool
-
-
-class NoneInAST(Exception): """U apstraktnom sintaksnom stablu se našao None."""
-
-
 def prikaz(objekt, dubina:int=math.inf, uvlaka:str='', ime:str=None):
     """Vertikalni prikaz AST-a, do zadane dubine."""
     intro = uvlaka
     if ime is not None: intro += ime + ' = '
-    if isinstance(objekt, (Token, elementarni, Nenavedeno, enum.Enum)) \
+    if isinstance(objekt, (Token, str, int, Nenavedeno, enum.Enum)) \
             or not dubina:
         return print(intro, repr(objekt), sep='')
     if isinstance(objekt, list):
@@ -406,11 +417,11 @@ def prikaz(objekt, dubina:int=math.inf, uvlaka:str='', ime:str=None):
         for ime, vrijednost in d.items():
             if not ime.startswith('_'):
                 prikaz(vrijednost, dubina - 1, uvlaka + t, ime)
-    else: assert False, f'Ne znam lijepo prikazati {objekt}'
+    else: raise TypeError(f'Ne znam lijepo prikazati {objekt}')
 
 
 def raspon(ast):
-    """String koji kazuje odakle dokle se prostire token (ili AST)."""
+    """String koji kazuje odakle dokle se prostire token ili AST."""
     if hasattr(ast, '_početak'):
         ip, jp = ast._početak
         ik, jk = ast._kraj
@@ -458,7 +469,10 @@ class Memorija:
     def __init__(self, podaci={}, *, redefinicija=True):
         self.redefinicija = redefinicija
         self.podaci, self.token_sadržaja = {}, {}
-        for ključ, vrijednost in podaci.items(): self[ključ] = vrijednost
+        if isinstance(podaci, dict): podaci = podaci.items()
+        elif not isinstance(podaci, (zip, Memorija)):
+            raise TypeError(f'Memorija ne razumije podatke: {podaci}')
+        for ključ, vrijednost in podaci: self[ključ] = vrijednost
 
     def provjeri(self, lokacija, sadržaj):
         if sadržaj in self.podaci: return
@@ -506,19 +520,3 @@ class Memorija:
     def __len__(self): return len(self.podaci)
 
     #TODO: dodati Memorija.imena kao dict(Memorija).keys(), koristiti u 04_...
-
-
-cache = functools.lru_cache(maxsize=None)
-
-
-def Registri(prefiks='_t', start=0):
-    for i in itertools.count(start):
-        yield prefiks + str(i)
-
-
-class NelokalnaKontrolaToka(Exception):
-    """Bazna klasa koja služi za implementaciju nelokalne kontrole toka."""
-    @property
-    def preneseno(self):
-        """Vrijednost koja je prenesena "unatrag" prema korijenu."""
-        return self.args[0] if self.args else nenavedeno
