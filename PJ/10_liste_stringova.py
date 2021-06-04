@@ -95,7 +95,7 @@ print(lista := r'''
 P.tokeniziraj(lista)
 prikaz(ast := P(lista), 2)
 print(v := ast.vrijednost())
-for element in v: print(element, end='\t')
+print(*v, sep='\t')
 
 
 # DZ: omogućite razne druge \-escape sekvence (npr. \u za znakove Unikoda)

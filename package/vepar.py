@@ -6,7 +6,7 @@ __version__ = '2.2'
 
 
 import enum, types, collections, contextlib, itertools, functools, \
-        math, typing, dataclasses, fractions, textwrap
+        math, typing, dataclasses, fractions, textwrap, operator
 
 
 def paše(znak, uvjet): 
@@ -271,8 +271,8 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         if self.tip is KRAJ: poruka = 'Neočekivani kraj ulaza'
         else: poruka = raspon(self) + f': neočekivani token {self!r}'
         if info: poruka += f' ({info})'
-        očekivano = ' ili '.join(t.name for t in self.uspoređeni if t!=self.tip)
-        if očekivano: poruka += f'\n\tOčekivano: {očekivano}'
+        uspoređeni = sorted(t.name for t in self.uspoređeni if t != self.tip)
+        if uspoređeni: poruka += f"\n\tOčekivano: {' ili '.join(uspoređeni)}"
         return SintaksnaGreška(poruka)
 
     def redefinicija(self, prvi=None):
