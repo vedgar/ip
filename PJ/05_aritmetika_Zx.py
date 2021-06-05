@@ -3,8 +3,7 @@
 Aritmetika cijelih brojeva je specijalni slučaj, kad se x ne pojavljuje.
 Dozvoljeno je ispuštanje zvjezdice za množenje u slučajevima poput
   23x, xxxx, 2(3+1), (x+1)x, (x)(7) -- ali ne x3: to znači potenciranje!
-Pokazuje se kako programirati jednostavne izuzetke od pravila BKG:
-  konkretno, zabranjeni su izrazi poput (x+2)3, te (već leksički) 2 3.
+  Također, zabranjeni su izrazi poput (x+2)3, te (već leksički) 2 3.
 
 Semantički analizator je napravljen u obliku prevoditelja (kompajlera) u
   klasu Polinom, čiji objekti podržavaju operacije prstena i lijep ispis."""

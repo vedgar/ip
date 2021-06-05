@@ -126,7 +126,7 @@ def nacrtaj(ime):
 
 # print(pathlib.Path(__file__).parent.parent)
 zb = {f.stem: f for f in (direktorij/'crteži').iterdir()}
-crteži = list(zb)
+crteži = sorted(zb)
 
 def nacrtaj_sve():
     for crtež in crteži:

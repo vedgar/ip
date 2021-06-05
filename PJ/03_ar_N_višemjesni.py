@@ -86,7 +86,7 @@ class Umnožak(AST):
 def testiraj(izraz):
     print('-' * 60)
     prikaz(stablo := P(izraz), 3)
-    prikaz(opt := stablo.optim(), 2)
+    prikaz(opt := stablo.optim(), 3)
     mi = opt.vrijednost()
     try: Python = Python_eval(izraz)
     except SyntaxError: print('Python ovo ne zna!', izraz, '==', mi)

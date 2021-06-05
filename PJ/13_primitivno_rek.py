@@ -3,7 +3,7 @@
 Slažemo funkcije od osnovnih (tzv. inicijalnih) funkcija:
     nulfunkcija: Z(x) := 0
     sljedbenik: Sc(x) := x + 1
-    koordinatna projekcija: Ikn(x1,...,xk) := xn
+    koordinatna projekcija: Ink(x1,...,xk) := xn
 pomoću dva operatora:
     kompozicija: 
         (H o (G1,...,Gl)) (x1,...,xk) := H(G1(x1,...,xk),...,Gl(x1,...xk))

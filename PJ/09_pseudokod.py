@@ -74,7 +74,7 @@ def pseudokod_lexer(lex):
 ### ne sasvim BKG
 # program -> funkcija | funkcija program
 # funkcija -> ime OTV parametri? ZATV JEDNAKO naredba
-# parametri -> ime | IME ZAREZ parametri
+# parametri -> ime | parametri ZAREZ ime
 # ime -> AIME | LIME
 # naredba -> pridruži | OTV ZATV | OTV naredbe ZATV | VRATI argument
 #         | (AKO|DOK) (JE|NIJE) log naredba | AKO JE log naredba INAČE naredba
@@ -83,7 +83,7 @@ def pseudokod_lexer(lex):
 # log -> disjunkt | log ILI disjunkt
 # disjunkt -> aritm MANJE aritm | aritm JEDNAKO aritm 
 #         | ISTINA | LAŽ | LIME | LIME poziv | OTV log ZATV
-# aritm -> aritm PLUS član | aritm MINUS član
+# aritm -> član | aritm PLUS član | aritm MINUS član
 # član -> faktor | član ZVJEZDICA faktor
 # faktor -> BROJ | AIME | AIME poziv | OTV aritm ZATV | MINUS faktor
 # poziv -> OTV ZATV | OTV argumenti ZATV
@@ -98,7 +98,20 @@ class P(Parser):
             p.funkcije[funkcija.ime] = funkcija
         return p.funkcije
 
+    def funkcija(p) -> 'Funkcija':
+        atributi = p.imef, p.parametrif = p.ime(), p.parametri()
+        p >> T.JEDNAKO
+        return Funkcija(*atributi, p.naredba())
+
     def ime(p) -> 'AIME|LIME': return p >> {T.AIME, T.LIME}
+
+    def parametri(p) -> 'ime*':
+        p >> T.OTV
+        if p >= T.ZATV: return []
+        param = [p.ime()]
+        while p >= T.ZAREZ: param.append(p.ime())
+        p >> T.ZATV
+        return param
 
     def naredba(p) -> 'grananje|petlja|blok|Vrati|Pridruživanje':
         if p > T.AKO: return p.grananje()
@@ -110,18 +123,11 @@ class P(Parser):
             p >> T.JEDNAKO
             return Pridruživanje(ime, p.tipa(ime))
 
-    def blok(p) -> 'Blok|naredba':
-        p >> T.OTV
-        if p >= T.ZATV: return Blok([])
-        n = [p.naredba()]
-        while p >= T.ZAREZ and not p > T.ZATV: n.append(p.naredba())
-        p >> T.ZATV
-        return Blok.ili_samo(n)
-
-    def petlja(p) -> 'Petlja':
-        p >> T.DOK
-        return Petlja(p >> {T.JE, T.NIJE}, p.log(), p.naredba())
-
+    def tipa(p, ime) -> 'aritm|log':
+        if ime ^ T.AIME: return p.aritm()
+        elif ime ^ T.LIME: return p.log()
+        else: assert False, f'Nepoznat tip od {ime}'
+        
     def grananje(p) -> 'Grananje':
         p >> T.AKO
         je = p > T.JE
@@ -130,18 +136,17 @@ class P(Parser):
         else: inače = Blok([])
         return Grananje(*atributi, inače)
 
-    def funkcija(p) -> 'Funkcija':
-        atributi = p.imef, p.parametrif = p.ime(), p.parametri()
-        p >> T.JEDNAKO
-        return Funkcija(*atributi, p.naredba())
+    def petlja(p) -> 'Petlja':
+        p >> T.DOK
+        return Petlja(p >> {T.JE, T.NIJE}, p.log(), p.naredba())
 
-    def parametri(p) -> 'ime*':
+    def blok(p) -> 'Blok|naredba':
         p >> T.OTV
-        if p >= T.ZATV: return []
-        param = [p.ime()]
-        while p >= T.ZAREZ: param.append(p.ime())
+        if p >= T.ZATV: return Blok([])
+        n = [p.naredba()]
+        while p >= T.ZAREZ and not p > T.ZATV: n.append(p.naredba())
         p >> T.ZATV
-        return param
+        return Blok.ili_samo(n)
 
     def log(p) -> 'Disjunkcija|disjunkt':
         disjunkti = [p.disjunkt()]
@@ -169,11 +174,6 @@ class P(Parser):
         p >> T.ZATV
         return arg
     
-    def tipa(p, ime) -> 'aritm|log':
-        if ime ^ T.AIME: return p.aritm()
-        elif ime ^ T.LIME: return p.log()
-        else: assert False, f'Nepoznat tip od {ime}'
-        
     def aritm(p) -> 'Zbroj|član':
         članovi = [p.član()]
         while ...:
