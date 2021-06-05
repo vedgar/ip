@@ -286,7 +286,8 @@ Umnožak:  @[Znakovi #1–kraj]
   . BROJ'4'
 Umnožak:
   faktori = [...]:
-  . Zbroj(pribrojnici=[BROJ'2', BROJ'3'])
+  . Zbroj:
+  .   pribrojnici = [BROJ'2', BROJ'3']
   . BROJ'4'
 (2+3)*4 == 20 OK
 ------------------------------------------------------------
@@ -309,7 +310,8 @@ Umnožak:  @[Znakovi #1–kraj]
 Umnožak:
   faktori = [...]:
   . BROJ'2'
-  . Zbroj(pribrojnici=[BROJ'3', BROJ'5'])
+  . Zbroj:
+  .   pribrojnici = [BROJ'3', BROJ'5']
 Python ovo ne zna! 2(3+5) == 16
 ------------------------------------------------------------
 Umnožak:  @[Znakovi #1–kraj]
@@ -324,9 +326,11 @@ Umnožak:  @[Znakovi #1–kraj]
   .   pribrojnici = [BROJ'3', BROJ'4']
 Umnožak:
   faktori = [...]:
-  . Zbroj(pribrojnici=[BROJ'1', BROJ'1'])
+  . Zbroj:
+  .   pribrojnici = [BROJ'1', BROJ'1']
   . BROJ'2'
-  . Zbroj(pribrojnici=[BROJ'3', BROJ'4'])
+  . Zbroj:
+  .   pribrojnici = [BROJ'3', BROJ'4']
 Python ovo ne zna! (1+1) (0+2+0) (0+1) (3+4) == 28
 ------------------------------------------------------------
 SintaksnaGreška: Znak #6: neočekivani token BROJ'4'
@@ -1487,15 +1491,15 @@ Unija:
             znak = 'c'
 ε a* a*c a** a**c a*c* a*c*c a*** a***c a**c* a**c*c a*c** a*c**c a*c*c* a*c*c*c a**** a****c a***c* a***c*c a**c**
 ###################################15_Logo####################################
-0 kocke
-1 kućica
-2 peterokuti
-3 zviježđe
-4 Hi
-5 pisanje
-6 cvijeće
-7 lagana rotacija
-Što da nacrtam? Crtam: peterokuti
+0 Hi
+1 cvijeće
+2 kocke
+3 kućica
+4 lagana rotacija
+5 peterokuti
+6 pisanje
+7 zviježđe
+Što da nacrtam? Crtam: kocke
 ################################16_XHTML_liste################################
 Dokument:  @[Redak 1, stupac 5 – redak 26, stupac 11]
   zaglavlje = Tekst:  @[Redak 3, stupac 13 – redak 4, stupac 15]

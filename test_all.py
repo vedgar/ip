@@ -30,6 +30,6 @@ else:
         with tempfile.NamedTemporaryFile(
                 mode='w', prefix='_vepar_', delete=False) as tmp:
             print(diff, file=tmp)
-        webbrowser.open(tmp.name)
-        time.sleep(5)
+        webbrowser.open(tmp.name, 2)
+        time.sleep(6)
         pathlib.Path(tmp.name).unlink()
