@@ -265,6 +265,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         if self.tip in tip:
             self.razriješen = True
             return self
+        else: return nenavedeno
 
     def neočekivan(self, info=''):
         """Konstruira sintaksnu grešku: neočekivani tip tokena."""
@@ -443,8 +444,9 @@ class AST:
     def __init_subclass__(cls): dataclasses.dataclass(cls, frozen=False)
 
     def __xor__(self, tip):
-        """Vraća sebe (istina) ako je zadanog tipa, inače None (laž)."""
+        """Vraća sebe (istina) ako je zadanog tipa, inače nenavedeno (laž)."""
         if isinstance(tip, type) and isinstance(self, tip): return self
+        else: return nenavedeno
 
     iznimka = Token.iznimka
 
