@@ -15,7 +15,7 @@ from vepar import *
 BKSL, N1, N2, NOVIRED = '\\', "'", '"', '\n'
 
 @cache
-def unescape(string):
+def raspiši(string):
     """Interpretira obrnute kose crte (backslashes) u stringu."""
     iterator, rezultat = iter(string), []
     for znak in iterator:
@@ -36,8 +36,9 @@ class T(TipoviTokena):
         def vrijednost(t): return t.sadržaj[1:-1]
     class STRING2(Token):
         """String u dvostrukim navodnicima (backslash kao escape)."""
-        def vrijednost(t): return unescape(t.sadržaj[1:-1])
+        def vrijednost(t): return raspiši(t.sadržaj[1:-1])
 
+@lexer
 def listlexer(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
@@ -62,13 +63,6 @@ def listlexer(lex):
 # element -> BROJ | STRING1 | STRING2 | UOTV elementi UZATV
 # elementi -> element | elementi ZAREZ element | ''
 
-## AST:
-# element: Lista: elementi:[element]
-#          BROJ: Token
-#          STRING1: Token
-#          STRING2: Token
-
-
 class P(Parser):
     def element(self) -> 'Lista|BROJ|STRING1|STRING2':
         if self >= T.UOTV:
@@ -80,9 +74,12 @@ class P(Parser):
             return Lista(elementi)
         else: return self >> {T.BROJ, T.STRING1, T.STRING2}
     
-    lexer = listlexer 
-    start = element
 
+## AST:
+# element: Lista: elementi:[element]
+#          BROJ: Token
+#          STRING1: Token
+#          STRING2: Token
 
 class Lista(AST):
     elementi: 'element*'
@@ -90,9 +87,10 @@ class Lista(AST):
 
 
 print(lista := r'''
-    [23, "ab\"c]", 'a[]', [2, 3, ], 523, [1,2,2,3], '"', '\', "\e", "\\", '']
+  [[], 23, "ab\"c]", 'a[]', [2, 3, ], 523, [1,2,2,3], '"', '\', "\e",
+   "\\", '', "", "\[", ]
 ''')
-P.tokeniziraj(lista)
+listlexer(lista)
 prikaz(ast := P(lista), 2)
 print(v := ast.vrijednost())
 print(*v, sep='\t')

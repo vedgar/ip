@@ -23,7 +23,7 @@ class T(TipoviTokena):
         def optim(t): return t
         def prevedi(t): yield ['PUSH', t.vrijednost()]
 
-
+@lexer
 def an(lex):
     for znak in lex:
         if znak.isdecimal():
@@ -70,9 +70,6 @@ class P(Parser):
             u_zagradi = p.izraz()
             p >> T.ZATVORENA
             return u_zagradi
-
-    lexer = an
-    start = izraz
 
 
 nula = Token(T.BROJ, '0')
@@ -158,7 +155,7 @@ def testiraj(izraz):
         raise ArithmeticError('Python se ne slaže s nama')
 
 
-P.tokeniziraj('(2+3)*4^1')
+an('(2+3)*4^1')
 testiraj('(2+3)*4^1')
 testiraj('2^0^0^0^0')
 testiraj('2+(0+1*1*2)')

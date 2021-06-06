@@ -21,7 +21,7 @@ class T(TipoviTokena):
     class BROJ(Token):
         def vrijednost(t): return int(t.sadržaj)
 
-
+@lexer
 def kemija(lex):
     može_n = False
     for znak in lex:
@@ -43,7 +43,6 @@ def kemija(lex):
 # skupina -> ATOM | ATOM BROJ | zagrade | zagrade BROJ | zagrade N
 # zagrade -> OOTV formula OZATV | UOTV formula UZATV
 
-
 class spoj(Parser):
     def formula(p) -> 'Formula':
         l = [p.skupina()]
@@ -60,14 +59,10 @@ class spoj(Parser):
         else: što = p >> T.ATOM
         return Skupina(što, p >= {T.BROJ, T.N})
 
-    lexer = kemija
-    start = formula
-
 
 ### AST
 # Formula: skupine:[Skupina]
 # Skupina: čega:ATOM|Formula koliko:(BROJ|N)?
-
 
 class Formula(AST):
     skupine: 'Skupina*'
@@ -80,7 +75,6 @@ class Formula(AST):
         if 'n' in mase: rt.n = mase.pop('n')
         rt.tablica = Memorija(referentne_atomske_mase | mase)
         return spoj.masa()
-
 
 class Skupina(AST):
     čega: 'ATOM|Formula'
@@ -96,7 +90,7 @@ natrijev_trikarbonatokobaltat = spoj('Na3[Co(CO3)3]')
 prikaz(natrijev_trikarbonatokobaltat)
 print(natrijev_trikarbonatokobaltat.Mr())
 for krivo in 'SnABcdefG', 'O Be', 'Es(n)':
-    with LeksičkaGreška: spoj.tokeniziraj(krivo)
+    with LeksičkaGreška: kemija(krivo)
     print()
-spoj.tokeniziraj(']nB')
+kemija(']nB')
 print('Molarna masa butana je', spoj('CH3(CH2)nCH3').Mr(n=2))

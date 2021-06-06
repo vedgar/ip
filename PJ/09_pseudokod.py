@@ -52,8 +52,8 @@ class T(TipoviTokena):
         literal = 'Laž'
         def vrijednost(self, mem, unutar): return False
 
-
-def pseudokod_lexer(lex):
+@lexer
+def pseudokod(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak.islower():
@@ -195,9 +195,6 @@ class P(Parser):
             return u_zagradi
         else: return p >> T.BROJ
 
-    start = program
-    lexer = pseudokod_lexer
-
 
 def izvrši(funkcije, *argv):
     print('Program je vratio:', funkcije['program'].pozovi(argv))
@@ -222,7 +219,7 @@ class Funkcija(AST):
     parametri: 'IME*'
     tijelo: 'naredba'
     def pozovi(funkcija, argumenti):
-        lokalni = Memorija(dict(zip(funkcija.parametri, argumenti)))
+        lokalni = Memorija(zip(funkcija.parametri, argumenti))
         try: funkcija.tijelo.izvrši(mem=lokalni, unutar=funkcija)
         except Povratak as exc: return exc.preneseno
         else: raise GreškaIzvođenja(f'{funkcija.ime} nije ništa vratila')
@@ -336,7 +333,6 @@ Neparan(x) = (
     vrati N
 )
 '''
-
 suma_faktorijela = P(modul + '''
 fakt(x) = (
     f = 1,

@@ -1,13 +1,16 @@
 """Lambda-račun: zadatak s kolokvija 28. lipnja 2019.
 https://web.math.pmf.unizg.hr/~veky/B/IP.k2.19-06-28.pdf"""
 
+
 from vepar import *
+
 
 class Λ(enum.Enum):
     LAMBDA, TOČKA, OTV, ZATV = 'λ.()'
     class SLOVO(Token):
         def slobodne(t): return {t}
 
+@lexer
 def λex(l):
     for znak in l:
         if znak.isspace(): l.zanemari()
@@ -47,8 +50,6 @@ class λ(Parser):
             return u_zagradi
         else: return p >> Λ.SLOVO
 
-    start = izraz
-    lexer = λex
 
 ### Apstraktna sintaksna stabla
 # izraz: SLOVO:Token
@@ -66,6 +67,7 @@ class Aplikacija(AST):
     argument: 'izraz'
     def slobodne(aplikacija):
         return aplikacija.funkcija.slobodne() | aplikacija.argument.slobodne()
+
 
 def kombinator(l): return not λ(l).slobodne()
 

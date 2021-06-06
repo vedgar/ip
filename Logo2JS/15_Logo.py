@@ -20,6 +20,7 @@ alias = {'fd': T.FORWARD, 'fw': T.FORWARD,
          'bk': T.BACKWARD, 'back': T.BACKWARD, 'bw': T.BACKWARD,
          'lt': T.LEFT, 'rt': T.RIGHT, 'pu': T.PENUP, 'pd': T.PENDOWN}
 
+@lexer
 def logo(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
@@ -46,8 +47,6 @@ def logo(lex):
 #          Olovka: položaj:PENUP|PENDOWN
 
 class P(Parser):
-    lexer = logo
-
     def start(p) -> 'Program':
         naredbe = [p.naredba()]
         while not p > KRAJ: naredbe.append(p.naredba())
@@ -140,6 +139,7 @@ if __name__ == '__main__':
     elif utipkano == '*': nacrtaj_sve()
     elif utipkano.isdecimal(): nacrtaj(crteži[int(utipkano)])
     else: print('Ne razumijem.')
+
 
 # DZ: dodajte REPCOUNT (pogledajte na webu kako se koristi)
 # DZ: pogledati http://www.mathcats.com/gallery/15wordcontest.html

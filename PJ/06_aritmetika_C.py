@@ -31,6 +31,7 @@ class T(TipoviTokena):
             yield [r:=next(rt.reg), '=', self.sadržaj]
             return r
 
+@lexer
 def ac(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
@@ -58,8 +59,6 @@ def ac(lex):
 
 
 class P(Parser):
-    lexer = ac
-
     def start(p) -> 'Program':
         definicije = []
         izraz = p.izraz()
@@ -186,6 +185,6 @@ with LeksičkaGreška: izračunaj('2e+3')
 with GreškaIzvođenja: izračunaj('2+2/0')
 with GreškaIzvođenja: izračunaj('0**i')
 
-# DZ: Dodajte implicitno množenje, barem s i; tako da radi npr. 2+3i
+# DZ: Dodajte implicitno množenje (barem s i, tako da radi npr. 2+3i)
 # DZ: Stritkno držanje IEEE-754 zahtijeva i ispravno tretiranje dijeljenja nulom
 # (a ako želite biti sasvim compliant, i potenciranja poput 0^-1): učinite to!

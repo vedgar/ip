@@ -15,6 +15,20 @@ class T(TipoviTokena):
     class IME(Token): pass
     class BROJ(Token): pass
 
+@lexer
+def sql(lex):
+    for znak in lex:
+        if znak.isspace(): lex.zanemari()
+        elif znak.isalnum():
+            lex * str.isalnum
+            if lex.sadržaj.isdecimal(): yield lex.token(T.BROJ)
+            else: yield lex.literal_ili(T.IME, case=False)
+        elif znak == '-':
+            lex >> '-'
+            lex - '\n'
+            lex.zanemari()
+        else: yield lex.literal(T)
+
 
 ### Beskontekstna gramatika:
 # start -> naredba | start naredba
@@ -25,27 +39,7 @@ class T(TipoviTokena):
 # spec_stupci -> spec_stupac | spec_stupci ZAREZ spec_stupac
 # spec_stupac -> IME IME | IME IME OTVORENA BROJ ZATVORENA
 
-### Apstraktna sintaksna stabla:
-# Skripta: naredbe:[naredba]
-# naredba: Select: tablica:IME stupci:[IME]?
-#          Create: tablica:IME specifikacije:[Stupac]
-# Stupac: ime:IME tip:IME veličina:BROJ?
-
-
 class P(Parser):
-    def lexer(lex):
-        for znak in lex:
-            if znak.isspace(): lex.zanemari()
-            elif znak.isalnum():
-                lex * str.isalnum
-                if lex.sadržaj.isdecimal(): yield lex.token(T.BROJ)
-                else: yield lex.literal_ili(T.IME, case=False)
-            elif znak == '-':
-                lex >> '-'
-                lex - '\n'
-                lex.zanemari()
-            else: yield lex.literal(T)
-
     def start(p) -> 'Skripta':
         naredbe = [p.naredba()]
         while not p > KRAJ: naredbe.append(p.naredba())
@@ -84,6 +78,12 @@ class P(Parser):
         p >> T.TOČKAZAREZ
         return rezultat
 
+
+### Apstraktna sintaksna stabla:
+# Skripta: naredbe:[naredba]
+# naredba: Select: tablica:IME stupci:[IME]?
+#          Create: tablica:IME specifikacije:[Stupac]
+# Stupac: ime:IME tip:IME veličina:BROJ?
 
 class Skripta(AST):
     """Niz naredbi SQLa, svaka završava točkazarezom."""

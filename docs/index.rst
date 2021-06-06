@@ -10,6 +10,10 @@ Dokumentacija za vepar 2.0
    :maxdepth: 2
    :caption: Sadržaj:
 
+   tutorial/lexer
+   tutorial/parser
+   tutorial/semantic
+
 Vepar vam omogućuje da koristeći Python pišete vlastite programske
 jezike, prolazeći kroz uobičajene faze kao što su leksiranje,
 parsiranje, proizvodnja apstraktnih sintaksnih stabala (AST),

@@ -22,7 +22,7 @@ class T(TipoviTokena):
         def makni_neg(self): return self, True
         def ispis(self): return self.sadržaj.translate(subskript)
 
-
+@lexer
 def ls(lex):
     for znak in lex:
         if znak == 'P':
@@ -40,16 +40,6 @@ def ls(lex):
 ### Beskontekstna gramatika:
 # formula -> PVAR | NEG formula | OTV formula binvez formula ZATV
 # binvez -> KONJ | DISJ | KOND | BIKOND
-
-### Apstraktna sintaksna stabla (i njihovi atributi):
-# formula: PVAR: Token
-#          Negacija: ispod:formula
-#          Konjunkcija: Binarna
-#          Disjunkcija: Binarna
-#          Kondicional: Binarna
-#          Bikondicional: Binarna
-# Binarna: lijevo:formula desno:formula
-
 
 class P(Parser):
     def formula(p) -> \
@@ -70,9 +60,15 @@ class P(Parser):
         elif p >= T.BIKOND: return Bikondicional
         else: raise p.greška()
 
-    lexer = ls
-    start = formula
 
+### Apstraktna sintaksna stabla (i njihovi atributi):
+# formula: PVAR: Token
+#          Negacija: ispod:formula
+#          Konjunkcija: Binarna
+#          Disjunkcija: Binarna
+#          Kondicional: Binarna
+#          Bikondicional: Binarna
+# Binarna: lijevo:formula desno:formula
 
 class Negacija(AST):
     ispod: 'formula'
@@ -156,7 +152,7 @@ def istinitost(formula, **interpretacija):
 
 
 for ulaz in '!(P5&!!(P3->P0))', '(!P0&(!P1<->!P5))':
-    P.tokeniziraj(ulaz)
+    ls(ulaz)
     prikaz(F := P(ulaz))
     print(F.ispis())
     prikaz(F := optim(F))
@@ -164,5 +160,5 @@ for ulaz in '!(P5&!!(P3->P0))', '(!P0&(!P1<->!P5))':
     print(f'{istinitost(F, P0=False, P3=True, P5=False, P1=True)=}')
     print('-' * 60)
 
-for krivo in 'P007', 'P1 P2', 'P34<>P56', 'P05', 'P-2':
-    with LeksičkaGreška: P.tokeniziraj(krivo)
+for nije_formula in 'P007', 'P1 P2', 'P34<>P56', 'P05', 'P-2':
+    with LeksičkaGreška: ls(nije_formula)

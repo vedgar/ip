@@ -10,7 +10,6 @@ Interpretaciju zadajemo imenovanim argumentima: vrijednost(F, P2=True, P7=False)
 Optimizacija (formula.optim()) zamjenjuje potformule oblika !!F sa F."""
 
 
-from __future__ import annotations
 from vepar import *
 
 
@@ -22,6 +21,7 @@ class T(TipoviTokena):
         def optim(var): return var
 
 
+@lexer
 def ls(lex):
     for znak in lex:
         if znak == 'P':
@@ -62,9 +62,6 @@ class P(Parser):
             p >> T.ZATV
             return Binarna(veznik, lijevo, desno)
 
-    lexer = ls
-    start = formula
-
 
 class Negacija(AST):
     ispod: 'formula'
@@ -103,15 +100,15 @@ def istinitost(formula, **interpretacija):
     return formula.vrijednost(I)
 
 
-P.tokeniziraj(ulaz := '!(P5&!!(P3->P0))')
+ls(ulaz := '!(P5&!!(P3->P0))')
 prikaz(F := P(ulaz))
 prikaz(F := F.optim())
 print(f'{istinitost(F, P0=False, P3=True, P5=False)=}')  # True
 
 for krivo in 'P', 'P00', 'P1\tP2', 'P34<>P56':
-    with LeksičkaGreška: print(P.tokeniziraj(krivo))
+    with LeksičkaGreška: ls(krivo)
 
 
 # DZ: implementirajte još neke optimizacije: npr. F|!G u G->F.
 # DZ: Napravite totalnu optimizaciju negacije: svaka formula s najviše jednim !
-#     *Za ovo bi vjerojatno bilo puno lakše imati po jedno AST za svaki veznik.
+# ~~  *Za ovo bi vjerojatno bilo puno lakše imati po jedno AST za svaki veznik.

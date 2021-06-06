@@ -22,7 +22,7 @@ class T(TipoviTokena):
         literal = 'x'
         def prevedi(t): return Polinom.x()
 
-
+@lexer
 def az(lex):
     for znak in lex:
         if znak.isdecimal():
@@ -36,15 +36,6 @@ def az(lex):
 # član -> faktor | član PUTA faktor | član faktorxz
 # faktor -> MINUS faktor | BROJ | faktorxz
 # faktorxz -> X | X BROJ | OTVORENA izraz ZATVORENA
-
-### Apstraktna sintaksna stabla:
-# izraz: BROJ: Token
-#        X: Token
-#        Zbroj: lijevo:izraz desno:izraz
-#        Umnožak: lijevo:izraz desno:izraz
-#        Suprotan: od:izraz
-#        Xna: eksponent:BROJ
-
 
 class P(Parser):
     def izraz(p) -> 'Zbroj|član':
@@ -71,9 +62,14 @@ class P(Parser):
             p >> T.ZATVORENA
             return u_zagradi
 
-    lexer = az
-    start = izraz
 
+### Apstraktna sintaksna stabla:
+# izraz: BROJ: Token
+#        X: Token
+#        Zbroj: lijevo:izraz desno:izraz
+#        Umnožak: lijevo:izraz desno:izraz
+#        Suprotan: od:izraz
+#        Xna: eksponent:BROJ
 
 class Zbroj(AST):
     lijevo: 'izraz'

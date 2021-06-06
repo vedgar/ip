@@ -1,13 +1,12 @@
 """Interpreter za jednostavni fragment jezika C++: petlje, grananja, ispis.
+    Prema zadatku s kolokvija 16. veljače 2015. (Puljić).
     * petlje: for(var = broj; var < broj; var ++ ili var += broj) naredba
     * grananja: if(var == broj) naredba
     * ispis: cout << var1 << var2 << ..., s opcionalnim << endl na kraju
 
 Tijelo petlje može biti i blok u vitičastim zagradama.
 Podržana je i naredba break za izlaz iz unutarnje petlje:
-    nelokalna kontrola toka realizirana je pomoću izuzetka Prekid.
-
-Prema zadatku s kolokvija 16. veljače 2015. (Puljić)."""
+    nelokalna kontrola toka realizirana je pomoću izuzetka Prekid."""
 
 
 from vepar import *
@@ -25,6 +24,7 @@ class T(TipoviTokena):
     class IME(Token):
         def vrijednost(self): return rt.mem[self]
 
+@lexer
 def cpp(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
@@ -57,8 +57,6 @@ def cpp(lex):
 # grananje -> IF OOTV IME JJEDNAKO BROJ OZATV naredba
  
 class P(Parser):
-    lexer = cpp
-
     def start(p) -> 'Program':
         naredbe = [p.naredba()]
         while not p > KRAJ: naredbe.append(p.naredba())
@@ -196,10 +194,10 @@ očekuj(SemantičkaGreška, 'break;')
 očekuj(LeksičkaGreška, 'if(i == 07) cout;')
 
 
-# DZ: implementirati naredbu continue
-# DZ: implementirati praznu naredbu (for/if(...);)
-# DZ: omogućiti i grananjima da imaju blokove - uvesti novo AST Blok
-# DZ: omogućiti da parametri petlje budu varijable, ne samo brojevi
-# DZ: omogućiti grananja s obzirom na relaciju <, ne samo ==
-# DZ: dodati kontekstnu varijablu 'jesmo li u petlji' za dozvolu BREAK
-# DZ: uvesti deklaracije varijabli i pratiti jesu li varijable deklarirane
+# DZ: implementirajte naredbu continue
+# DZ: implementirajte praznu naredbu (for/if(...);)
+# DZ: omogućite i grananjima da imaju blokove -- uvedite novo AST Blok
+# DZ: omogućite da parametri petlje budu varijable, ne samo brojevi
+# DZ: omogućite grananja s obzirom na relaciju <, ne samo ==
+# DZ: dodajte parseru kontekstnu varijablu 'jesmo li u petlji' za dozvolu BREAK
+# DZ: uvedite deklaracije varijabli i pratite jesu li varijable deklarirane

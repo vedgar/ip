@@ -22,7 +22,7 @@ class T(TipoviTokena):
     PRAZAN, EPSILON = '/0', '/1'
     class ZNAK(Token): pass
 
-
+@lexer
 def ri(lex):
     for znak in lex:
         if znak in specijalni: yield lex.literal(T)
@@ -40,17 +40,6 @@ def ri(lex):
 # disjunkt -> faktor | faktor disjunkt
 # faktor -> element | faktor ZVIJEZDA | faktor PLUS | faktor UPITNIK
 # element -> PRAZAN | EPSILON | ZNAK | OTV rx ZATV
-
-### Kao ASTove koristimo klase iz modula RI
-# rx: prazan
-#     epsilon
-#     Elementarni: znak:str (duljine 1)
-#     Unija: r1:rx r2:rx
-#     Konkatenacija: r1:rx r2:rx
-#     Zvijezda: r:rx
-#     Plus: r:rx
-#     Upitnik: r:rx
-
 
 class P(Parser):
     def rx(self) -> 'disjunkt|Unija':
@@ -84,10 +73,17 @@ class P(Parser):
             self >> T.ZATV
             return u_zagradi
 
-    lexer = ri
-    start = rx
 
+### Kao ASTove koristimo klase iz modula RI
+# rx: prazan
+#     epsilon
+#     Elementarni: znak:str (duljine 1)
+#     Unija: r1:rx r2:rx
+#     Konkatenacija: r1:rx r2:rx
+#     Zvijezda: r:rx
+#     Plus: r:rx
+#     Upitnik: r:rx
 
-P.tokeniziraj(ri := '(a(/*c?)+)?')
-prikaz(P(ri))
-print(*P(ri).početak(20))
+ri(r := '(a(/*c?)+)?')
+prikaz(P(r))
+print(*P(r).početak(20))

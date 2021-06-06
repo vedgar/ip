@@ -15,7 +15,7 @@ class T(TipoviTokena):
     class IME(Token): pass
     class NAREDBA(Token): pass
 
-
+@lexer
 def js(lex):
     ugniježđenost = 0
     for znak in lex:
@@ -43,8 +43,6 @@ def js(lex):
 # nar -> NAREDBA TOČKAZAREZ nar | NAREDBA KOMENTAR+ nar | NAREDBA | ''
 
 class P(Parser):
-    lexer = js
-
     def funkcija(p) -> 'Funkcija':
         p >> T.FUNCTION
         ime = p >> T.IME

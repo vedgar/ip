@@ -3,6 +3,7 @@ Po uzoru na https://web.math.pmf.unizg.hr/~veky/B/IP.k2p.17-09-08.pdf."""
 
 
 from vepar import *
+import fractions
 
 
 class T(TipoviTokena):
@@ -14,6 +15,7 @@ class T(TipoviTokena):
             if t in rt.memorija: return rt.memorija[t]
             else: raise t.nedeklaracija(f'pri pridruživanju {rt.pridruženo}')
 
+@lexer
 def aq(lex):
     for znak in lex:
         if znak.isdecimal():
@@ -33,17 +35,8 @@ def aq(lex):
 # član -> faktor | član PUTA faktor | član KROZ faktor
 # faktor -> BROJ | IME | MINUS faktor | OTV izraz ZATV
 
-### AST
-# Program: pridruživanja:[(IME,izraz)]
-# izraz: BROJ: Token
-#        IME: Token
-#        Op: op:PLUS|MINUS|PUTA|KROZ lijevo:izraz? desno:izraz
-
-
 class P(Parser):
-    lexer = aq
-
-    def start(p) -> 'Program':
+    def program(p) -> 'Program':
         pridruživanja = []
         while ime := p >= T.IME:
             p >> T.JEDNAKO
@@ -69,6 +62,12 @@ class P(Parser):
             p >> T.ZATV
             return u_zagradi
 
+
+### AST
+# Program: pridruživanja:[(IME,izraz)]
+# izraz: BROJ: Token
+#        IME: Token
+#        Op: op:PLUS|MINUS|PUTA|KROZ lijevo:izraz? desno:izraz
 
 class Program(AST):
     pridruživanja: '(IME,izraz)*'

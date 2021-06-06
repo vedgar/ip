@@ -1,4 +1,4 @@
-import collections, types, warnings
+import collections, types, warnings, fractions
 
 
 class Polinom(collections.Counter):

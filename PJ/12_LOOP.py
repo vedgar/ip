@@ -1,6 +1,6 @@
 """RAM-stroj i LOOP-jezik.
 
-RAM-stroj je virtualna mašina s prebrojivo mnogo registara R0, R1, R2, ....
+RAM-stroj je virtualni stroj (VM) s prebrojivo mnogo registara R0, R1, R2, ....
 U svakom registru može se nalaziti proizvoljni prirodni broj (uključujući 0).
 Na početku rada RAM-stroja (reset) su svi registri inicijalizirani na 0.
 
@@ -30,6 +30,7 @@ class T(TipoviTokena):
     class REG(Token):
         def broj(t): return int(t.sadržaj[1:])
 
+@lexer
 def loop(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
@@ -46,12 +47,6 @@ def loop(lex):
 ### Beskontekstna gramatika:
 # program -> naredba | program naredba
 # naredba -> INC REG TOČKAZ | DEC REG TOČKAZ | REG VOTV program VZATV
-
-### Apstraktna sintaksna stabla:
-# naredba: Petlja: registar:REG tijelo:Program
-#          Promjena: op:INC|DEC registar:REG
-# Program: naredbe:[naredba]
-
 
 class P(Parser):
     def program(p) -> 'Program':
@@ -70,9 +65,11 @@ class P(Parser):
             p >> T.VZATV
             return Petlja(reg, tijelo)
 
-    lexer = loop
-    start = program
 
+### Apstraktna sintaksna stabla:
+# naredba: Petlja: registar:REG tijelo:Program
+#          Promjena: op:INC|DEC registar:REG
+# Program: naredbe:[naredba]
 
 class Program(AST):
     naredbe: 'naredba*'
@@ -102,7 +99,7 @@ def računaj(program, *ulazi):
     return rt.stroj.rezultat
 
 
-with LeksičkaGreška: P.tokeniziraj('inc R00')
+with LeksičkaGreška: loop('inc R00')
 prikaz(power := P('''
     INC R0;
     R2{

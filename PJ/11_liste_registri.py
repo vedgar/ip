@@ -16,8 +16,8 @@ class T(TipoviTokena):
         def vrijednost(self): return int(self.sadržaj)
     class MINUSBROJ(BROJ): """Negativni broj."""
 
-
-def list_lexer(lex):
+@lexer
+def listlexer(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
         elif znak == 'L':
@@ -62,21 +62,19 @@ def list_lexer(lex):
 
 
 class P(Parser):
-    lexer = list_lexer
-
     def start(self) -> 'Program':
         naredbe = []
         while not self > KRAJ: naredbe.append(self.naredba())
         return Program(naredbe)
 
     def naredba(self) -> 'Ubaci|Deklaracija|Provjera|Izbaci|Dohvati|Duljina':
-        if self >= T.UBACI: return Ubaci(self >> T.ID, 
-            self >> {T.BROJ,T.MINUSBROJ}, self >> T.BROJ)
-        elif self >= T.LISTA: return Deklaracija(self >> T.ID)
+        if self >= T.LISTA: return Deklaracija(self >> T.ID)
         elif self >= T.PRAZNA: return Provjera(self >> T.ID)
-        elif self >= T.IZBACI: return Izbaci(self >> T.ID, self >> T.BROJ)
-        elif self >= T.DOHVATI: return Dohvati(self >> T.ID, self >> T.BROJ)
         elif self >= T.KOLIKO: return Duljina(self >> T.ID)
+        elif self >= T.DOHVATI: return Dohvati(self >> T.ID, self >> T.BROJ)
+        elif self >= T.IZBACI: return Izbaci(self >> T.ID, self >> T.BROJ)
+        elif self >= T.UBACI: return Ubaci(self >> T.ID, 
+            self >> {T.BROJ,T.MINUSBROJ}, self >> T.BROJ)
         else: raise self.greška()
 
 
@@ -131,17 +129,17 @@ class Ubaci(AST):
         else: raise self.iznimka('Prevelik indeks')
 
 
-P.tokeniziraj('lista L1 prazna ubaci-2345izbaci L9 dohvati 3 koliko')
-source = '''
+listlexer('lista L1 prazna ubaci-2345izbaci L9 dohvati 3 koliko')
+P('''
     lista L1  lista L3  ubaci L3 45 0  dohvati L3 0
     koliko L1  koliko L3  prazna L1  prazna L3
     Lista L5  ubaci L5 6 0  ubaci L5 -7 1  ubaci L5 8 1  ubaci L5 9 0
     koliko L5  dohvati L5 0  dohvati L5 1  dohvati L5 2  dohvati L5 3
-    izbaci L5 1  koliko L5 dohvati L5 0 dohvati L5 1 dohvati L5 2'''
-P(source).izvrši()
+    izbaci L5 1  koliko L5 dohvati L5 0 dohvati L5 1 dohvati L5 2
+''').izvrši()
 for ime, lista in rt.mem: print(ime, '=', lista)
-with LeksičkaGreška: P.tokeniziraj('L0')
+with LeksičkaGreška: listlexer('L0')
 with SintaksnaGreška: P('ubaci L5 6 -2')
 with SemantičkaGreška: P('ubaci L7 5 0').izvrši()
-with LeksičkaGreška: P.tokeniziraj('ubaci L3 5 -0')
+with LeksičkaGreška: listlexer('ubaci L3 5 -0')
 with GreškaIzvođenja: P('lista L1 ubaci L1 7 3').izvrši()

@@ -13,7 +13,7 @@ class T(TipoviTokena):
         def vrijednost(t): return int(t.sadržaj)
         def optim(t): return t
 
-
+@lexer
 def an(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
@@ -48,9 +48,6 @@ class P(Parser):
             u_zagradi = p.izraz()
             p >> T.ZATVORENA
             return u_zagradi
-
-    lexer = an
-    start = izraz
 
 
 nula, jedan = Token(T.BROJ, '0'), Token(T.BROJ, '1')
@@ -89,14 +86,12 @@ def testiraj(izraz):
     prikaz(opt := stablo.optim(), 3)
     mi = opt.vrijednost()
     try: Python = Python_eval(izraz)
-    except SyntaxError: print('Python ovo ne zna!', izraz, '==', mi)
-    else:
-        if mi == Python: print(izraz, '==', mi, 'OK')
-        else:
-            print(izraz, 'mi:', mi, 'Python:', Python, 'krivo')
-            raise ArithmeticError
+    except SyntaxError: return print('Python ovo ne zna!', izraz, '==', mi)
+    if mi == Python: return print(izraz, '==', mi, 'OK')
+    print(izraz, 'mi:', mi, 'Python:', Python, 'krivo')
+    raise ArithmeticError
 
-P.tokeniziraj('(2+3)*4')
+an('(2+3)*4')
 testiraj('(2+3)*4')
 testiraj('2 + (0+1*1*2)')
 testiraj('2(3+5)')

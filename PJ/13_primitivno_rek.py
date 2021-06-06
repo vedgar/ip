@@ -47,7 +47,7 @@ class T(TipoviTokena):
             n = int(self.sadržaj[1])
             return argumenti[n - 1]
 
-
+@lexer
 def pr(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
@@ -70,7 +70,6 @@ def pr(lex):
 # desno -> osnovna | OTV funkcije ZATV
 # osnovna -> FIME | NULFUNKCIJA | SLJEDBENIK | KPROJEKCIJA
 # funkcije -> funkcija | funkcije ZAREZ funkcija
-
 
 class P(Parser):
     def program(p) -> 'Memorija':
@@ -107,15 +106,11 @@ class P(Parser):
             return rezultat
         else: return [p.osnovna()]
 
-    start = program
-    lexer = pr
-
 
 ### AST
 # funkcija: FIME|NULFUNKCIJA|SLJEDBENIK|KPROJEKCIJA:Token
 #           Kompozicija: lijeva:funkcija desne:[funkcija]
 #           PRekurzija: baza:funkcija korak:funkcija
-
 
 class Kompozicija(AST):
     lijeva: 'funkcija'
@@ -132,7 +127,6 @@ class Kompozicija(AST):
     def izračunaj(self, *argumenti):
         međurezultati = (G.izračunaj(*argumenti) for G in self.desne)
         return self.lijeva.izračunaj(*međurezultati)
-
 
 class PRekurzija(AST):
     baza: 'funkcija'
@@ -170,5 +164,6 @@ prikaz(P('''
         pow = Sc o Z PR mul2 o (I13, I33)
 '''))
 print(b:=3, '^', e:=7, '=', izračunaj('pow', b, e))
+
 
 # DZ**: dokažite ekvivalentnost ovog sustava i programskog jezika LOOP

@@ -2,6 +2,7 @@
 
 
 from vepar import *
+import fractions
 
 
 class T(TipoviTokena):
@@ -19,7 +20,7 @@ class T(TipoviTokena):
     class TVAR(Token):
         def vrijednost(t): return rt.memorija[t]
 
-
+@lexer
 def basic(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
@@ -55,7 +56,6 @@ def basic(lex):
 
 
 class P(Parser):
-    lexer = basic
     def start(p) -> 'Program': return Program(p.naredbe())
 
     def naredbe(p) -> '(pridruživanje|petlja|unos|ispis|grananje)*':

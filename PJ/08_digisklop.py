@@ -11,7 +11,7 @@ class T(TipoviTokena):
     class SLOVO(Token):
         def uNand(t): return t.sadržaj
 
-
+@lexer
 def ds(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
@@ -23,7 +23,6 @@ def ds(lex):
 # sklop -> disjunkt | sklop ILI disjunkt
 # disjunkt -> faktor | disjunkt faktor
 # faktor -> SLOVO | faktor NE | OOTV sklop OZATV | UOTV sklop UZATV
-
 
 class P(Parser):
     def sklop(p) -> 'Or|disjunkt':
@@ -46,9 +45,6 @@ class P(Parser):
         else: trenutni = p >> T.SLOVO
         while p >= T.NE: trenutni = Not(trenutni)
         return trenutni
-
-    lexer = ds
-    start = sklop
 
 
 class Not(AST):
@@ -75,7 +71,7 @@ def optimiziraj(sklop):
 
 
 print(opis := "x ([yxx'] + y')")
-P.tokeniziraj(opis)
+ds(opis)
 prikaz(ast := P(opis))
 print(nand := ast.uNand())  # [['x', [[[[['y', 'x', ['x']]]]], [['y']]]]]
 print(optimiziraj(nand))

@@ -15,7 +15,7 @@ class T(TipoviTokena):
     class BROJ(Token):
         def provjeri_tip(t): return Tip.N
 
-
+@lexer
 def aq(lex):
     for znak in lex:
         if znak == '\n': yield lex.literal(T)  # prije provjere isspace!
@@ -50,8 +50,6 @@ class Tip(enum.Enum):
 
 
 class P(Parser):
-    lexer = aq
-
     def start(self) -> 'Program':
         self >= T.NOVIRED
         rt.symtab, naredbe = Memorija(), []
@@ -101,7 +99,6 @@ class P(Parser):
 # Suprotan: operand:izraz
 # Op: operator:T lijevo:izraz desno:izraz
 
-
 def ažuriraj(var, token_za_tip):
     if token_za_tip:
         tip = Tip(token_za_tip)
@@ -111,7 +108,6 @@ def ažuriraj(var, token_za_tip):
             else: raise var.krivi_tip(tip, pravi)
         rt.symtab[var] = tip
     return var.provjeri_tip()
-
 
 class Program(AST):
     naredbe: 'naredba*'

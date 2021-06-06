@@ -13,6 +13,7 @@ class T(TipoviTokena):
     class TEKST(Token):
         def render(t): print(t.sadržaj, end=' ')
 
+@lexer
 def html(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
@@ -31,15 +32,8 @@ def html(lex):
 # element -> TEKST | OL stavka+ ZOL | UL stavka+ ZUL
 # stavka -> LI element ZLI
 
-### Apstraktna sintaksna stabla
-# Dokument: zaglavlje:Tekst tijelo:[element]
-# element: Lista: vrsta:OL|UL stavke:[element]
-#          Tekst: dijelovi:[TEKST]
-
 
 class P(Parser):
-    lexer = html
-
     def start(p) -> 'Dokument':
         p >> T.HTML, p >> T.HEAD
         zaglavlje = p.tekst()
@@ -70,6 +64,11 @@ class P(Parser):
         p >> T.ZLI
         return rezultat
             
+
+### Apstraktna sintaksna stabla
+# Dokument: zaglavlje:Tekst tijelo:[element]
+# element: Lista: vrsta:OL|UL stavke:[element]
+#          Tekst: dijelovi:[TEKST]
 
 class Dokument(AST):
     zaglavlje: 'Tekst'

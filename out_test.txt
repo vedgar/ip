@@ -668,7 +668,7 @@ Program:  @[Znakovi #1–kraj]
 6.02214076e23->NA 1.6605e-27->u 1/(NA*u) = (1000.0235273555235+0j)
 ------------------------------------------------------------
 LeksičkaGreška: Znak #3: neočekivani znak '+'
-	(očekivano <method 'isdecimal' of 'str' objects>)
+	(očekivano isdecimal)
 ------------------------------------------------------------
 Program:  @[Znakovi #1–kraj]
   definicije = []
@@ -1240,46 +1240,56 @@ Memorija:
 Program je vratio: 5040
 ##############################10_liste_stringova##############################
 
-    [23, "ab\"c]", 'a[]', [2, 3, ], 523, [1,2,2,3], '"', '\', "\e", "\\", '']
+  [[], 23, "ab\"c]", 'a[]', [2, 3, ], 523, [1,2,2,3], '"', '\', "\e",
+   "\\", '', "", "\[", ]
 
-	Redak 1, stupac 5      : UOTV'['
-	Redak 1, stupci 6–7    : BROJ'23'
-	Redak 1, stupac 8      : ZAREZ','
-	Redak 1, stupci 10–17  : STRING2'"ab\\"c]"'
-	Redak 1, stupac 18     : ZAREZ','
-	Redak 1, stupci 20–24  : STRING1"'a[]'"
-	Redak 1, stupac 25     : ZAREZ','
-	Redak 1, stupac 27     : UOTV'['
-	Redak 1, stupac 28     : BROJ'2'
-	Redak 1, stupac 29     : ZAREZ','
-	Redak 1, stupac 31     : BROJ'3'
-	Redak 1, stupac 32     : ZAREZ','
-	Redak 1, stupac 34     : UZATV']'
-	Redak 1, stupac 35     : ZAREZ','
-	Redak 1, stupci 37–39  : BROJ'523'
-	Redak 1, stupac 40     : ZAREZ','
-	Redak 1, stupac 42     : UOTV'['
-	Redak 1, stupac 43     : BROJ'1'
-	Redak 1, stupac 44     : ZAREZ','
-	Redak 1, stupac 45     : BROJ'2'
+	Redak 1, stupac 3      : UOTV'['
+	Redak 1, stupac 4      : UOTV'['
+	Redak 1, stupac 5      : UZATV']'
+	Redak 1, stupac 6      : ZAREZ','
+	Redak 1, stupci 8–9    : BROJ'23'
+	Redak 1, stupac 10     : ZAREZ','
+	Redak 1, stupci 12–19  : STRING2'"ab\\"c]"'
+	Redak 1, stupac 20     : ZAREZ','
+	Redak 1, stupci 22–26  : STRING1"'a[]'"
+	Redak 1, stupac 27     : ZAREZ','
+	Redak 1, stupac 29     : UOTV'['
+	Redak 1, stupac 30     : BROJ'2'
+	Redak 1, stupac 31     : ZAREZ','
+	Redak 1, stupac 33     : BROJ'3'
+	Redak 1, stupac 34     : ZAREZ','
+	Redak 1, stupac 36     : UZATV']'
+	Redak 1, stupac 37     : ZAREZ','
+	Redak 1, stupci 39–41  : BROJ'523'
+	Redak 1, stupac 42     : ZAREZ','
+	Redak 1, stupac 44     : UOTV'['
+	Redak 1, stupac 45     : BROJ'1'
 	Redak 1, stupac 46     : ZAREZ','
 	Redak 1, stupac 47     : BROJ'2'
 	Redak 1, stupac 48     : ZAREZ','
-	Redak 1, stupac 49     : BROJ'3'
-	Redak 1, stupac 50     : UZATV']'
-	Redak 1, stupac 51     : ZAREZ','
-	Redak 1, stupci 53–55  : STRING1'\'"\''
-	Redak 1, stupac 56     : ZAREZ','
-	Redak 1, stupci 58–60  : STRING1"'\\'"
-	Redak 1, stupac 61     : ZAREZ','
-	Redak 1, stupci 63–66  : STRING2'"\\e"'
-	Redak 1, stupac 67     : ZAREZ','
-	Redak 1, stupci 69–72  : STRING2'"\\\\"'
-	Redak 1, stupac 73     : ZAREZ','
-	Redak 1, stupci 75–76  : STRING1"''"
-	Redak 1, stupac 77     : UZATV']'
-Lista:  @[Redak 1, stupci 5–77]
+	Redak 1, stupac 49     : BROJ'2'
+	Redak 1, stupac 50     : ZAREZ','
+	Redak 1, stupac 51     : BROJ'3'
+	Redak 1, stupac 52     : UZATV']'
+	Redak 1, stupac 53     : ZAREZ','
+	Redak 1, stupci 55–57  : STRING1'\'"\''
+	Redak 1, stupac 58     : ZAREZ','
+	Redak 1, stupci 60–62  : STRING1"'\\'"
+	Redak 1, stupac 63     : ZAREZ','
+	Redak 1, stupci 65–68  : STRING2'"\\e"'
+	Redak 1, stupac 69     : ZAREZ','
+	Redak 2, stupci 4–7    : STRING2'"\\\\"'
+	Redak 2, stupac 8      : ZAREZ','
+	Redak 2, stupci 10–11  : STRING1"''"
+	Redak 2, stupac 12     : ZAREZ','
+	Redak 2, stupci 14–15  : STRING2'""'
+	Redak 2, stupac 16     : ZAREZ','
+	Redak 2, stupci 18–21  : STRING2'"\\["'
+	Redak 2, stupac 22     : ZAREZ','
+	Redak 2, stupac 24     : UZATV']'
+Lista:  @[Redak 1, stupac 3 – redak 2, stupac 24]
   elementi = [...]:
+  . Lista(elementi=[])
   . BROJ'23'
   . STRING2'"ab\\"c]"'
   . STRING1"'a[]'"
@@ -1291,8 +1301,10 @@ Lista:  @[Redak 1, stupci 5–77]
   . STRING2'"\\e"'
   . STRING2'"\\\\"'
   . STRING1"''"
-[23, 'ab"c]', 'a[]', [2, 3], 523, [1, 2, 2, 3], '"', '\\', 'e', '\\', '']
-23	ab"c]	a[]	[2, 3]	523	[1, 2, 2, 3]	"	\	e	\	
+  . STRING2'""'
+  . STRING2'"\\["'
+[[], 23, 'ab"c]', 'a[]', [2, 3], 523, [1, 2, 2, 3], '"', '\\', 'e', '\\', '', '', '[']
+[]	23	ab"c]	a[]	[2, 3]	523	[1, 2, 2, 3]	"	\	e	\			[
 ##############################11_liste_registri###############################
 Tokenizacija: lista L1 prazna ubaci-2345izbaci L9 dohvati 3 koliko
 		Znakovi #1–#5  : LISTA'lista'
@@ -1990,4 +2002,4 @@ False
 SintaksnaGreška: Znak #5: neočekivani token LAMBDA'^'
 	Očekivano: KRAJ ili OTV ili SLOVO
 LeksičkaGreška: Znak #2: neočekivani znak ' '
-	(očekivano <method 'isalpha' of 'str' objects>)
+	(očekivano isalpha)

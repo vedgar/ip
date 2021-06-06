@@ -2,11 +2,30 @@
 Za više detalja pogledati šalabahter.txt."""
 
 
-__version__ = '2.2'
+__version__ = '2.3'
 
 
 import enum, types, collections, contextlib, itertools, functools, \
-        math, typing, dataclasses, fractions, textwrap, operator
+        dataclasses, textwrap, inspect, math
+
+
+the_lexer = None
+
+def lexer(gen):
+    global the_lexer
+    assert the_lexer is None, 'Lexer je već postavljen!'
+    assert inspect.isgeneratorfunction(gen), 'Lexer mora biti generator!'
+    the_lexer = gen
+
+    @functools.wraps(gen)
+    def tokeniziraj(ulaz): 
+        """Pregledno ispisuje pronađene tokene, za debugiranje tokenizacije."""
+        if '\n' not in ulaz: print('Tokenizacija:', ulaz)
+        for token in the_lexer(Tokenizer(ulaz)):
+            r = raspon(token)
+            if r.startswith('Znak'): print(f'\t\t{r:15}: {token}')
+            else: print(f'\t{r:23}: {token}')
+    return tokeniziraj
 
 
 def paše(znak, uvjet): 
@@ -18,8 +37,16 @@ def paše(znak, uvjet):
         rezultat = uvjet(znak)
         assert isinstance(rezultat, bool), 'Uvjet nije predikat!'
         return rezultat
-    elif isinstance(uvjet, set):
+    elif isinstance(uvjet, (set, frozenset)):
         return any(paše(znak, disjunkt) for disjunkt in uvjet)
+    else: assert False, f'Nepoznata vrsta uvjeta {uvjet}!'
+
+def raspis(uvjet):
+    if isinstance(uvjet, str): yield repr(uvjet)
+    elif callable(uvjet): yield uvjet.__name__
+    elif isinstance(uvjet, (set, frozenset)):
+        yield from itertools.chain.from_iterable(map(raspis, uvjet))
+    else: assert False, f'Nepoznata vrsta uvjeta {uvjet}!'
 
 
 def omotaj(metoda):
@@ -89,7 +116,6 @@ class NelokalnaKontrolaToka(Exception):
         """Vrijednost koja je prenesena "unatrag" prema korijenu."""
         return self.args[0] if self.args else nenavedeno
 
-
 class Tokenizer:
     """Klasa za rastavljanje niza znakova na tokene."""
     def __init__(self, string):
@@ -153,19 +179,20 @@ class Tokenizer:
     def nužno(self, uvjet):
         """Čita zadani znak, ili prijavljuje leksičku grešku."""
         if not paše(self.čitaj(), uvjet):
-            raise self.greška(f'očekivano {uvjet!r}')
+            raise self.greška(f"očekivano {' ili '.join(raspis(uvjet))}")
 
     def pročitaj_do(self, uvjet, *, uključivo=True, više_redova=False):
         """Čita sve znakove do ispunjenja uvjeta."""
+        poruka = ' ni '.join(raspis(uvjet)) + ' nije pronađen '
         while ...:
             znak = self.čitaj()
             if paše(znak, uvjet):
                 if not uključivo: self.vrati()
                 break
             elif znak == '\n' and not više_redova:
-                raise self.greška(f'{uvjet!r} nije pronađen u retku')
+                raise self.greška(poruka + 'u retku')
             elif not znak:
-                raise self.greška(f'{uvjet!r} nije pronađen do kraja ulaza')
+                raise self.greška(poruka + 'do kraja ulaza')
 
     def __lt__(self, uvjet): 
         return self.pročitaj_do(uvjet, uključivo=False)
@@ -318,29 +345,24 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
 class Parser:
     def __new__(cls, ulaz):
         """(Tokenizira i) parsira ulaz u apstraktno sintaksno stablo."""
+        if the_lexer is None:
+            raise LookupError('Dekorirajte generator tokena s @lexer!')
         self = super().__new__(cls)
         self.buffer = self.zadnji = None
         self.KRAJ = Token.kraj()
-        self.stream = cls.static_lexer(Tokenizer(ulaz))
+        self.stream = the_lexer(Tokenizer(ulaz))
         rezultat = self.start()
         self >> KRAJ
         return rezultat
 
     def __init_subclass__(cls):
+        prva = None
         for ime, metoda in vars(cls).items():
-            if ime != 'lexer' and not ime.startswith('_') and \
-                    isinstance(metoda, types.FunctionType):
+            if ime.startswith('_'): continue
+            if prva is None: prva = metoda
+            if isinstance(metoda, types.FunctionType):
                 setattr(cls, ime, omotaj(metoda))
-        cls.static_lexer = staticmethod(cls.lexer)
-
-    @classmethod
-    def tokeniziraj(cls, ulaz): 
-        """Pregledno ispisuje pronađene tokene, za debugiranje tokenizacije."""
-        if '\n' not in ulaz: print('Tokenizacija:', ulaz)
-        for token in cls.static_lexer(Tokenizer(ulaz)):
-            r = raspon(token)
-            if r.startswith('Znak'): print(f'\t\t{r:15}: {token}')
-            else: print(f'\t{r:23}: {token}')
+        if not hasattr(cls, 'start'): cls.start = omotaj(prva)
 
     def čitaj(self):
         """Čitanje sljedećeg tokena iz buffera ili inicijalnog niza."""
