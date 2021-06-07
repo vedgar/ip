@@ -175,7 +175,7 @@ def očekuj(greška, kôd):
     print('Testiram:', kôd)
     with greška: P(kôd).izvrši()
 
-prikaz(cpp := P('''
+prikaz(kôd := P('''
     for ( i = 8 ; i < 13 ; i += 2 ) {
         for(j=0; j<5; j++) {
             cout<<i<<j;
@@ -184,7 +184,7 @@ prikaz(cpp := P('''
         cout<<i<<endl;
     }
 '''), 8)
-cpp.izvrši()
+kôd.izvrši()
 prikaz(P('cout;'))
 očekuj(SintaksnaGreška, '')
 očekuj(SintaksnaGreška, 'for(c=1; c<3; c++);')

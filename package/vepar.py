@@ -31,7 +31,7 @@ def lexer(gen):
 def paše(znak, uvjet): 
     """Zadovoljava li znak zadani uvjet (funkcija, znak ili skup)."""
     if isinstance(uvjet, str):
-        assert len(uvjet) <= 1, 'Znakovi ne mogu biti duljine veće od 1!'
+        assert len(uvjet) == 1, 'Znakovi moraju biti duljine 1!'
         return znak == uvjet
     elif callable(uvjet):
         rezultat = uvjet(znak)
@@ -407,14 +407,18 @@ class Parser:
         return self.zadnji.neočekivan()
 
 
-def prikaz(objekt, dubina:int=math.inf, uvlaka:str='', ime:str=None):
+def prikaz(objekt, dubina:int=math.inf, uvlaka='', ime:str=None, rasponi=2):
     """Vertikalni prikaz AST-a, do zadane dubine."""
     intro = uvlaka
     if ime is not None: intro += ime + ' = '
-    if isinstance(objekt, (Token, str, int, Nenavedeno, enum.Enum)) \
+    if isinstance(objekt, (str, int, Nenavedeno, enum.Enum)) \
             or not dubina:
         return print(intro, repr(objekt), sep='')
-    if isinstance(objekt, list):
+    elif isinstance(objekt, Token):
+        r, tail = raspon(objekt), ''
+        if r != 'Nepoznata pozicija' and rasponi > 1: tail = '  @[' + r + ']'
+        return print(intro, repr(objekt), tail, sep='')
+    elif isinstance(objekt, list):
         print(intro, end='[...]:\n' if objekt else '[]\n')
         for vrijednost in objekt:
             prikaz(vrijednost, dubina-1, uvlaka+'. ')
@@ -433,7 +437,7 @@ def prikaz(objekt, dubina:int=math.inf, uvlaka:str='', ime:str=None):
     elif isinstance(objekt, (types.SimpleNamespace, AST)):
         header = intro + type(objekt).__name__ + ':'*bool(vars(objekt))
         r = raspon(objekt)
-        if r != 'Nepoznata pozicija': header += '  @[' + r + ']'
+        if r != 'Nepoznata pozicija' and rasponi: header += '  @[' + r + ']'
         print(header)
         try: d, t = objekt.za_prikaz(), '~ '
         except AttributeError: d, t = vars(objekt), '  '
