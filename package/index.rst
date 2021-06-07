@@ -13,6 +13,9 @@ Dokumentacija za vepar 2.0
    tutorial/lexer
    tutorial/parser
    tutorial/semantic
+   refer/modules
+   refer/vepar
+   refer/backend
 
 Vepar vam omogućuje da koristeći Python pišete vlastite programske
 jezike, prolazeći kroz uobičajene faze kao što su leksiranje,
