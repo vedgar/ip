@@ -36,7 +36,7 @@ def logo(lex):
 
 ### Beskontekstna gramatika
 # start -> start naredba | naredba
-# naredba -> nar1 BROJ | PENUP | PENDOWN | REPEAT BROJ OTV program ZATV
+# naredba -> nar1 BROJ | PENUP | PENDOWN | REPEAT BROJ OTV start ZATV
 # nar1 -> FORWARD | BACKWARD | LEFT | RIGHT
 
 ### Apstraktna sintaksna stabla
