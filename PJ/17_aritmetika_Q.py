@@ -29,7 +29,7 @@ def aq(lex):
 
 
 ### BKG
-# program -> '' | naredba | program naredba
+# program -> '' | program naredba
 # naredba -> IME JEDNAKO izraz NOVIRED
 # izraz -> član | izraz PLUS član | izraz MINUS član
 # član -> faktor | član PUTA faktor | član KROZ faktor

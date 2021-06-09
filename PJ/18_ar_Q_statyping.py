@@ -96,7 +96,6 @@ class P(Parser):
 ### Apstraktna sintaksna stabla
 # Program: naredbe:[naredba]  # rt.symtab:Memorija
 # Pridruživanje: varijabla:IME tip:T? vrijednost:izraz
-# Suprotan: operand:izraz
 # Op: operator:T lijevo:izraz desno:izraz
 
 def ažuriraj(var, token_za_tip):
@@ -104,7 +103,7 @@ def ažuriraj(var, token_za_tip):
         tip = Tip(token_za_tip)
         if var in rt.symtab:
             pravi = var.provjeri_tip()
-            if tip == pravi: raise var.redeklaracija()
+            if tip is pravi: raise var.redeklaracija()
             else: raise var.krivi_tip(tip, pravi)
         rt.symtab[var] = tip
     return var.provjeri_tip()
@@ -132,20 +131,18 @@ class Op(AST):
     def provjeri_tip(self):
         if self.lijevo is nenavedeno: prvi = Tip.N  # -x = 0 - x
         else: prvi = self.lijevo.provjeri_tip()
-        drugi = self.desno.provjeri_tip()
-        o = self.operator
-        greška = o.krivi_tip(prvi, drugi)
+        o, drugi = self.operator, self.desno.provjeri_tip()
         if o ^ T.KROZ: return Tip.Q
         elif o ^ {T.PLUS, T.PUTA}: return max(prvi, drugi)
         elif o ^ T.MINUS: return max(prvi, drugi, Tip.Z)
-        elif o ^ {T.DIV, T.MOD}:
-            if prvi is Tip.Q: raise greška
-            elif drugi is Tip.N: return prvi
-            else: raise greška
+        # semantika: a div b := floor(a/b), a mod b := a - a div b * b
+        elif o ^ T.DIV: return Tip.N if prvi is drugi is Tip.N else tip.Z
+        elif o ^ T.MOD: return Tip.Q if prvi is Tip.Q else drugi
         elif o ^ T.NA:
             if drugi is Tip.N: return prvi
             elif drugi is Tip.Z: return Tip.Q 
-            else: raise greška
+            else: raise o.krivi_tip(prvi, drugi)
+        else: assert False, f'nepokriveni slučaj operatora {o}!'
 
 
 ast = P('''
@@ -161,3 +158,6 @@ ast = P('''
 ''')
 prikaz(ast, 3)
 ast.provjeri_tipove()
+
+
+# DZ: Dodajte tipove R i C (u statičku analizu; računanje je druga stvar:)

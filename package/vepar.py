@@ -303,9 +303,9 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         if uspoređeni: poruka += f"\n\tOčekivano: {' ili '.join(uspoređeni)}"
         return SintaksnaGreška(poruka)
 
-    def redefinicija(self, prvi=None):
-        """Konstruira semantičku grešku redefiniranog simbola."""
-        poruka = raspon(self) + f': redefinicija {self!r}'
+    def redeklaracija(self, prvi=None):
+        """Konstruira semantičku grešku redeklariranog simbola."""
+        poruka = raspon(self) + f': redeklaracija {self!r}'
         if prvi: poruka += '\n\tPrva deklaracija: ' + raspon(prvi).lower()
         return SemantičkaGreška(poruka)
 
@@ -329,7 +329,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
 
     def krivi_tip(self, *tipovi):
         """Konstruira semantičku grešku nepodudarajućih (statičkih) tipova."""
-        poruka = raspon(self) + ': {self!r}: tipovi ne odgovaraju: '
+        poruka = raspon(self) + f': {self!r}: tipovi ne odgovaraju: '
         poruka += ' vs. '.join(map(str, tipovi))
         return SemantičkaGreška(poruka)
 
