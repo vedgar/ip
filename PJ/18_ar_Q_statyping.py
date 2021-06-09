@@ -99,7 +99,6 @@ class P(Parser):
 ### Apstraktna sintaksna stabla
 # Program: naredbe symtab
 # Pridruživanje: varijabla tip? vrijednost
-# Suprotan: operand
 # Op: operator lijevo desno
 
 
