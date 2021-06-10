@@ -238,6 +238,12 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         if info: poruka += f' ({info})'
         return SemantičkaGreška(poruka)
 
+    def redeklaracija(self, info=''):
+        """Konstruira semantičku grešku redeklariranog simbola."""
+        poruka = raspon(self) + f': redeklarirano {self!r}'
+        if info: poruka += f': {info}'
+        return SemantičkaGreška(poruka)
+
     def krivi_sadržaj(self, info):
         """Konstruira leksičku grešku: token nema dobar sadržaj."""
         poruka = raspon(self) + f': {self!r}: {info}'

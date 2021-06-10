@@ -106,7 +106,7 @@ def ažuriraj(var, tip, symtab):
     if tip is not nenavedeno:
         tip = Tip(tip)
         if var in symtab:
-            if tip == symtab[var]: raise var.redeklaracija()
+            if tip == symtab[var]: raise var.redeklaracija(tip)
             else: raise var.krivi_tip(tip, symtab[var])
         symtab[var] = tip
     return symtab[var]
