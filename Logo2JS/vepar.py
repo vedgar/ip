@@ -257,7 +257,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
 
     def krivi_tip(self, *tipovi):
         """Konstruira semantičku grešku nepodudarajućih (statičkih) tipova."""
-        poruka = raspon(self) + ': {self!r}: tipovi ne odgovaraju: '
+        poruka = raspon(self) + f': {self!r}: tipovi ne odgovaraju: '
         poruka += ' vs. '.join(map(str, tipovi))
         return SemantičkaGreška(poruka)
 
