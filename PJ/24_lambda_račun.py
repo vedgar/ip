@@ -14,7 +14,7 @@ def λex(l):
         elif znak in {'λ', '^'}:
             yield l.token(Λ.LAMBDA)
             if l.čitaj().isalpha(): yield l.token(Λ.SLOVO)
-            else: raise l.greška('iza λ mora ići slovo bez razmaka')
+            else: raise l.greška('neposredno iza λ mora doći slovo')
         elif znak.isalpha(): yield l.token(Λ.SLOVO)
         else: yield l.literal(Λ)
 
