@@ -26,7 +26,7 @@ def kemija(lex):
     for znak in lex:
         if znak == 'n':
             if možeN: yield lex.token(T.N)
-            else: raise lex.greška('n ne može doći ovdje')
+            else: raise lex.greška('može doći samo neposredno iza zatvorene zagrade')
         elif znak.isdecimal():
             lex.prirodni_broj(znak, nula=False)
             yield lex.token(T.BROJ)
