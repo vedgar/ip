@@ -10,12 +10,14 @@ class T(TipoviTokena):
     O_OTV, O_ZATV, V_OTV, V_ZATV, KOSACRTA, ZAREZ, TOČKAZAREZ = '(){}/,;'
     IME = TipTokena()
 
+def js_id(znak):
+    return znak.isalnum() or znak in '_$'
 
 def js(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
-        elif znak.isalpha() or znak == '$':
-            lex.zvijezda(identifikator)
+        elif znak.isalpha() or znak in '_$':
+            lex.zvijezda(js_id)
             yield lex.literal(T.IME)
         elif znak == '/':
             if lex >= '/':
@@ -26,13 +28,19 @@ def js(lex):
 
 
 ### Beskontekstna gramatika
-# start -> fun | start fun
-# fun -> FUNCTION IME O_OTV argumenti? O_ZATV V_OTV KOMENTAR* nar V_ZATV
+# start -> funkcija | start funkcija
+# funkcija -> FUNCTION IME O_OTV argumenti? O_ZATV tijelo
 # argumenti -> VAR IME ZAREZ argumenti | VAR IME
-# nar -> NAREDBA TOČKAZAREZ nar | NAREDBA KOMENTAR+ nar | NAREDBA | ''
+# tijelo -> V_OTV KOMENTAR* naredbe V_ZATV
+# naredbe -> NAREDBA (TOČKAZAREZ | KOMENTAR+) naredbe | NAREDBA | ''
 
 class P(Parser):
     lexer = js
+
+    def start(self):
+        funkcije = [self.funkcija()]
+        while not self > KRAJ: funkcije.append(self.funkcija())
+        return Program(funkcije)
 
     def funkcija(self):
         self >> T.FUNCTION
@@ -45,28 +53,21 @@ class P(Parser):
         self >> T.O_ZATV
         return Funkcija(ime, argumenti, self.tijelo())
 
+    def argument(self):
+        self >> T.VAR
+        return self >> T.IME
+
     def tijelo(self):
         self >> T.V_OTV
         while self >= T.KOMENTAR: pass
         naredbe = []
         while not self >= T.V_ZATV:
-            naredbe.append(self.naredba())
+            naredbe.append(self >> T.NAREDBA)
             if self >= T.TOČKAZAREZ: pass
             elif self > T.KOMENTAR:
                 while self >= T.KOMENTAR: pass
             elif self >> T.V_ZATV: break
         return naredbe
-
-    def start(self):
-        funkcije = [self.funkcija()]
-        while not self > KRAJ: funkcije.append(self.funkcija())
-        return Program(funkcije)
-
-    def argument(self):
-        self >> T.VAR
-        return self >> T.IME
-
-    def naredba(self): return self >> T.NAREDBA
 
 
 ### AST
@@ -78,7 +79,7 @@ class Program(AST('funkcije')): pass
 
 
 prikaz(P('''\
-    function ime (var x, var y, var z) {
+    function $ime (var x, var y, var z) {
         //neke naredbe odvojene s ; ili komentarima
         naredba; naredba //kom 
         naredba
