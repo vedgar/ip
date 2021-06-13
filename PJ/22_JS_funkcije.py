@@ -79,7 +79,7 @@ class Program(AST('funkcije')): pass
 
 
 prikaz(P('''\
-    function $ime (var x, var y, var z) {
+    function ime_1 (var x, var y, var z) {
         //neke naredbe odvojene s ; ili komentarima
         naredba; naredba //kom 
         naredba
