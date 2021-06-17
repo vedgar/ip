@@ -95,7 +95,9 @@ class P(Parser):
     def ispis(p) -> 'Ispis':
         p >> T.ISPIS
         if p > {T.BROJ, T.BVAR, T.OTV, T.UBROJ}: što = p.broj()
-        elif p > {T.TEKST, T.TVAR, T.UTEKST}: što = p.tekst()
+        elif p > {T.TEKST, T.TVAR, T.UTEKST}:
+            što = p.tekst()
+            if p >= T.JEDNAKO: što = JednakTekst(što, p.tekst())
         else: što = p >> T.SLJEDEĆI
         return Ispis(što)
     
