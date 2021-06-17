@@ -16,7 +16,7 @@ def λex(l):
         if znak.isspace(): l.zanemari()
         elif znak in {'λ', '^'}:
             yield l.token(Λ.LAMBDA)
-            l >> str.isalpha  # iza λ mora ići slovo bez razmaka
+            if (l >> str.isalpha) == 'λ': raise lex.greška('λ nije slovo!')
             yield l.token(Λ.SLOVO)
         elif znak.isalpha(): yield l.token(Λ.SLOVO)
         else: yield l.literal(Λ)
