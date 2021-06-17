@@ -20,8 +20,8 @@ def js(lex):
     ugniježđenost = 0
     for znak in lex:
         if znak.isspace(): lex.zanemari()
-        elif znak.isalpha() or znak == '$':
-            lex * {str.isalpha, '_'}
+        elif znak.isalpha() or znak in {'$', '_'}:
+            lex * {str.isalnum, '$', '_'}
             default = T.NAREDBA if ugniježđenost else T.IME
             yield lex.literal_ili(default)
         elif znak == '/':
