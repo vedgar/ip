@@ -14,22 +14,22 @@ Tokenizacija: !(P5&!!(P3->P0))
 		Znak #16       : ZATV')'
 Negacija:  @[Znakovi #1–#16]
   ispod = Binarna:  @[Znakovi #2–#16]
-    veznik = KONJ'&'
-    lijevo = PVAR'P5'
+    veznik = KONJ'&'  @[Znak #5]
+    lijevo = PVAR'P5'  @[Znakovi #3–#4]
     desno = Negacija:  @[Znakovi #6–#15]
       ispod = Negacija:  @[Znakovi #7–#15]
         ispod = Binarna:  @[Znakovi #8–#15]
-          veznik = KOND'->'
-          lijevo = PVAR'P3'
-          desno = PVAR'P0'
+          veznik = KOND'->'  @[Znakovi #11–#12]
+          lijevo = PVAR'P3'  @[Znakovi #9–#10]
+          desno = PVAR'P0'  @[Znakovi #13–#14]
 Negacija:
   ispod = Binarna:
-    veznik = KONJ'&'
-    lijevo = PVAR'P5'
+    veznik = KONJ'&'  @[Znak #5]
+    lijevo = PVAR'P5'  @[Znakovi #3–#4]
     desno = Binarna:
-      veznik = KOND'->'
-      lijevo = PVAR'P3'
-      desno = PVAR'P0'
+      veznik = KOND'->'  @[Znakovi #11–#12]
+      lijevo = PVAR'P3'  @[Znakovi #9–#10]
+      desno = PVAR'P0'  @[Znakovi #13–#14]
 istinitost(F, P0=False, P3=True, P5=False)=True
 Tokenizacija: P
 LeksičkaGreška: Znak #2: neočekivani kraj ulaza
@@ -60,19 +60,19 @@ Tokenizacija: !(P5&!!(P3->P0))
 		Znak #16       : ZATV')'
 Negacija:  @[Znakovi #1–#16]
   ispod = Konjunkcija:  @[Znakovi #2–#16]
-    lijevo = PVAR'P5'
+    lijevo = PVAR'P5'  @[Znakovi #3–#4]
     desno = Negacija:  @[Znakovi #6–#15]
       ispod = Negacija:  @[Znakovi #7–#15]
         ispod = Kondicional:  @[Znakovi #8–#15]
-          lijevo = PVAR'P3'
-          desno = PVAR'P0'
+          lijevo = PVAR'P3'  @[Znakovi #9–#10]
+          desno = PVAR'P0'  @[Znakovi #13–#14]
 ¬(P₅∧¬¬(P₃→P₀))
 Negacija:
   ispod = Konjunkcija:
-    lijevo = PVAR'P5'
+    lijevo = PVAR'P5'  @[Znakovi #3–#4]
     desno = Kondicional:
-      lijevo = PVAR'P3'
-      desno = PVAR'P0'
+      lijevo = PVAR'P3'  @[Znakovi #9–#10]
+      desno = PVAR'P0'  @[Znakovi #13–#14]
 ¬(P₅∧(P₃→P₀))
 istinitost(F, P0=False, P3=True, P5=False, P1=True)=True
 ------------------------------------------------------------
@@ -91,19 +91,19 @@ Tokenizacija: (!P0&(!P1<->!P5))
 		Znak #17       : ZATV')'
 Konjunkcija:  @[Znakovi #1–#17]
   lijevo = Negacija:  @[Znakovi #2–#4]
-    ispod = PVAR'P0'
+    ispod = PVAR'P0'  @[Znakovi #3–#4]
   desno = Bikondicional:  @[Znakovi #6–#16]
     lijevo = Negacija:  @[Znakovi #7–#9]
-      ispod = PVAR'P1'
+      ispod = PVAR'P1'  @[Znakovi #8–#9]
     desno = Negacija:  @[Znakovi #13–#15]
-      ispod = PVAR'P5'
+      ispod = PVAR'P5'  @[Znakovi #14–#15]
 (¬P₀∧(¬P₁↔¬P₅))
 Negacija:
   ispod = Kondicional:
     lijevo = Bikondicional:
-      lijevo = PVAR'P1'
-      desno = PVAR'P5'
-    desno = PVAR'P0'
+      lijevo = PVAR'P1'  @[Znakovi #8–#9]
+      desno = PVAR'P5'  @[Znakovi #14–#15]
+    desno = PVAR'P0'  @[Znakovi #3–#4]
 ¬((P₁↔P₅)→P₀)
 istinitost(F, P0=False, P3=True, P5=False, P1=True)=False
 ------------------------------------------------------------
@@ -140,18 +140,18 @@ Umnožak:  @[Znakovi #1–kraj]
   faktori = [...]:
   . Zbroj:  @[Znakovi #1–#6]
   .   pribrojnici = [...]:
-  .   . BROJ'2'
-  .   . BROJ'3'
+  .   . BROJ'2'  @[Znak #2]
+  .   . BROJ'3'  @[Znak #4]
   . Potencija:  @[Znakovi #7–kraj]
-  .   baza = BROJ'4'
-  .   eksponent = BROJ'1'
+  .   baza = BROJ'4'  @[Znak #7]
+  .   eksponent = BROJ'1'  @[Znak #9]
 Umnožak:
   faktori = [...]:
   . Zbroj:
   .   pribrojnici = [...]:
-  .   . BROJ'2'
-  .   . BROJ'3'
-  . BROJ'4'
+  .   . BROJ'2'  @[Znak #2]
+  .   . BROJ'3'  @[Znak #4]
+  . BROJ'4'  @[Znak #7]
 PUSH 2 		 [ 2<
 PUSH 3 		 [ 2 3<
 ADD 		 [ 5<
@@ -162,15 +162,15 @@ rezultat: 20
 ------------------------------------------------------------
 2^0^0^0^0
 Potencija:  @[Znakovi #1–kraj]
-  baza = BROJ'2'
+  baza = BROJ'2'  @[Znak #1]
   eksponent = Potencija:  @[Znakovi #3–kraj]
-    baza = BROJ'0'
+    baza = BROJ'0'  @[Znak #3]
     eksponent = Potencija:  @[Znakovi #5–kraj]
-      baza = BROJ'0'
+      baza = BROJ'0'  @[Znak #5]
       eksponent = Potencija:  @[Znakovi #7–kraj]
-        baza = BROJ'0'
-        eksponent = BROJ'0'
-BROJ'2'
+        baza = BROJ'0'  @[Znak #7]
+        eksponent = BROJ'0'  @[Znak #9]
+BROJ'2'  @[Znak #1]
 PUSH 2 		 [ 2<
 rezultat: 2
 2^0^0^0^0 == 2 OK
@@ -178,21 +178,21 @@ rezultat: 2
 2+(0+1*1*2)
 Zbroj:  @[Znakovi #1–kraj]
   pribrojnici = [...]:
-  . BROJ'2'
+  . BROJ'2'  @[Znak #1]
   . Zbroj:  @[Znakovi #3–kraj]
   .   pribrojnici = [...]:
-  .   . BROJ'0'
+  .   . BROJ'0'  @[Znak #4]
   .   . Umnožak:  @[Znakovi #6–#11]
   .   .   faktori = [...]:
-  .   .   . BROJ'1'
+  .   .   . BROJ'1'  @[Znak #6]
   .   .   . Umnožak:  @[Znakovi #8–#11]
   .   .   .   faktori = [...]:
-  .   .   .   . BROJ'1'
-  .   .   .   . BROJ'2'
+  .   .   .   . BROJ'1'  @[Znak #8]
+  .   .   .   . BROJ'2'  @[Znak #10]
 Zbroj:
   pribrojnici = [...]:
-  . BROJ'2'
-  . BROJ'2'
+  . BROJ'2'  @[Znak #1]
+  . BROJ'2'  @[Znak #10]
 PUSH 2 		 [ 2<
 PUSH 2 		 [ 2 2<
 ADD 		 [ 4<
@@ -202,45 +202,45 @@ rezultat: 4
 1+2*3^4+0*5^6*7+8*9
 Zbroj:  @[Znakovi #1–kraj]
   pribrojnici = [...]:
-  . BROJ'1'
+  . BROJ'1'  @[Znak #1]
   . Zbroj:  @[Znakovi #3–kraj]
   .   pribrojnici = [...]:
   .   . Umnožak:  @[Znakovi #3–#8]
   .   .   faktori = [...]:
-  .   .   . BROJ'2'
+  .   .   . BROJ'2'  @[Znak #3]
   .   .   . Potencija:  @[Znakovi #5–#8]
-  .   .   .   baza = BROJ'3'
-  .   .   .   eksponent = BROJ'4'
+  .   .   .   baza = BROJ'3'  @[Znak #5]
+  .   .   .   eksponent = BROJ'4'  @[Znak #7]
   .   . Zbroj:  @[Znakovi #9–kraj]
   .   .   pribrojnici = [...]:
   .   .   . Umnožak:  @[Znakovi #9–#16]
   .   .   .   faktori = [...]:
-  .   .   .   . BROJ'0'
+  .   .   .   . BROJ'0'  @[Znak #9]
   .   .   .   . Umnožak:  @[Znakovi #11–#16]
   .   .   .   .   faktori = [...]:
   .   .   .   .   . Potencija:  @[Znakovi #11–#14]
-  .   .   .   .   .   baza = BROJ'5'
-  .   .   .   .   .   eksponent = BROJ'6'
-  .   .   .   .   . BROJ'7'
+  .   .   .   .   .   baza = BROJ'5'  @[Znak #11]
+  .   .   .   .   .   eksponent = BROJ'6'  @[Znak #13]
+  .   .   .   .   . BROJ'7'  @[Znak #15]
   .   .   . Umnožak:  @[Znakovi #17–kraj]
   .   .   .   faktori = [...]:
-  .   .   .   . BROJ'8'
-  .   .   .   . BROJ'9'
+  .   .   .   . BROJ'8'  @[Znak #17]
+  .   .   .   . BROJ'9'  @[Znak #19]
 Zbroj:
   pribrojnici = [...]:
-  . BROJ'1'
+  . BROJ'1'  @[Znak #1]
   . Zbroj:
   .   pribrojnici = [...]:
   .   . Umnožak:
   .   .   faktori = [...]:
-  .   .   . BROJ'2'
+  .   .   . BROJ'2'  @[Znak #3]
   .   .   . Potencija:
-  .   .   .   baza = BROJ'3'
-  .   .   .   eksponent = BROJ'4'
+  .   .   .   baza = BROJ'3'  @[Znak #5]
+  .   .   .   eksponent = BROJ'4'  @[Znak #7]
   .   . Umnožak:
   .   .   faktori = [...]:
-  .   .   . BROJ'8'
-  .   .   . BROJ'9'
+  .   .   . BROJ'8'  @[Znak #17]
+  .   .   . BROJ'9'  @[Znak #19]
 PUSH 1 		 [ 1<
 PUSH 2 		 [ 1 2<
 PUSH 3 		 [ 1 2 3<
@@ -283,33 +283,33 @@ Umnožak:  @[Znakovi #1–kraj]
   faktori = [...]:
   . Zbroj:  @[Znakovi #1–#5]
   .   pribrojnici = [BROJ'2', BROJ'3']
-  . BROJ'4'
+  . BROJ'4'  @[Znak #7]
 Umnožak:
   faktori = [...]:
   . Zbroj:
   .   pribrojnici = [BROJ'2', BROJ'3']
-  . BROJ'4'
+  . BROJ'4'  @[Znak #7]
 (2+3)*4 == 20 OK
 ------------------------------------------------------------
 Zbroj:  @[Znakovi #1–kraj]
   pribrojnici = [...]:
-  . BROJ'2'
+  . BROJ'2'  @[Znak #1]
   . Zbroj:  @[Znakovi #5–kraj]
   .   pribrojnici = [BROJ'0', Umnožak(faktori=[BROJ'1', BROJ'1', BROJ'2'])]
 Zbroj:
   pribrojnici = [...]:
-  . BROJ'2'
-  . BROJ'2'
+  . BROJ'2'  @[Znak #1]
+  . BROJ'2'  @[Znak #12]
 2 + (0+1*1*2) == 4 OK
 ------------------------------------------------------------
 Umnožak:  @[Znakovi #1–kraj]
   faktori = [...]:
-  . BROJ'2'
+  . BROJ'2'  @[Znak #1]
   . Zbroj:  @[Znakovi #2–#6]
   .   pribrojnici = [BROJ'3', BROJ'5']
 Umnožak:
   faktori = [...]:
-  . BROJ'2'
+  . BROJ'2'  @[Znak #1]
   . Zbroj:
   .   pribrojnici = [BROJ'3', BROJ'5']
 Python ovo ne zna! 2(3+5) == 16
@@ -328,7 +328,7 @@ Umnožak:
   faktori = [...]:
   . Zbroj:
   .   pribrojnici = [BROJ'1', BROJ'1']
-  . BROJ'2'
+  . BROJ'2'  @[Znak #10]
   . Zbroj:
   .   pribrojnici = [BROJ'3', BROJ'4']
 Python ovo ne zna! (1+1) (0+2+0) (0+1) (3+4) == 28
@@ -352,7 +352,7 @@ LeksičkaGreška: Znak #1: neočekivani znak '-'
 Skripta:  @[Redak 1, stupac 5 – kraj]
   naredbe = [...]:
   . Create:  @[Redak 1, stupac 5 – redak 8, stupac 6]
-  .   tablica = IME'Persons'
+  .   tablica = IME'Persons'  @[Redak 1, stupci 18–24]
   .   specifikacije = [...]:
   .   . Stupac(ime=IME'PersonID', tip=IME'int', veličina=<nenavedeno>)
   .   . Stupac(ime=IME'Name', tip=IME'varchar', veličina=BROJ'255')
@@ -360,32 +360,32 @@ Skripta:  @[Redak 1, stupac 5 – kraj]
   .   . Stupac(ime=IME'Married', tip=IME'bool', veličina=<nenavedeno>)
   .   . Stupac(ime=IME'City', tip=IME'varchar', veličina=BROJ'9')
   . Select:  @[Redak 9, stupci 5–35]
-  .   tablica = IME'Persons'
+  .   tablica = IME'Persons'  @[Redak 9, stupci 28–34]
   .   stupci = [...]:
   .   . IME'Name'
   .   . IME'City'
   . Select:  @[Redak 10, stupci 5–26]
-  .   tablica = IME'Persons'
+  .   tablica = IME'Persons'  @[Redak 10, stupci 19–25]
   .   stupci = <nenavedeno>
   . Create:  @[Redak 11, stupci 5–33]
-  .   tablica = IME'2E3'
+  .   tablica = IME'2E3'  @[Redak 11, stupci 18–20]
   .   specifikacije = [...]:
   .   . Stupac(ime=IME's', tip=IME't', veličina=<nenavedeno>)
   .   . Stupac(ime=IME's2', tip=IME't', veličina=<nenavedeno>)
   . Select:  @[Redak 12, stupci 5–20]
-  .   tablica = IME'2E3'
+  .   tablica = IME'2E3'  @[Redak 12, stupci 17–19]
   .   stupci = <nenavedeno>
   . Select:  @[Redak 13, stupci 5–22]
-  .   tablica = IME'2E3'
+  .   tablica = IME'2E3'  @[Redak 13, stupci 19–21]
   .   stupci = [...]:
   .   . IME's'
   . Select:  @[Redak 14, stupci 5–38]
-  .   tablica = IME'Persons'
+  .   tablica = IME'Persons'  @[Redak 14, stupci 31–37]
   .   stupci = [...]:
   .   . IME'Name'
   .   . IME'Married'
   . Select:  @[Redak 15, stupci 5–29]
-  .   tablica = IME'Persons'
+  .   tablica = IME'Persons'  @[Redak 15, stupci 22–28]
   .   stupci = [...]:
   .   . IME'Name'
 Tablica IME'Persons' - stupci:
@@ -419,12 +419,12 @@ LeksičkaGreška: Znak #2: neočekivani znak ' '
 Program:  @[Znakovi #1–kraj]
   definicije = []
   završni = Binarna:  @[Znakovi #1–kraj]
-    op = PLUS'+'
-    lijevo = BROJ'2'
+    op = PLUS'+'  @[Znak #2]
+    lijevo = BROJ'2'  @[Znak #1]
     desno = Binarna:  @[Znakovi #3–kraj]
-      op = PUTA'*'
-      lijevo = BROJ'2'
-      desno = BROJ'3'
+      op = PUTA'*'  @[Znak #4]
+      lijevo = BROJ'2'  @[Znak #3]
+      desno = BROJ'3'  @[Znak #5]
 		 | _t0 = 2.0
 		 | _t1 = 2.0
 		 | _t2 = 3.0
@@ -436,28 +436,28 @@ Program:  @[Znakovi #1–kraj]
 Program:  @[Znakovi #1–kraj]
   definicije = []
   završni = Binarna:  @[Znakovi #1–kraj]
-    op = KROZ'/'
+    op = KROZ'/'  @[Znak #8]
     lijevo = Binarna:  @[Znakovi #1–#8]
-      op = PLUS'+'
-      lijevo = BROJ'1'
+      op = PLUS'+'  @[Znak #3]
+      lijevo = BROJ'1'  @[Znak #2]
       desno = Binarna:  @[Znakovi #4–#7]
-        op = PUTA'*'
-        lijevo = BROJ'6'
-        desno = I'i'
+        op = PUTA'*'  @[Znak #5]
+        lijevo = BROJ'6'  @[Znak #4]
+        desno = I'i'  @[Znak #6]
     desno = Binarna:  @[Znakovi #9–kraj]
-      op = NA'^'
+      op = NA'^'  @[Znak #17]
       lijevo = Unarna:  @[Znakovi #9–#17]
-        op = KONJ'~'
+        op = KONJ'~'  @[Znak #16]
         ispod = Binarna:  @[Znakovi #10–#15]
-          op = MINUS'-'
+          op = MINUS'-'  @[Znak #13]
           lijevo = Binarna:  @[Znakovi #10–#13]
-            op = PUTA'*'
-            lijevo = BROJ'3'
-            desno = I'i'
-          desno = BROJ'4'
+            op = PUTA'*'  @[Znak #11]
+            lijevo = BROJ'3'  @[Znak #10]
+            desno = I'i'  @[Znak #12]
+          desno = BROJ'4'  @[Znak #14]
       desno = Unarna:  @[Znakovi #18–kraj]
-        op = KONJ'~'
-        ispod = BROJ'2'
+        op = KONJ'~'  @[Znak #19]
+        ispod = BROJ'2'  @[Znak #18]
 		 | _t0 = 1.0
 		 | _t1 = 6.0
 		 | _t2 = i
@@ -479,9 +479,9 @@ Program:  @[Znakovi #1–kraj]
 Program:  @[Znakovi #1–kraj]
   definicije = []
   završni = Binarna:  @[Znakovi #1–kraj]
-    op = NA'^'
-    lijevo = I'i'
-    desno = I'i'
+    op = NA'^'  @[Znak #2]
+    lijevo = I'i'  @[Znak #1]
+    desno = I'i'  @[Znak #3]
 		 | _t0 = i
 		 | _t1 = i
 		 | _t2 = _t0 ^ _t1
@@ -491,44 +491,44 @@ i^i = (0.20787957635076193+0j)
 Program:  @[Redak 1, stupac 5 – kraj]
   definicije = [...]:
   . (...):
-  . , IME't'
+  . , IME't'  @[Redak 1, stupac 12]
   . , Binarna:  @[Redak 1, stupci 5–10]
-  . ,   op = PLUS'+'
-  . ,   lijevo = I'i'
-  . ,   desno = BROJ'1'
+  . ,   op = PLUS'+'  @[Redak 1, stupac 6]
+  . ,   lijevo = I'i'  @[Redak 1, stupac 5]
+  . ,   desno = BROJ'1'  @[Redak 1, stupac 7]
   . (...):
-  . , IME'a'
+  . , IME'a'  @[Redak 2, stupac 17]
   . , Binarna:  @[Redak 2, stupci 5–15]
-  . ,   op = KROZ'/'
-  . ,   lijevo = IME't'
+  . ,   op = KROZ'/'  @[Redak 2, stupac 6]
+  . ,   lijevo = IME't'  @[Redak 2, stupac 5]
   . ,   desno = Binarna:  @[Redak 2, stupci 7–15]
-  . ,     op = NA'^'
-  . ,     lijevo = BROJ'2'
+  . ,     op = NA'^'  @[Redak 2, stupac 8]
+  . ,     lijevo = BROJ'2'  @[Redak 2, stupac 7]
   . ,     desno = Binarna:  @[Redak 2, stupci 9–15]
-  . ,       op = NA'^'
-  . ,       lijevo = BROJ'2'
+  . ,       op = NA'^'  @[Redak 2, stupac 10]
+  . ,       lijevo = BROJ'2'  @[Redak 2, stupac 9]
   . ,       desno = Unarna:  @[Redak 2, stupci 11–15]
-  . ,         op = MINUS'-'
-  . ,         ispod = BROJ'1'
+  . ,         op = MINUS'-'  @[Redak 2, stupac 11]
+  . ,         ispod = BROJ'1'  @[Redak 2, stupac 12]
   . (...):
-  . , IME'b'
+  . , IME'b'  @[Redak 3, stupac 20]
   . , Binarna:  @[Redak 3, stupci 5–18]
-  . ,   op = NA'^'
-  . ,   lijevo = IME'a'
+  . ,   op = NA'^'  @[Redak 3, stupac 6]
+  . ,   lijevo = IME'a'  @[Redak 3, stupac 5]
   . ,   desno = Binarna:  @[Redak 3, stupci 7–18]
-  . ,     op = NA'^'
-  . ,     lijevo = BROJ'2'
+  . ,     op = NA'^'  @[Redak 3, stupac 8]
+  . ,     lijevo = BROJ'2'  @[Redak 3, stupac 7]
   . ,     desno = Binarna:  @[Redak 3, stupci 9–18]
-  . ,       op = NA'^'
-  . ,       lijevo = BROJ'2'
+  . ,       op = NA'^'  @[Redak 3, stupac 10]
+  . ,       lijevo = BROJ'2'  @[Redak 3, stupac 9]
   . ,       desno = Binarna:  @[Redak 3, stupci 11–18]
-  . ,         op = NA'^'
-  . ,         lijevo = BROJ'2'
+  . ,         op = NA'^'  @[Redak 3, stupac 12]
+  . ,         lijevo = BROJ'2'  @[Redak 3, stupac 11]
   . ,         desno = Binarna:  @[Redak 3, stupci 13–18]
-  . ,           op = NA'^'
-  . ,           lijevo = BROJ'2'
-  . ,           desno = BROJ'0'
-  završni = IME'b'
+  . ,           op = NA'^'  @[Redak 3, stupac 14]
+  . ,           lijevo = BROJ'2'  @[Redak 3, stupac 13]
+  . ,           desno = BROJ'0'  @[Redak 3, stupac 15]
+  završni = IME'b'  @[Redak 4, stupac 5]
 		 | _t0 = i
 		 | _t1 = 1.0
 		 | _t2 = _t0 + _t1
@@ -565,45 +565,45 @@ Program:  @[Redak 1, stupac 5 – kraj]
 Program:  @[Redak 1, stupac 5 – kraj]
   definicije = [...]:
   . (...):
-  . , IME'd'
-  . , BROJ'8'
+  . , IME'd'  @[Redak 1, stupac 10]
+  . , BROJ'8'  @[Redak 1, stupac 5]
   . (...):
-  . , IME'n'
+  . , IME'n'  @[Redak 2, stupac 13]
   . , Binarna:  @[Redak 2, stupci 5–11]
-  . ,   op = NA'^'
-  . ,   lijevo = BROJ'10'
-  . ,   desno = IME'd'
+  . ,   op = NA'^'  @[Redak 2, stupac 7]
+  . ,   lijevo = BROJ'10'  @[Redak 2, stupci 5–6]
+  . ,   desno = IME'd'  @[Redak 2, stupac 8]
   . (...):
-  . , IME'e'
+  . , IME'e'  @[Redak 3, stupac 18]
   . , Binarna:  @[Redak 3, stupci 5–16]
-  . ,   op = NA'^'
+  . ,   op = NA'^'  @[Redak 3, stupac 12]
   . ,   lijevo = Binarna:  @[Redak 3, stupci 5–12]
-  . ,     op = PLUS'+'
-  . ,     lijevo = BROJ'1'
+  . ,     op = PLUS'+'  @[Redak 3, stupac 7]
+  . ,     lijevo = BROJ'1'  @[Redak 3, stupac 6]
   . ,     desno = Binarna:  @[Redak 3, stupci 8–11]
-  . ,       op = KROZ'/'
-  . ,       lijevo = BROJ'1'
-  . ,       desno = IME'n'
-  . ,   desno = IME'n'
+  . ,       op = KROZ'/'  @[Redak 3, stupac 9]
+  . ,       lijevo = BROJ'1'  @[Redak 3, stupac 8]
+  . ,       desno = IME'n'  @[Redak 3, stupac 10]
+  . ,   desno = IME'n'  @[Redak 3, stupac 13]
   . (...):
-  . , IME'pi'
+  . , IME'pi'  @[Redak 4, stupci 16–17]
   . , Binarna:  @[Redak 4, stupci 5–14]
-  . ,   op = KROZ'/'
-  . ,   lijevo = BROJ'355'
-  . ,   desno = BROJ'113'
+  . ,   op = KROZ'/'  @[Redak 4, stupac 8]
+  . ,   lijevo = BROJ'355'  @[Redak 4, stupci 5–7]
+  . ,   desno = BROJ'113'  @[Redak 4, stupci 9–11]
   . (...):
-  . , IME'skoro0'
+  . , IME'skoro0'  @[Redak 5, stupci 21–26]
   . , Binarna:  @[Redak 5, stupci 5–19]
-  . ,   op = PLUS'+'
+  . ,   op = PLUS'+'  @[Redak 5, stupac 14]
   . ,   lijevo = Binarna:  @[Redak 5, stupci 5–14]
-  . ,     op = NA'^'
-  . ,     lijevo = IME'e'
+  . ,     op = NA'^'  @[Redak 5, stupac 6]
+  . ,     lijevo = IME'e'  @[Redak 5, stupac 5]
   . ,     desno = Binarna:  @[Redak 5, stupci 7–14]
-  . ,       op = PUTA'*'
-  . ,       lijevo = I'i'
-  . ,       desno = IME'pi'
-  . ,   desno = BROJ'1'
-  završni = IME'skoro0'
+  . ,       op = PUTA'*'  @[Redak 5, stupac 9]
+  . ,       lijevo = I'i'  @[Redak 5, stupac 8]
+  . ,       desno = IME'pi'  @[Redak 5, stupci 10–11]
+  . ,   desno = BROJ'1'  @[Redak 5, stupac 16]
+  završni = IME'skoro0'  @[Redak 6, stupci 5–10]
 		 | _t0 = 8.0
 		 | d = _t0
 		 | _t1 = 10.0
@@ -643,18 +643,18 @@ Program:  @[Redak 1, stupac 5 – kraj]
 Program:  @[Znakovi #1–kraj]
   definicije = [...]:
   . (...):
-  . , IME'NA'
-  . , BROJ'6.02214076e23'
+  . , IME'NA'  @[Znakovi #16–#17]
+  . , BROJ'6.02214076e23'  @[Znakovi #1–#13]
   . (...):
-  . , IME'u'
-  . , BROJ'1.6605e-27'
+  . , IME'u'  @[Znak #31]
+  . , BROJ'1.6605e-27'  @[Znakovi #19–#28]
   završni = Binarna:  @[Znakovi #33–kraj]
-    op = KROZ'/'
-    lijevo = BROJ'1'
+    op = KROZ'/'  @[Znak #34]
+    lijevo = BROJ'1'  @[Znak #33]
     desno = Binarna:  @[Znakovi #35–kraj]
-      op = PUTA'*'
-      lijevo = IME'NA'
-      desno = IME'u'
+      op = PUTA'*'  @[Znak #38]
+      lijevo = IME'NA'  @[Znakovi #36–#37]
+      desno = IME'u'  @[Znak #39]
 		 | _t0 = 6.02214076e+23
 		 | NA = _t0
 		 | _t1 = 1.6605e-27
@@ -673,12 +673,12 @@ LeksičkaGreška: Znak #3: neočekivani znak '+'
 Program:  @[Znakovi #1–kraj]
   definicije = []
   završni = Binarna:  @[Znakovi #1–kraj]
-    op = PLUS'+'
-    lijevo = BROJ'2'
+    op = PLUS'+'  @[Znak #2]
+    lijevo = BROJ'2'  @[Znak #1]
     desno = Binarna:  @[Znakovi #3–kraj]
-      op = KROZ'/'
-      lijevo = BROJ'2'
-      desno = BROJ'0'
+      op = KROZ'/'  @[Znak #4]
+      lijevo = BROJ'2'  @[Znak #3]
+      desno = BROJ'0'  @[Znak #5]
 		 | _t0 = 2.0
 		 | _t1 = 2.0
 		 | _t2 = 0.0
@@ -691,9 +691,9 @@ GreškaIzvođenja: Znakovi #3–kraj:
 Program:  @[Znakovi #1–kraj]
   definicije = []
   završni = Binarna:  @[Znakovi #1–kraj]
-    op = NA'**'
-    lijevo = BROJ'0'
-    desno = I'i'
+    op = NA'**'  @[Znakovi #2–#3]
+    lijevo = BROJ'0'  @[Znak #1]
+    desno = I'i'  @[Znak #4]
 		 | _t0 = 0.0
 		 | _t1 = i
 		 | _t2 = _t0 ^ _t1
@@ -704,15 +704,15 @@ GreškaIzvođenja: Znakovi #1–kraj:
 Program:  @[Redak 1, stupac 5 – kraj]
   naredbe = [...]:
   . Petlja:  @[Redak 1, stupac 5 – redak 7, stupac 5]
-  .   varijabla = IME'i'
-  .   početak = BROJ'8'
-  .   granica = BROJ'13'
-  .   inkrement = BROJ'2'
+  .   varijabla = IME'i'  @[Redak 1, stupac 11]
+  .   početak = BROJ'8'  @[Redak 1, stupac 15]
+  .   granica = BROJ'13'  @[Redak 1, stupci 23–24]
+  .   inkrement = BROJ'2'  @[Redak 1, stupac 33]
   .   blok = [...]:
   .   . Petlja:  @[Redak 2, stupac 9 – redak 5, stupac 9]
-  .   .   varijabla = IME'j'
-  .   .   početak = BROJ'0'
-  .   .   granica = BROJ'5'
+  .   .   varijabla = IME'j'  @[Redak 2, stupac 13]
+  .   .   početak = BROJ'0'  @[Redak 2, stupac 15]
+  .   .   granica = BROJ'5'  @[Redak 2, stupac 20]
   .   .   inkrement = <nenavedeno>
   .   .   blok = [...]:
   .   .   . Ispis:  @[Redak 3, stupci 13–23]
@@ -721,16 +721,16 @@ Program:  @[Redak 1, stupac 5 – kraj]
   .   .   .   . IME'j'
   .   .   .   novired = <nenavedeno>
   .   .   . Grananje:  @[Redak 4, stupci 13–42]
-  .   .   .   lijevo = IME'i'
-  .   .   .   desno = BROJ'10'
+  .   .   .   lijevo = IME'i'  @[Redak 4, stupac 16]
+  .   .   .   desno = BROJ'10'  @[Redak 4, stupci 21–22]
   .   .   .   onda = Grananje:  @[Redak 4, stupci 25–42]
   .   .   .     lijevo = IME'j'
   .   .   .     desno = BROJ'1'
   .   .   .     onda = BREAK'break'
   .   . Ispis:  @[Redak 6, stupci 9–22]
   .   .   varijable = [...]:
-  .   .   . IME'i'
-  .   .   novired = ENDL'endl'
+  .   .   . IME'i'  @[Redak 6, stupac 15]
+  .   .   novired = ENDL'endl'  @[Redak 6, stupci 18–21]
 8 0 8 1 8 2 8 3 8 4 8 
 10 0 10 1 10 
 12 0 12 1 12 2 12 3 12 4 12 
@@ -772,34 +772,34 @@ Tokenizacija: x ([yxx'] + y')
 		Znak #15       : OZATV')'
 And:  @[Znakovi #1–kraj]
   ulazi = [...]:
-  . SLOVO'x'
+  . SLOVO'x'  @[Znak #1]
   . Or:  @[Znakovi #3–kraj]
   .   ulazi = [...]:
   .   . Not:  @[Znakovi #4–#11]
   .   .   ulaz = And:  @[Znakovi #5–#9]
   .   .     ulazi = [...]:
-  .   .     . SLOVO'y'
-  .   .     . SLOVO'x'
+  .   .     . SLOVO'y'  @[Znak #5]
+  .   .     . SLOVO'x'  @[Znak #6]
   .   .     . Not:  @[Znakovi #7–#9]
-  .   .     .   ulaz = SLOVO'x'
+  .   .     .   ulaz = SLOVO'x'  @[Znak #7]
   .   . Not:  @[Znakovi #13–#15]
-  .   .   ulaz = SLOVO'y'
+  .   .   ulaz = SLOVO'y'  @[Znak #13]
 [['x', [[[[['y', 'x', ['x']]]]], [['y']]]]]
 [['x', [[['y', 'x', ['x']]], 'y']]]
 #################################09_pseudokod#################################
 Memorija:
 : AIME'program' = Funkcija:  @[Znakovi #1–kraj]
-:   ime = AIME'program'
+:   ime = AIME'program'  @[Znakovi #1–#7]
 :   parametri = []
 :   tijelo = Grananje:  @[Znakovi #13–kraj]
-:     istinitost = JE'je'
-:     uvjet = ISTINA'Istina'
+:     istinitost = JE'je'  @[Znakovi #17–#18]
+:     uvjet = ISTINA'Istina'  @[Znakovi #20–#25]
 :     onda = Vrati:  @[Znakovi #27–#39]
-:       što = BROJ'1'
+:       što = BROJ'1'  @[Znak #33]
 :     inače = Vrati:  @[Znakovi #41–kraj]
-:       što = BROJ'2'
+:       što = BROJ'2'  @[Znak #47]
 Program je vratio: 1
-SemantičkaGreška: Znak #9: redefinicija AIME'f'
+SemantičkaGreška: Znak #9: redeklaracija AIME'f'
 	Prva deklaracija: znak #1
 SintaksnaGreška: Znakovi #39–#41: neočekivani token LAŽ'Laž'
 	Očekivano: AIME ili BROJ ili MINUS ili OTV
@@ -809,434 +809,434 @@ LeksičkaGreška: Znak #20: neočekivani znak '0'
 	(vodeće nule nisu dozvoljene)
 Memorija:
 : LIME'Negacija' = Funkcija:  @[Redak 1, stupac 1 – redak 2, stupac 7]
-:   ime = LIME'Negacija'
+:   ime = LIME'Negacija'  @[Redak 1, stupci 1–8]
 :   parametri = [...]:
-:   . LIME'V'
+:   . LIME'V'  @[Redak 1, stupac 10]
 :   tijelo = Grananje:  @[Redak 1, stupac 15 – redak 2, stupac 7]
-:     istinitost = JE'je'
-:     uvjet = LIME'V'
+:     istinitost = JE'je'  @[Redak 1, stupci 19–20]
+:     uvjet = LIME'V'  @[Redak 1, stupac 22]
 :     onda = Vrati:  @[Redak 1, stupci 24–38]
-:       što = LAŽ'Laž'
+:       što = LAŽ'Laž'  @[Redak 1, stupci 30–32]
 :     inače = Vrati:  @[Redak 1, stupac 40 – redak 2, stupac 7]
-:       što = ISTINA'Istina'
+:       što = ISTINA'Istina'  @[Redak 1, stupci 46–51]
 : LIME'Neparan' = Funkcija:  @[Redak 2, stupac 1 – redak 9, stupac 1]
-:   ime = LIME'Neparan'
+:   ime = LIME'Neparan'  @[Redak 2, stupci 1–7]
 :   parametri = [...]:
-:   . AIME'x'
+:   . AIME'x'  @[Redak 2, stupac 9]
 :   tijelo = Blok:  @[Redak 2, stupac 14 – redak 9, stupac 1]
 :     naredbe = [...]:
 :     . Pridruživanje:  @[Redak 3, stupci 5–12]
-:     .   ime = LIME'N'
-:     .   pridruženo = LAŽ'Laž'
+:     .   ime = LIME'N'  @[Redak 3, stupac 5]
+:     .   pridruženo = LAŽ'Laž'  @[Redak 3, stupci 9–11]
 :     . Petlja:  @[Redak 4, stupac 5 – redak 7, stupac 5]
-:     .   istinitost = NIJE'nije'
+:     .   istinitost = NIJE'nije'  @[Redak 4, stupci 9–12]
 :     .   uvjet = Usporedba:  @[Redak 4, stupci 14–20]
-:     .     lijevo = AIME'x'
-:     .     relacija = JEDNAKO'='
-:     .     desno = BROJ'0'
+:     .     lijevo = AIME'x'  @[Redak 4, stupac 14]
+:     .     relacija = JEDNAKO'='  @[Redak 4, stupac 16]
+:     .     desno = BROJ'0'  @[Redak 4, stupac 18]
 :     .   tijelo = Blok:  @[Redak 4, stupac 20 – redak 7, stupac 5]
 :     .     naredbe = [...]:
 :     .     . Pridruživanje:  @[Redak 5, stupci 9–18]
-:     .     .   ime = AIME'x'
+:     .     .   ime = AIME'x'  @[Redak 5, stupac 9]
 :     .     .   pridruženo = Zbroj:  @[Redak 5, stupci 13–18]
 :     .     .     pribrojnici = [...]:
-:     .     .     . AIME'x'
+:     .     .     . AIME'x'  @[Redak 5, stupac 13]
 :     .     .     . Suprotan:
-:     .     .     .   od = BROJ'1'
+:     .     .     .   od = BROJ'1'  @[Redak 5, stupac 17]
 :     .     . Pridruživanje:  @[Redak 6, stupci 9–24]
-:     .     .   ime = LIME'N'
+:     .     .   ime = LIME'N'  @[Redak 6, stupac 9]
 :     .     .   pridruženo = Poziv:  @[Redak 6, stupci 13–24]
 :     .     .   ~ argumenti = [...]:
-:     .     .   ~ . LIME'N'
-:     .     .   ~ *ime = LIME'Negacija'
+:     .     .   ~ . LIME'N'  @[Redak 6, stupac 22]
+:     .     .   ~ *ime = LIME'Negacija'  @[Redak 1, stupci 1–8]
 :     . Vrati:  @[Redak 8, stupac 5 – redak 9, stupac 1]
-:     .   što = LIME'N'
+:     .   što = LIME'N'  @[Redak 8, stupac 11]
 : AIME'fakt' = Funkcija:  @[Redak 11, stupac 1 – redak 18, stupac 1]
-:   ime = AIME'fakt'
+:   ime = AIME'fakt'  @[Redak 11, stupci 1–4]
 :   parametri = [...]:
-:   . AIME'x'
+:   . AIME'x'  @[Redak 11, stupac 6]
 :   tijelo = Blok:  @[Redak 11, stupac 11 – redak 18, stupac 1]
 :     naredbe = [...]:
 :     . Pridruživanje:  @[Redak 12, stupci 5–10]
-:     .   ime = AIME'f'
-:     .   pridruženo = BROJ'1'
+:     .   ime = AIME'f'  @[Redak 12, stupac 5]
+:     .   pridruženo = BROJ'1'  @[Redak 12, stupac 9]
 :     . Petlja:  @[Redak 13, stupac 5 – redak 16, stupac 5]
-:     .   istinitost = NIJE'nije'
+:     .   istinitost = NIJE'nije'  @[Redak 13, stupci 9–12]
 :     .   uvjet = Usporedba:  @[Redak 13, stupci 14–20]
-:     .     lijevo = AIME'x'
-:     .     relacija = JEDNAKO'='
-:     .     desno = BROJ'0'
+:     .     lijevo = AIME'x'  @[Redak 13, stupac 14]
+:     .     relacija = JEDNAKO'='  @[Redak 13, stupac 16]
+:     .     desno = BROJ'0'  @[Redak 13, stupac 18]
 :     .   tijelo = Blok:  @[Redak 13, stupac 20 – redak 16, stupac 5]
 :     .     naredbe = [...]:
 :     .     . Pridruživanje:  @[Redak 14, stupci 9–16]
-:     .     .   ime = AIME'f'
+:     .     .   ime = AIME'f'  @[Redak 14, stupac 9]
 :     .     .   pridruženo = Umnožak:  @[Redak 14, stupci 13–16]
 :     .     .     faktori = [...]:
-:     .     .     . AIME'f'
-:     .     .     . AIME'x'
+:     .     .     . AIME'f'  @[Redak 14, stupac 13]
+:     .     .     . AIME'x'  @[Redak 14, stupac 15]
 :     .     . Pridruživanje:  @[Redak 15, stupac 9 – redak 16, stupac 5]
-:     .     .   ime = AIME'x'
+:     .     .   ime = AIME'x'  @[Redak 15, stupac 9]
 :     .     .   pridruženo = Zbroj:  @[Redak 15, stupac 13 – redak 16, stupac 5]
 :     .     .     pribrojnici = [...]:
-:     .     .     . AIME'x'
+:     .     .     . AIME'x'  @[Redak 15, stupac 13]
 :     .     .     . Suprotan:
-:     .     .     .   od = BROJ'1'
+:     .     .     .   od = BROJ'1'  @[Redak 15, stupac 15]
 :     . Vrati:  @[Redak 17, stupac 5 – redak 18, stupac 1]
-:     .   što = AIME'f'
+:     .   što = AIME'f'  @[Redak 17, stupac 11]
 : AIME'program' = Funkcija:  @[Redak 19, stupac 1 – redak 27, stupac 1]
-:   ime = AIME'program'
+:   ime = AIME'program'  @[Redak 19, stupci 1–7]
 :   parametri = []
 :   tijelo = Blok:  @[Redak 19, stupac 13 – redak 27, stupac 1]
 :     naredbe = [...]:
 :     . Pridruživanje:  @[Redak 20, stupci 5–10]
-:     .   ime = AIME's'
-:     .   pridruženo = BROJ'0'
+:     .   ime = AIME's'  @[Redak 20, stupac 5]
+:     .   pridruženo = BROJ'0'  @[Redak 20, stupac 9]
 :     . Pridruživanje:  @[Redak 21, stupci 5–10]
-:     .   ime = AIME't'
-:     .   pridruženo = BROJ'0'
+:     .   ime = AIME't'  @[Redak 21, stupac 5]
+:     .   pridruženo = BROJ'0'  @[Redak 21, stupac 9]
 :     . Petlja:  @[Redak 22, stupac 5 – redak 25, stupac 5]
-:     .   istinitost = JE'je'
+:     .   istinitost = JE'je'  @[Redak 22, stupci 9–10]
 :     .   uvjet = Usporedba:  @[Redak 22, stupci 12–18]
-:     .     lijevo = AIME't'
-:     .     relacija = MANJE'<'
-:     .     desno = BROJ'9'
+:     .     lijevo = AIME't'  @[Redak 22, stupac 12]
+:     .     relacija = MANJE'<'  @[Redak 22, stupac 14]
+:     .     desno = BROJ'9'  @[Redak 22, stupac 16]
 :     .   tijelo = Blok:  @[Redak 22, stupac 18 – redak 25, stupac 5]
 :     .     naredbe = [...]:
 :     .     . Grananje:  @[Redak 23, stupci 9–42]
-:     .     .   istinitost = JE'je'
+:     .     .   istinitost = JE'je'  @[Redak 23, stupci 13–14]
 :     .     .   uvjet = Poziv:  @[Redak 23, stupci 16–27]
 :     .     .   ~ argumenti = [...]:
-:     .     .   ~ . AIME't'
-:     .     .   ~ *ime = LIME'Neparan'
+:     .     .   ~ . AIME't'  @[Redak 23, stupac 24]
+:     .     .   ~ *ime = LIME'Neparan'  @[Redak 2, stupci 1–7]
 :     .     .   onda = Pridruživanje:  @[Redak 23, stupci 27–42]
-:     .     .     ime = AIME's'
+:     .     .     ime = AIME's'  @[Redak 23, stupac 27]
 :     .     .     pridruženo = Zbroj:  @[Redak 23, stupci 31–42]
 :     .     .       pribrojnici = [...]:
-:     .     .       . AIME's'
+:     .     .       . AIME's'  @[Redak 23, stupac 31]
 :     .     .       . Poziv:  @[Redak 23, stupci 35–42]
 :     .     .       . ~ argumenti = [...]:
-:     .     .       . ~ . AIME't'
-:     .     .       . ~ *ime = AIME'fakt'
+:     .     .       . ~ . AIME't'  @[Redak 23, stupac 40]
+:     .     .       . ~ *ime = AIME'fakt'  @[Redak 11, stupci 1–4]
 :     .     .   inače = Blok:
 :     .     .     naredbe = []
 :     .     . Pridruživanje:  @[Redak 24, stupac 9 – redak 25, stupac 5]
-:     .     .   ime = AIME't'
+:     .     .   ime = AIME't'  @[Redak 24, stupac 9]
 :     .     .   pridruženo = Zbroj:  @[Redak 24, stupac 13 – redak 25, stupac 5]
 :     .     .     pribrojnici = [...]:
-:     .     .     . AIME't'
-:     .     .     . BROJ'1'
+:     .     .     . AIME't'  @[Redak 24, stupac 13]
+:     .     .     . BROJ'1'  @[Redak 24, stupac 17]
 :     . Vrati:  @[Redak 26, stupac 5 – redak 27, stupac 1]
-:     .   što = AIME's'
+:     .   što = AIME's'  @[Redak 26, stupac 11]
 Program je vratio: 5167
 
 Memorija:
 : LIME'Negacija' = Funkcija:  @[Redak 1, stupac 1 – redak 2, stupac 7]
-:   ime = LIME'Negacija'
+:   ime = LIME'Negacija'  @[Redak 1, stupci 1–8]
 :   parametri = [...]:
-:   . LIME'V'
+:   . LIME'V'  @[Redak 1, stupac 10]
 :   tijelo = Grananje:  @[Redak 1, stupac 15 – redak 2, stupac 7]
-:     istinitost = JE'je'
-:     uvjet = LIME'V'
+:     istinitost = JE'je'  @[Redak 1, stupci 19–20]
+:     uvjet = LIME'V'  @[Redak 1, stupac 22]
 :     onda = Vrati:  @[Redak 1, stupci 24–38]
-:       što = LAŽ'Laž'
+:       što = LAŽ'Laž'  @[Redak 1, stupci 30–32]
 :     inače = Vrati:  @[Redak 1, stupac 40 – redak 2, stupac 7]
-:       što = ISTINA'Istina'
+:       što = ISTINA'Istina'  @[Redak 1, stupci 46–51]
 : LIME'Neparan' = Funkcija:  @[Redak 2, stupac 1 – redak 9, stupac 1]
-:   ime = LIME'Neparan'
+:   ime = LIME'Neparan'  @[Redak 2, stupci 1–7]
 :   parametri = [...]:
-:   . AIME'x'
+:   . AIME'x'  @[Redak 2, stupac 9]
 :   tijelo = Blok:  @[Redak 2, stupac 14 – redak 9, stupac 1]
 :     naredbe = [...]:
 :     . Pridruživanje:  @[Redak 3, stupci 5–12]
-:     .   ime = LIME'N'
-:     .   pridruženo = LAŽ'Laž'
+:     .   ime = LIME'N'  @[Redak 3, stupac 5]
+:     .   pridruženo = LAŽ'Laž'  @[Redak 3, stupci 9–11]
 :     . Petlja:  @[Redak 4, stupac 5 – redak 7, stupac 5]
-:     .   istinitost = NIJE'nije'
+:     .   istinitost = NIJE'nije'  @[Redak 4, stupci 9–12]
 :     .   uvjet = Usporedba:  @[Redak 4, stupci 14–20]
-:     .     lijevo = AIME'x'
-:     .     relacija = JEDNAKO'='
-:     .     desno = BROJ'0'
+:     .     lijevo = AIME'x'  @[Redak 4, stupac 14]
+:     .     relacija = JEDNAKO'='  @[Redak 4, stupac 16]
+:     .     desno = BROJ'0'  @[Redak 4, stupac 18]
 :     .   tijelo = Blok:  @[Redak 4, stupac 20 – redak 7, stupac 5]
 :     .     naredbe = [...]:
 :     .     . Pridruživanje:  @[Redak 5, stupci 9–18]
-:     .     .   ime = AIME'x'
+:     .     .   ime = AIME'x'  @[Redak 5, stupac 9]
 :     .     .   pridruženo = Zbroj:  @[Redak 5, stupci 13–18]
 :     .     .     pribrojnici = [...]:
-:     .     .     . AIME'x'
+:     .     .     . AIME'x'  @[Redak 5, stupac 13]
 :     .     .     . Suprotan:
-:     .     .     .   od = BROJ'1'
+:     .     .     .   od = BROJ'1'  @[Redak 5, stupac 17]
 :     .     . Pridruživanje:  @[Redak 6, stupci 9–24]
-:     .     .   ime = LIME'N'
+:     .     .   ime = LIME'N'  @[Redak 6, stupac 9]
 :     .     .   pridruženo = Poziv:  @[Redak 6, stupci 13–24]
 :     .     .   ~ argumenti = [...]:
-:     .     .   ~ . LIME'N'
-:     .     .   ~ *ime = LIME'Negacija'
+:     .     .   ~ . LIME'N'  @[Redak 6, stupac 22]
+:     .     .   ~ *ime = LIME'Negacija'  @[Redak 1, stupci 1–8]
 :     . Vrati:  @[Redak 8, stupac 5 – redak 9, stupac 1]
-:     .   što = LIME'N'
+:     .   što = LIME'N'  @[Redak 8, stupac 11]
 : LIME'Konjunkcija' = Funkcija:  @[Redak 11, stupac 1 – redak 12, stupac 11]
-:   ime = LIME'Konjunkcija'
+:   ime = LIME'Konjunkcija'  @[Redak 11, stupci 1–11]
 :   parametri = [...]:
-:   . LIME'P'
-:   . LIME'Q'
+:   . LIME'P'  @[Redak 11, stupac 13]
+:   . LIME'Q'  @[Redak 11, stupac 16]
 :   tijelo = Grananje:  @[Redak 11, stupac 21 – redak 12, stupac 11]
-:     istinitost = JE'je'
-:     uvjet = LIME'P'
+:     istinitost = JE'je'  @[Redak 11, stupci 25–26]
+:     uvjet = LIME'P'  @[Redak 11, stupac 28]
 :     onda = Vrati:  @[Redak 11, stupci 30–42]
-:       što = LIME'Q'
+:       što = LIME'Q'  @[Redak 11, stupac 36]
 :     inače = Vrati:  @[Redak 11, stupac 44 – redak 12, stupac 11]
-:       što = LIME'P'
+:       što = LIME'P'  @[Redak 11, stupac 50]
 : LIME'Disjunkcija' = Funkcija:  @[Redak 12, stupac 1 – redak 13, stupac 11]
-:   ime = LIME'Disjunkcija'
+:   ime = LIME'Disjunkcija'  @[Redak 12, stupci 1–11]
 :   parametri = [...]:
-:   . LIME'P'
-:   . LIME'Q'
+:   . LIME'P'  @[Redak 12, stupac 13]
+:   . LIME'Q'  @[Redak 12, stupac 16]
 :   tijelo = Grananje:  @[Redak 12, stupac 21 – redak 13, stupac 11]
-:     istinitost = JE'je'
-:     uvjet = LIME'P'
+:     istinitost = JE'je'  @[Redak 12, stupci 25–26]
+:     uvjet = LIME'P'  @[Redak 12, stupac 28]
 :     onda = Vrati:  @[Redak 12, stupci 30–42]
-:       što = LIME'P'
+:       što = LIME'P'  @[Redak 12, stupac 36]
 :     inače = Vrati:  @[Redak 12, stupac 44 – redak 13, stupac 11]
-:       što = LIME'Q'
+:       što = LIME'Q'  @[Redak 12, stupac 50]
 : LIME'Kondicional' = Funkcija:  @[Redak 13, stupac 1 – redak 14, stupac 13]
-:   ime = LIME'Kondicional'
+:   ime = LIME'Kondicional'  @[Redak 13, stupci 1–11]
 :   parametri = [...]:
-:   . LIME'P'
-:   . LIME'Q'
+:   . LIME'P'  @[Redak 13, stupac 13]
+:   . LIME'Q'  @[Redak 13, stupac 16]
 :   tijelo = Vrati:  @[Redak 13, stupac 21 – redak 14, stupac 13]
 :     što = Poziv:  @[Redak 13, stupac 27 – redak 14, stupac 13]
 :     ~ argumenti = [...]:
 :     ~ . Poziv:  @[Redak 13, stupci 39–50]
 :     ~ . ~ argumenti = [...]:
-:     ~ . ~ . LIME'P'
-:     ~ . ~ *ime = LIME'Negacija'
-:     ~ . LIME'Q'
-:     ~ *ime = LIME'Disjunkcija'
+:     ~ . ~ . LIME'P'  @[Redak 13, stupac 48]
+:     ~ . ~ *ime = LIME'Negacija'  @[Redak 1, stupci 1–8]
+:     ~ . LIME'Q'  @[Redak 13, stupac 52]
+:     ~ *ime = LIME'Disjunkcija'  @[Redak 12, stupci 1–11]
 : LIME'Bikondicional' = Funkcija:  @[Redak 14, stupac 1 – redak 15, stupac 9]
-:   ime = LIME'Bikondicional'
+:   ime = LIME'Bikondicional'  @[Redak 14, stupci 1–13]
 :   parametri = [...]:
-:   . LIME'P'
-:   . LIME'Q'
+:   . LIME'P'  @[Redak 14, stupac 15]
+:   . LIME'Q'  @[Redak 14, stupac 18]
 :   tijelo = Vrati:  @[Redak 14, stupac 23 – redak 15, stupac 9]
 :     što = Poziv:  @[Redak 14, stupac 29 – redak 15, stupac 9]
 :     ~ argumenti = [...]:
 :     ~ . Poziv:  @[Redak 14, stupci 41–58]
 :     ~ . ~ argumenti = [...]:
-:     ~ . ~ . LIME'P'
-:     ~ . ~ . LIME'Q'
-:     ~ . ~ *ime = LIME'Kondicional'
+:     ~ . ~ . LIME'P'  @[Redak 14, stupac 53]
+:     ~ . ~ . LIME'Q'  @[Redak 14, stupac 56]
+:     ~ . ~ *ime = LIME'Kondicional'  @[Redak 13, stupci 1–11]
 :     ~ . Poziv:  @[Redak 14, stupci 60–77]
 :     ~ . ~ argumenti = [...]:
-:     ~ . ~ . LIME'Q'
-:     ~ . ~ . LIME'P'
-:     ~ . ~ *ime = LIME'Kondicional'
-:     ~ *ime = LIME'Konjunkcija'
+:     ~ . ~ . LIME'Q'  @[Redak 14, stupac 72]
+:     ~ . ~ . LIME'P'  @[Redak 14, stupac 75]
+:     ~ . ~ *ime = LIME'Kondicional'  @[Redak 13, stupci 1–11]
+:     ~ *ime = LIME'Konjunkcija'  @[Redak 11, stupci 1–11]
 : LIME'Multiplex' = Funkcija:  @[Redak 15, stupac 1 – redak 22, stupac 4]
-:   ime = LIME'Multiplex'
+:   ime = LIME'Multiplex'  @[Redak 15, stupci 1–9]
 :   parametri = [...]:
-:   . AIME'm'
-:   . LIME'P'
-:   . LIME'Q'
+:   . AIME'm'  @[Redak 15, stupac 11]
+:   . LIME'P'  @[Redak 15, stupac 14]
+:   . LIME'Q'  @[Redak 15, stupac 17]
 :   tijelo = Grananje:  @[Redak 16, stupac 5 – redak 22, stupac 4]
-:     istinitost = JE'je'
+:     istinitost = JE'je'  @[Redak 16, stupci 9–10]
 :     uvjet = Usporedba:  @[Redak 16, stupci 12–22]
-:       lijevo = AIME'm'
-:       relacija = JEDNAKO'='
-:       desno = BROJ'1'
+:       lijevo = AIME'm'  @[Redak 16, stupac 12]
+:       relacija = JEDNAKO'='  @[Redak 16, stupac 14]
+:       desno = BROJ'1'  @[Redak 16, stupac 16]
 :     onda = Vrati:  @[Redak 16, stupci 18–48]
 :       što = Poziv:  @[Redak 16, stupci 24–48]
 :       ~ argumenti = [...]:
-:       ~ . LIME'P'
-:       ~ . LIME'Q'
-:       ~ *ime = LIME'Konjunkcija'
+:       ~ . LIME'P'  @[Redak 16, stupac 36]
+:       ~ . LIME'Q'  @[Redak 16, stupac 39]
+:       ~ *ime = LIME'Konjunkcija'  @[Redak 11, stupci 1–11]
 :     inače = Grananje:  @[Redak 17, stupac 5 – redak 22, stupac 4]
-:       istinitost = JE'je'
+:       istinitost = JE'je'  @[Redak 17, stupci 9–10]
 :       uvjet = Usporedba:  @[Redak 17, stupci 12–22]
-:         lijevo = AIME'm'
-:         relacija = JEDNAKO'='
-:         desno = BROJ'2'
+:         lijevo = AIME'm'  @[Redak 17, stupac 12]
+:         relacija = JEDNAKO'='  @[Redak 17, stupac 14]
+:         desno = BROJ'2'  @[Redak 17, stupac 16]
 :       onda = Vrati:  @[Redak 17, stupci 18–48]
 :         što = Poziv:  @[Redak 17, stupci 24–48]
 :         ~ argumenti = [...]:
-:         ~ . LIME'P'
-:         ~ . LIME'Q'
-:         ~ *ime = LIME'Disjunkcija'
+:         ~ . LIME'P'  @[Redak 17, stupac 36]
+:         ~ . LIME'Q'  @[Redak 17, stupac 39]
+:         ~ *ime = LIME'Disjunkcija'  @[Redak 12, stupci 1–11]
 :       inače = Grananje:  @[Redak 18, stupac 5 – redak 22, stupac 4]
-:         istinitost = JE'je'
+:         istinitost = JE'je'  @[Redak 18, stupci 9–10]
 :         uvjet = Usporedba:  @[Redak 18, stupci 12–22]
-:           lijevo = AIME'm'
-:           relacija = JEDNAKO'='
-:           desno = BROJ'3'
+:           lijevo = AIME'm'  @[Redak 18, stupac 12]
+:           relacija = JEDNAKO'='  @[Redak 18, stupac 14]
+:           desno = BROJ'3'  @[Redak 18, stupac 16]
 :         onda = Vrati:  @[Redak 18, stupci 18–48]
 :           što = Poziv:  @[Redak 18, stupci 24–48]
 :           ~ argumenti = [...]:
-:           ~ . LIME'P'
-:           ~ . LIME'Q'
-:           ~ *ime = LIME'Kondicional'
+:           ~ . LIME'P'  @[Redak 18, stupac 36]
+:           ~ . LIME'Q'  @[Redak 18, stupac 39]
+:           ~ *ime = LIME'Kondicional'  @[Redak 13, stupci 1–11]
 :         inače = Grananje:  @[Redak 19, stupac 5 – redak 22, stupac 4]
-:           istinitost = JE'je'
+:           istinitost = JE'je'  @[Redak 19, stupci 9–10]
 :           uvjet = Usporedba:  @[Redak 19, stupci 12–22]
-:             lijevo = AIME'm'
-:             relacija = JEDNAKO'='
-:             desno = BROJ'4'
+:             lijevo = AIME'm'  @[Redak 19, stupac 12]
+:             relacija = JEDNAKO'='  @[Redak 19, stupac 14]
+:             desno = BROJ'4'  @[Redak 19, stupac 16]
 :           onda = Vrati:  @[Redak 19, stupci 18–48]
 :             što = Poziv:  @[Redak 19, stupci 24–48]
 :             ~ argumenti = [...]:
-:             ~ . LIME'P'
-:             ~ . LIME'Q'
-:             ~ *ime = LIME'Bikondicional'
+:             ~ . LIME'P'  @[Redak 19, stupac 38]
+:             ~ . LIME'Q'  @[Redak 19, stupac 41]
+:             ~ *ime = LIME'Bikondicional'  @[Redak 14, stupci 1–13]
 :           inače = Grananje:  @[Redak 20, stupac 5 – redak 22, stupac 4]
-:             istinitost = JE'je'
+:             istinitost = JE'je'  @[Redak 20, stupci 9–10]
 :             uvjet = Usporedba:  @[Redak 20, stupci 12–22]
-:               lijevo = AIME'm'
-:               relacija = JEDNAKO'='
-:               desno = BROJ'5'
+:               lijevo = AIME'm'  @[Redak 20, stupac 12]
+:               relacija = JEDNAKO'='  @[Redak 20, stupac 14]
+:               desno = BROJ'5'  @[Redak 20, stupac 16]
 :             onda = Vrati:  @[Redak 20, stupci 18–48]
 :               što = Poziv:  @[Redak 20, stupci 24–48]
 :               ~ argumenti = [...]:
-:               ~ . LIME'P'
-:               ~ *ime = LIME'Negacija'
+:               ~ . LIME'P'  @[Redak 20, stupac 33]
+:               ~ *ime = LIME'Negacija'  @[Redak 1, stupci 1–8]
 :             inače = Vrati:  @[Redak 21, stupac 18 – redak 22, stupac 4]
-:               što = LAŽ'Laž'
+:               što = LAŽ'Laž'  @[Redak 21, stupci 24–26]
 : AIME'broj' = Funkcija:  @[Redak 22, stupac 1 – redak 23, stupac 5]
-:   ime = AIME'broj'
+:   ime = AIME'broj'  @[Redak 22, stupci 1–4]
 :   parametri = [...]:
-:   . LIME'Bool'
+:   . LIME'Bool'  @[Redak 22, stupci 6–9]
 :   tijelo = Grananje:  @[Redak 22, stupac 14 – redak 23, stupac 5]
-:     istinitost = JE'je'
-:     uvjet = LIME'Bool'
+:     istinitost = JE'je'  @[Redak 22, stupci 18–19]
+:     uvjet = LIME'Bool'  @[Redak 22, stupci 21–24]
 :     onda = Vrati:  @[Redak 22, stupci 26–38]
-:       što = BROJ'1'
+:       što = BROJ'1'  @[Redak 22, stupac 32]
 :     inače = Vrati:  @[Redak 22, stupac 40 – redak 23, stupac 5]
-:       što = BROJ'0'
+:       što = BROJ'0'  @[Redak 22, stupac 46]
 : AIME'dodaj' = Funkcija:  @[Redak 23, stupac 1 – redak 28, stupac 1]
-:   ime = AIME'dodaj'
+:   ime = AIME'dodaj'  @[Redak 23, stupci 1–5]
 :   parametri = [...]:
-:   . AIME'lista'
-:   . LIME'Bool'
+:   . AIME'lista'  @[Redak 23, stupci 7–11]
+:   . LIME'Bool'  @[Redak 23, stupci 14–17]
 :   tijelo = Blok:  @[Redak 23, stupac 22 – redak 28, stupac 1]
 :     naredbe = [...]:
 :     . Pridruživanje:  @[Redak 24, stupci 5–21]
-:     .   ime = AIME'bit'
+:     .   ime = AIME'bit'  @[Redak 24, stupci 5–7]
 :     .   pridruženo = Poziv:  @[Redak 24, stupci 11–21]
 :     .   ~ argumenti = [...]:
-:     .   ~ . LIME'Bool'
-:     .   ~ *ime = AIME'broj'
+:     .   ~ . LIME'Bool'  @[Redak 24, stupci 16–19]
+:     .   ~ *ime = AIME'broj'  @[Redak 22, stupci 1–4]
 :     . Pridruživanje:  @[Redak 25, stupci 5–29]
-:     .   ime = AIME'lista'
+:     .   ime = AIME'lista'  @[Redak 25, stupci 5–9]
 :     .   pridruženo = Zbroj:  @[Redak 25, stupci 13–29]
 :     .     pribrojnici = [...]:
 :     .     . Umnožak:  @[Redak 25, stupci 13–24]
 :     .     .   faktori = [...]:
-:     .     .   . AIME'lista'
-:     .     .   . BROJ'10'
-:     .     . AIME'bit'
+:     .     .   . AIME'lista'  @[Redak 25, stupci 13–17]
+:     .     .   . BROJ'10'  @[Redak 25, stupci 21–22]
+:     .     . AIME'bit'  @[Redak 25, stupci 26–28]
 :     . Pridruživanje:  @[Redak 26, stupci 5–27]
-:     .   ime = AIME'lista'
+:     .   ime = AIME'lista'  @[Redak 26, stupci 5–9]
 :     .   pridruženo = Zbroj:  @[Redak 26, stupci 13–27]
 :     .     pribrojnici = [...]:
 :     .     . Umnožak:  @[Redak 26, stupci 13–24]
 :     .     .   faktori = [...]:
-:     .     .   . AIME'lista'
-:     .     .   . BROJ'10'
-:     .     . BROJ'8'
+:     .     .   . AIME'lista'  @[Redak 26, stupci 13–17]
+:     .     .   . BROJ'10'  @[Redak 26, stupci 21–22]
+:     .     . BROJ'8'  @[Redak 26, stupac 26]
 :     . Vrati:  @[Redak 27, stupac 5 – redak 28, stupac 1]
-:     .   što = AIME'lista'
+:     .   što = AIME'lista'  @[Redak 27, stupci 11–15]
 : AIME'program' = Funkcija:  @[Redak 29, stupac 1 – redak 40, stupac 1]
-:   ime = AIME'program'
+:   ime = AIME'program'  @[Redak 29, stupci 1–7]
 :   parametri = [...]:
-:   . AIME'm'
+:   . AIME'm'  @[Redak 29, stupac 9]
 :   tijelo = Blok:  @[Redak 29, stupac 14 – redak 40, stupac 1]
 :     naredbe = [...]:
 :     . Pridruživanje:  @[Redak 30, stupci 5–14]
-:     .   ime = AIME'lista'
-:     .   pridruženo = BROJ'6'
+:     .   ime = AIME'lista'  @[Redak 30, stupci 5–9]
+:     .   pridruženo = BROJ'6'  @[Redak 30, stupac 13]
 :     . Pridruživanje:  @[Redak 31, stupci 5–10]
-:     .   ime = AIME'b'
-:     .   pridruženo = BROJ'0'
+:     .   ime = AIME'b'  @[Redak 31, stupac 5]
+:     .   pridruženo = BROJ'0'  @[Redak 31, stupac 9]
 :     . Petlja:  @[Redak 32, stupac 5 – redak 38, stupac 5]
-:     .   istinitost = JE'je'
+:     .   istinitost = JE'je'  @[Redak 32, stupci 9–10]
 :     .   uvjet = Usporedba:  @[Redak 32, stupci 12–18]
-:     .     lijevo = AIME'b'
-:     .     relacija = MANJE'<'
-:     .     desno = BROJ'4'
+:     .     lijevo = AIME'b'  @[Redak 32, stupac 12]
+:     .     relacija = MANJE'<'  @[Redak 32, stupac 14]
+:     .     desno = BROJ'4'  @[Redak 32, stupac 16]
 :     .   tijelo = Blok:  @[Redak 32, stupac 18 – redak 38, stupac 5]
 :     .     naredbe = [...]:
 :     .     . Pridruživanje:  @[Redak 33, stupci 9–31]
-:     .     .   ime = LIME'Prvi'
+:     .     .   ime = LIME'Prvi'  @[Redak 33, stupci 9–12]
 :     .     .   pridruženo = Poziv:  @[Redak 33, stupci 16–31]
 :     .     .   ~ argumenti = [...]:
 :     .     .   ~ . Usporedba:  @[Redak 33, stupci 25–30]
-:     .     .   ~ .   lijevo = AIME'b'
-:     .     .   ~ .   relacija = MANJE'<'
-:     .     .   ~ .   desno = BROJ'2'
-:     .     .   ~ *ime = LIME'Negacija'
+:     .     .   ~ .   lijevo = AIME'b'  @[Redak 33, stupac 25]
+:     .     .   ~ .   relacija = MANJE'<'  @[Redak 33, stupac 27]
+:     .     .   ~ .   desno = BROJ'2'  @[Redak 33, stupac 29]
+:     .     .   ~ *ime = LIME'Negacija'  @[Redak 1, stupci 1–8]
 :     .     . Pridruživanje:  @[Redak 34, stupci 9–27]
-:     .     .   ime = LIME'Drugi'
+:     .     .   ime = LIME'Drugi'  @[Redak 34, stupci 9–13]
 :     .     .   pridruženo = Poziv:  @[Redak 34, stupci 17–27]
 :     .     .   ~ argumenti = [...]:
-:     .     .   ~ . AIME'b'
-:     .     .   ~ *ime = LIME'Neparan'
+:     .     .   ~ . AIME'b'  @[Redak 34, stupac 25]
+:     .     .   ~ *ime = LIME'Neparan'  @[Redak 2, stupci 1–7]
 :     .     . Pridruživanje:  @[Redak 35, stupci 9–45]
-:     .     .   ime = LIME'Rezultat'
+:     .     .   ime = LIME'Rezultat'  @[Redak 35, stupci 9–16]
 :     .     .   pridruženo = Poziv:  @[Redak 35, stupci 20–45]
 :     .     .   ~ argumenti = [...]:
-:     .     .   ~ . AIME'm'
-:     .     .   ~ . LIME'Prvi'
-:     .     .   ~ . LIME'Drugi'
-:     .     .   ~ *ime = LIME'Multiplex'
+:     .     .   ~ . AIME'm'  @[Redak 35, stupac 30]
+:     .     .   ~ . LIME'Prvi'  @[Redak 35, stupci 33–36]
+:     .     .   ~ . LIME'Drugi'  @[Redak 35, stupci 39–43]
+:     .     .   ~ *ime = LIME'Multiplex'  @[Redak 15, stupci 1–9]
 :     .     . Pridruživanje:  @[Redak 36, stupci 9–39]
-:     .     .   ime = AIME'lista'
+:     .     .   ime = AIME'lista'  @[Redak 36, stupci 9–13]
 :     .     .   pridruženo = Poziv:  @[Redak 36, stupci 17–39]
 :     .     .   ~ argumenti = [...]:
-:     .     .   ~ . AIME'lista'
-:     .     .   ~ . LIME'Rezultat'
-:     .     .   ~ *ime = AIME'dodaj'
+:     .     .   ~ . AIME'lista'  @[Redak 36, stupci 23–27]
+:     .     .   ~ . LIME'Rezultat'  @[Redak 36, stupci 30–37]
+:     .     .   ~ *ime = AIME'dodaj'  @[Redak 23, stupci 1–5]
 :     .     . Pridruživanje:  @[Redak 37, stupac 9 – redak 38, stupac 5]
-:     .     .   ime = AIME'b'
+:     .     .   ime = AIME'b'  @[Redak 37, stupac 9]
 :     .     .   pridruženo = Zbroj:  @[Redak 37, stupac 13 – redak 38, stupac 5]
 :     .     .     pribrojnici = [...]:
-:     .     .     . AIME'b'
-:     .     .     . BROJ'1'
+:     .     .     . AIME'b'  @[Redak 37, stupac 13]
+:     .     .     . BROJ'1'  @[Redak 37, stupac 17]
 :     . Vrati:  @[Redak 39, stupac 5 – redak 40, stupac 1]
 :     .   što = Zbroj:  @[Redak 39, stupac 11 – redak 40, stupac 1]
 :     .     pribrojnici = [...]:
-:     .     . AIME'lista'
-:     .     . BROJ'1'
+:     .     . AIME'lista'  @[Redak 39, stupci 11–15]
+:     .     . BROJ'1'  @[Redak 39, stupac 19]
 Program je vratio: 618180819
 
 Memorija:
 : AIME'fakt' = Funkcija:  @[Redak 1, stupac 5 – redak 2, stupac 11]
-:   ime = AIME'fakt'
+:   ime = AIME'fakt'  @[Redak 1, stupci 5–8]
 :   parametri = [...]:
-:   . AIME'n'
+:   . AIME'n'  @[Redak 1, stupac 10]
 :   tijelo = Grananje:  @[Redak 1, stupac 15 – redak 2, stupac 11]
-:     istinitost = JE'je'
+:     istinitost = JE'je'  @[Redak 1, stupci 19–20]
 :     uvjet = Usporedba:  @[Redak 1, stupci 22–32]
-:       lijevo = AIME'n'
-:       relacija = JEDNAKO'='
-:       desno = BROJ'0'
+:       lijevo = AIME'n'  @[Redak 1, stupac 22]
+:       relacija = JEDNAKO'='  @[Redak 1, stupac 24]
+:       desno = BROJ'0'  @[Redak 1, stupac 26]
 :     onda = Vrati:  @[Redak 1, stupci 28–40]
-:       što = BROJ'1'
+:       što = BROJ'1'  @[Redak 1, stupac 34]
 :     inače = Vrati:  @[Redak 1, stupac 42 – redak 2, stupac 11]
 :       što = Umnožak:  @[Redak 1, stupac 48 – redak 2, stupac 11]
 :         faktori = [...]:
-:         . AIME'n'
+:         . AIME'n'  @[Redak 1, stupac 48]
 :         . Poziv:  @[Redak 1, stupci 50–58]
 :         . ~ argumenti = [...]:
 :         . ~ . Zbroj:  @[Redak 1, stupci 55–58]
 :         . ~ .   pribrojnici = [...]:
-:         . ~ .   . AIME'n'
+:         . ~ .   . AIME'n'  @[Redak 1, stupac 55]
 :         . ~ .   . Suprotan:
-:         . ~ .   .   od = BROJ'1'
+:         . ~ .   .   od = BROJ'1'  @[Redak 1, stupac 57]
 :         . ~ *rekurzivni = True
 : AIME'program' = Funkcija:  @[Redak 2, stupac 5 – kraj]
-:   ime = AIME'program'
+:   ime = AIME'program'  @[Redak 2, stupci 5–11]
 :   parametri = []
 :   tijelo = Vrati:  @[Redak 2, stupac 17 – kraj]
 :     što = Poziv:  @[Redak 2, stupac 23 – kraj]
 :     ~ argumenti = [...]:
-:     ~ . BROJ'7'
-:     ~ *ime = AIME'fakt'
+:     ~ . BROJ'7'  @[Redak 2, stupac 28]
+:     ~ *ime = AIME'fakt'  @[Redak 1, stupci 5–8]
 Program je vratio: 5040
 ##############################10_liste_stringova##############################
 
@@ -1365,14 +1365,14 @@ LeksičkaGreška: Znak #7: neočekivani znak '0'
 Program:  @[Redak 1, stupac 5 – kraj]
   naredbe = [...]:
   . Promjena:  @[Redak 1, stupci 5–11]
-  .   op = INC'INC'
-  .   registar = REG'R0'
+  .   op = INC'INC'  @[Redak 1, stupci 5–7]
+  .   registar = REG'R0'  @[Redak 1, stupci 9–10]
   . Petlja:  @[Redak 2, stupac 5 – redak 8, stupac 5]
-  .   registar = REG'R2'
+  .   registar = REG'R2'  @[Redak 2, stupci 5–6]
   .   tijelo = Program:  @[Redak 3, stupac 9 – redak 8, stupac 5]
   .     naredbe = [...]:
   .     . Petlja:  @[Redak 3, stupac 9 – redak 6, stupac 9]
-  .     .   registar = REG'R0'
+  .     .   registar = REG'R0'  @[Redak 3, stupci 9–10]
   .     .   tijelo = Program:  @[Redak 4, stupac 13 – redak 6, stupac 9]
   .     .     naredbe = [...]:
   .     .     . Petlja:  @[Redak 4, stupci 13–24]
@@ -1382,7 +1382,7 @@ Program:  @[Redak 1, stupac 5 – kraj]
   .     .     .   op = DEC'DEC'
   .     .     .   registar = REG'R0'
   .     . Petlja:  @[Redak 7, stupci 9–24]
-  .     .   registar = REG'R3'
+  .     .   registar = REG'R3'  @[Redak 7, stupci 9–10]
   .     .   tijelo = Program:  @[Redak 7, stupci 12–24]
   .     .     naredbe = [...]:
   .     .     . Promjena:  @[Redak 7, stupci 12–17]
@@ -1396,25 +1396,25 @@ Program:  @[Redak 1, stupac 5 – kraj]
 Memorija:
 : FIME'C01' = (...):
 : , 1
-: , NULFUNKCIJA'Z'
+: , NULFUNKCIJA'Z'  @[Redak 1, stupac 15]
 : FIME'C11' = (...):
 : , 1
 : , Kompozicija:  @[Redak 2, stupac 15 – redak 3, stupac 11]
-: ,   lijeva = SLJEDBENIK'Sc'
+: ,   lijeva = SLJEDBENIK'Sc'  @[Redak 2, stupci 15–16]
 : ,   desne = [...]:
-: ,   . FIME'C01'
+: ,   . FIME'C01'  @[Redak 2, stupci 20–22]
 : FIME'C21' = (...):
 : , 1
 : , Kompozicija:  @[Redak 3, stupac 15 – redak 4, stupac 11]
-: ,   lijeva = SLJEDBENIK'Sc'
+: ,   lijeva = SLJEDBENIK'Sc'  @[Redak 3, stupci 15–16]
 : ,   desne = [...]:
-: ,   . FIME'C11'
+: ,   . FIME'C11'  @[Redak 3, stupci 20–22]
 : FIME'C23' = (...):
 : , 3
 : , Kompozicija:  @[Redak 4, stupac 15 – redak 5, stupac 11]
-: ,   lijeva = FIME'C21'
+: ,   lijeva = FIME'C21'  @[Redak 4, stupci 15–17]
 : ,   desne = [...]:
-: ,   . KPROJEKCIJA'I13'
+: ,   . KPROJEKCIJA'I13'  @[Redak 4, stupci 21–23]
 : FIME'C58' = (...):
 : , 8
 : , Kompozicija:  @[Redak 5, stupac 15 – kraj]
@@ -1423,50 +1423,50 @@ Memorija:
 : ,       lijeva = Kompozicija:
 : ,         lijeva = Kompozicija:
 : ,           lijeva = Kompozicija:
-: ,             lijeva = SLJEDBENIK'Sc'
+: ,             lijeva = SLJEDBENIK'Sc'  @[Redak 5, stupci 15–16]
 : ,             desne = [...]:
-: ,             . SLJEDBENIK'Sc'
+: ,             . SLJEDBENIK'Sc'  @[Redak 5, stupci 20–21]
 : ,           desne = [...]:
-: ,           . SLJEDBENIK'Sc'
+: ,           . SLJEDBENIK'Sc'  @[Redak 5, stupci 25–26]
 : ,         desne = [...]:
-: ,         . SLJEDBENIK'Sc'
+: ,         . SLJEDBENIK'Sc'  @[Redak 5, stupci 30–31]
 : ,       desne = [...]:
-: ,       . SLJEDBENIK'Sc'
+: ,       . SLJEDBENIK'Sc'  @[Redak 5, stupci 35–36]
 : ,     desne = [...]:
-: ,     . NULFUNKCIJA'Z'
+: ,     . NULFUNKCIJA'Z'  @[Redak 5, stupac 40]
 : ,   desne = [...]:
-: ,   . KPROJEKCIJA'I18'
+: ,   . KPROJEKCIJA'I18'  @[Redak 5, stupci 44–46]
 C11(5) = 1
 Memorija:
 : FIME'add2' = (...):
 : , 2
 : , PRekurzija:  @[Redak 1, stupac 16 – redak 2, stupac 12]
-: ,   baza = KPROJEKCIJA'I11'
+: ,   baza = KPROJEKCIJA'I11'  @[Redak 1, stupci 16–18]
 : ,   korak = Kompozicija:  @[Redak 1, stupac 23 – redak 2, stupac 12]
-: ,     lijeva = SLJEDBENIK'Sc'
+: ,     lijeva = SLJEDBENIK'Sc'  @[Redak 1, stupci 23–24]
 : ,     desne = [...]:
-: ,     . KPROJEKCIJA'I33'
+: ,     . KPROJEKCIJA'I33'  @[Redak 1, stupci 28–30]
 : FIME'mul2' = (...):
 : , 2
 : , PRekurzija:  @[Redak 2, stupac 16 – redak 3, stupac 11]
-: ,   baza = NULFUNKCIJA'Z'
+: ,   baza = NULFUNKCIJA'Z'  @[Redak 2, stupac 16]
 : ,   korak = Kompozicija:  @[Redak 2, stupac 21 – redak 3, stupac 11]
-: ,     lijeva = FIME'add2'
+: ,     lijeva = FIME'add2'  @[Redak 2, stupci 21–24]
 : ,     desne = [...]:
-: ,     . KPROJEKCIJA'I13'
-: ,     . KPROJEKCIJA'I33'
+: ,     . KPROJEKCIJA'I13'  @[Redak 2, stupci 29–31]
+: ,     . KPROJEKCIJA'I33'  @[Redak 2, stupci 34–36]
 : FIME'pow' = (...):
 : , 2
 : , PRekurzija:  @[Redak 3, stupac 15 – kraj]
 : ,   baza = Kompozicija:  @[Redak 3, stupci 15–23]
-: ,     lijeva = SLJEDBENIK'Sc'
+: ,     lijeva = SLJEDBENIK'Sc'  @[Redak 3, stupci 15–16]
 : ,     desne = [...]:
-: ,     . NULFUNKCIJA'Z'
+: ,     . NULFUNKCIJA'Z'  @[Redak 3, stupac 20]
 : ,   korak = Kompozicija:  @[Redak 3, stupac 25 – kraj]
-: ,     lijeva = FIME'mul2'
+: ,     lijeva = FIME'mul2'  @[Redak 3, stupci 25–28]
 : ,     desne = [...]:
-: ,     . KPROJEKCIJA'I13'
-: ,     . KPROJEKCIJA'I33'
+: ,     . KPROJEKCIJA'I13'  @[Redak 3, stupci 33–35]
+: ,     . KPROJEKCIJA'I33'  @[Redak 3, stupci 38–40]
 3 ^ 7 = 2187
 ####################################14_RI#####################################
 Tokenizacija: (a(/*c?)+)?
@@ -1511,47 +1511,47 @@ Unija:
 5 peterokuti
 6 pisanje
 7 zviježđe
-Što da nacrtam? Crtam: kocke
+Što da nacrtam? (samo Enter: slučajni odabir, *: sve) Crtam: kocke
 ################################16_XHTML_liste################################
 Dokument:  @[Redak 1, stupac 5 – redak 26, stupac 11]
   zaglavlje = Tekst:  @[Redak 3, stupac 13 – redak 4, stupac 15]
     dijelovi = [...]:
-    . TEKST'bla'
-    . TEKST'bla'
+    . TEKST'bla'  @[Redak 3, stupci 13–15]
+    . TEKST'bla'  @[Redak 3, stupci 19–21]
   tijelo = [...]:
   . Tekst:  @[Redak 6, stupac 13 – redak 8, stupac 16]
   .   dijelovi = [...]:
-  .   . TEKST'&hmm;'
-  .   . TEKST'hm'
-  .   . TEKST'hm'
+  .   . TEKST'&hmm;'  @[Redak 6, stupci 13–17]
+  .   . TEKST'hm'  @[Redak 7, stupci 13–14]
+  .   . TEKST'hm'  @[Redak 7, stupci 16–17]
   . Lista:  @[Redak 8, stupac 13 – redak 23, stupac 17]
-  .   vrsta = OL'<ol>'
+  .   vrsta = OL'<ol>'  @[Redak 8, stupci 13–16]
   .   stavke = [...]:
   .   . Tekst:  @[Redak 9, stupci 17–47]
   .   .   dijelovi = [...]:
-  .   .   . TEKST'Ovo'
-  .   .   . TEKST'je'
-  .   .   . TEKST'prvi'
-  .   .   . TEKST'item.'
+  .   .   . TEKST'Ovo'  @[Redak 9, stupci 21–23]
+  .   .   . TEKST'je'  @[Redak 9, stupci 25–26]
+  .   .   . TEKST'prvi'  @[Redak 9, stupci 33–36]
+  .   .   . TEKST'item.'  @[Redak 9, stupci 38–42]
   .   . Tekst:  @[Redak 10, stupci 17–40]
   .   .   dijelovi = [...]:
-  .   .   . TEKST'A'
-  .   .   . TEKST'ovo'
-  .   .   . TEKST'je'
-  .   .   . TEKST'drugi.'
+  .   .   . TEKST'A'  @[Redak 10, stupac 21]
+  .   .   . TEKST'ovo'  @[Redak 10, stupci 23–25]
+  .   .   . TEKST'je'  @[Redak 10, stupci 27–28]
+  .   .   . TEKST'drugi.'  @[Redak 10, stupci 30–35]
   .   . Tekst:  @[Redak 11, stupci 17–72]
   .   .   dijelovi = [...]:
-  .   .   . TEKST'Ovo'
-  .   .   . TEKST'je'
-  .   .   . TEKST'---'
-  .   .   . TEKST'ne'
-  .   .   . TEKST'bi'
-  .   .   . TEKST'čovjek'
-  .   .   . TEKST'vjerovao'
-  .   .   . TEKST'---'
-  .   .   . TEKST'treći.'
+  .   .   . TEKST'Ovo'  @[Redak 11, stupci 22–24]
+  .   .   . TEKST'je'  @[Redak 11, stupci 26–27]
+  .   .   . TEKST'---'  @[Redak 11, stupci 31–33]
+  .   .   . TEKST'ne'  @[Redak 11, stupci 35–36]
+  .   .   . TEKST'bi'  @[Redak 11, stupci 38–39]
+  .   .   . TEKST'čovjek'  @[Redak 11, stupci 41–46]
+  .   .   . TEKST'vjerovao'  @[Redak 11, stupci 48–55]
+  .   .   . TEKST'---'  @[Redak 11, stupci 58–60]
+  .   .   . TEKST'treći.'  @[Redak 11, stupci 62–67]
   .   . Lista:  @[Redak 12, stupac 17 – redak 21, stupac 21]
-  .   .   vrsta = UL'<ul>'
+  .   .   vrsta = UL'<ul>'  @[Redak 13, stupci 21–24]
   .   .   stavke = [...]:
   .   .   . Lista:  @[Redak 14, stupac 25 – redak 18, stupac 29]
   .   .   .   vrsta = OL'<ol>'
@@ -1560,18 +1560,18 @@ Dokument:  @[Redak 1, stupac 5 – redak 26, stupac 11]
   .   .   .   dijelovi = [TEKST'Dvostruka!']
   .   . Tekst:  @[Redak 22, stupci 17–36]
   .   .   dijelovi = [...]:
-  .   .   . TEKST'nastavak...'
+  .   .   . TEKST'nastavak...'  @[Redak 22, stupci 21–31]
   . Tekst:  @[Redak 24, stupci 13–26]
   .   dijelovi = [...]:
-  .   . TEKST'I'
-  .   . TEKST'još'
-  .   . TEKST'malo'
+  .   . TEKST'I'  @[Redak 24, stupac 13]
+  .   . TEKST'još'  @[Redak 24, stupci 15–17]
+  .   . TEKST'malo'  @[Redak 24, stupci 19–22]
   . Lista:  @[Redak 24, stupci 23–47]
-  .   vrsta = UL'<ul>'
+  .   vrsta = UL'<ul>'  @[Redak 24, stupci 23–26]
   .   stavke = [...]:
   .   . Tekst:  @[Redak 24, stupci 27–42]
   .   .   dijelovi = [...]:
-  .   .   . TEKST'uvučeno'
+  .   .   . TEKST'uvučeno'  @[Redak 24, stupci 31–37]
 
 &hmm; hm hm 
      1.	Ovo je prvi item. 
@@ -1586,50 +1586,50 @@ I još malo
 Program:  @[Redak 1, stupac 5 – kraj]
   pridruživanja = [...]:
   . (...):
-  . , IME'a'
+  . , IME'a'  @[Redak 1, stupac 5]
   . , Op:  @[Redak 1, stupac 9 – redak 2, stupac 0]
-  . ,   op = KROZ'/'
-  . ,   lijevo = BROJ'3'
-  . ,   desno = BROJ'7'
+  . ,   op = KROZ'/'  @[Redak 1, stupac 11]
+  . ,   lijevo = BROJ'3'  @[Redak 1, stupac 9]
+  . ,   desno = BROJ'7'  @[Redak 1, stupac 13]
   . (...):
-  . , IME'b'
+  . , IME'b'  @[Redak 2, stupac 5]
   . , Op:  @[Redak 2, stupac 9 – redak 3, stupac 0]
-  . ,   op = PLUS'+'
-  . ,   lijevo = IME'a'
-  . ,   desno = BROJ'3'
+  . ,   op = PLUS'+'  @[Redak 2, stupac 11]
+  . ,   lijevo = IME'a'  @[Redak 2, stupac 9]
+  . ,   desno = BROJ'3'  @[Redak 2, stupac 13]
   . (...):
-  . , IME'c'
+  . , IME'c'  @[Redak 3, stupac 5]
   . , Op:  @[Redak 3, stupac 9 – redak 4, stupac 0]
-  . ,   op = MINUS'-'
-  . ,   lijevo = IME'b'
-  . ,   desno = IME'b'
+  . ,   op = MINUS'-'  @[Redak 3, stupac 11]
+  . ,   lijevo = IME'b'  @[Redak 3, stupac 9]
+  . ,   desno = IME'b'  @[Redak 3, stupac 13]
   . (...):
-  . , IME'b'
+  . , IME'b'  @[Redak 4, stupac 5]
   . , Op:  @[Redak 4, stupac 9 – redak 5, stupac 0]
-  . ,   op = PUTA'*'
-  . ,   lijevo = IME'a'
+  . ,   op = PUTA'*'  @[Redak 4, stupac 11]
+  . ,   lijevo = IME'a'  @[Redak 4, stupac 9]
   . ,   desno = Op:  @[Redak 4, stupci 13–14]
-  . ,     op = MINUS'-'
+  . ,     op = MINUS'-'  @[Redak 4, stupac 13]
   . ,     lijevo = <nenavedeno>
-  . ,     desno = IME'a'
+  . ,     desno = IME'a'  @[Redak 4, stupac 14]
   . (...):
-  . , IME'd'
+  . , IME'd'  @[Redak 5, stupac 5]
   . , Op:  @[Redak 5, stupac 9 – redak 6, stupac 0]
-  . ,   op = KROZ'/'
-  . ,   lijevo = IME'a'
+  . ,   op = KROZ'/'  @[Redak 5, stupac 11]
+  . ,   lijevo = IME'a'  @[Redak 5, stupac 9]
   . ,   desno = Op:  @[Redak 5, stupci 13–19]
-  . ,     op = PLUS'+'
-  . ,     lijevo = IME'c'
-  . ,     desno = BROJ'1'
+  . ,     op = PLUS'+'  @[Redak 5, stupac 16]
+  . ,     lijevo = IME'c'  @[Redak 5, stupac 14]
+  . ,     desno = BROJ'1'  @[Redak 5, stupac 18]
   . (...):
-  . , IME'e'
+  . , IME'e'  @[Redak 6, stupac 5]
   . , Op:  @[Redak 6, stupac 9 – redak 7, stupac 0]
-  . ,   op = KROZ'/'
+  . ,   op = KROZ'/'  @[Redak 6, stupac 12]
   . ,   lijevo = Op:  @[Redak 6, stupci 9–10]
-  . ,     op = MINUS'-'
+  . ,     op = MINUS'-'  @[Redak 6, stupac 9]
   . ,     lijevo = <nenavedeno>
-  . ,     desno = BROJ'3'
-  . ,   desno = BROJ'3'
+  . ,     desno = BROJ'3'  @[Redak 6, stupac 10]
+  . ,   desno = BROJ'3'  @[Redak 6, stupac 14]
 a=3/7
 b=-9/49
 c=0
@@ -1675,7 +1675,7 @@ Program:  @[Znakovi #1–kraj]
   .   lijevo = Op(operator=NA'^', lijevo=BROJ'6', desno=Op(operator=MINUS'-', lijevo=<nenavedeno>, desno=BROJ'3'))
   .   desno = BROJ'3'
 N
-Z
+N
 Q
 ###################################19_main####################################
 IZVRŠAVANJE PROGRAMA
@@ -1796,126 +1796,126 @@ Module(
 Program:  @[Redak 1, stupac 5 – kraj]
   naredbe = [...]:
   . Ispis:  @[Redak 1, stupci 5–18]
-  .   što = SLJEDEĆI'sljedeći'
+  .   što = SLJEDEĆI'sljedeći'  @[Redak 1, stupci 11–18]
   . Ispis:  @[Redak 1, stupci 20–49]
-  .   što = TEKST",Gaußova dosjetka'"
+  .   što = TEKST",Gaußova dosjetka'"  @[Redak 1, stupci 26–43]
   . Ispis:  @[Redak 1, stupci 45–58]
-  .   što = SLJEDEĆI'sljedeći'
+  .   što = SLJEDEĆI'sljedeći'  @[Redak 1, stupci 51–58]
   . Pridruživanje:  @[Redak 2, stupac 5 – redak 3, stupac 6]
-  .   varijabla = TVAR'crtice$'
-  .   što = TEKST",'"
+  .   varijabla = TVAR'crtice$'  @[Redak 2, stupci 5–11]
+  .   što = TEKST",'"  @[Redak 2, stupci 15–16]
   . Petlja:  @[Redak 3, stupac 5 – redak 5, stupac 14]
-  .   varijabla = BVAR'i'
-  .   početak = BROJ'1'
-  .   kraj = BROJ'16'
+  .   varijabla = BVAR'i'  @[Redak 3, stupac 8]
+  .   početak = BROJ'1'  @[Redak 3, stupac 10]
+  .   kraj = BROJ'16'  @[Redak 3, stupci 15–16]
   .   tijelo = [...]:
   .   . Pridruživanje:  @[Redak 4, stupac 7 – redak 5, stupac 12]
-  .   .   varijabla = TVAR'crtice$'
+  .   .   varijabla = TVAR'crtice$'  @[Redak 4, stupci 7–13]
   .   .   što = Konkatenacija:  @[Redak 4, stupac 17 – redak 5, stupac 12]
-  .   .     lijevo = TVAR'crtice$'
-  .   .     desno = TEKST",-'"
+  .   .     lijevo = TVAR'crtice$'  @[Redak 4, stupci 17–23]
+  .   .     desno = TEKST",-'"  @[Redak 4, stupci 27–29]
   . Ispis:  @[Redak 6, stupci 5–23]
-  .   što = TVAR'crtice$'
+  .   što = TVAR'crtice$'  @[Redak 6, stupci 11–17]
   . Ispis:  @[Redak 6, stupci 19–32]
-  .   što = SLJEDEĆI'sljedeći'
+  .   što = SLJEDEĆI'sljedeći'  @[Redak 6, stupci 25–32]
   . Ispis:  @[Redak 7, stupac 5 – redak 8, stupac 8]
-  .   što = TEKST",Prirodni broj'"
+  .   što = TEKST",Prirodni broj'"  @[Redak 7, stupci 11–25]
   . Unos:  @[Redak 8, stupci 5–10]
-  .   varijabla = BVAR'n'
+  .   varijabla = BVAR'n'  @[Redak 8, stupac 10]
   . Grananje:  @[Redak 9, stupac 5 – kraj]
   .   uvjet = Usporedba:  @[Redak 9, stupac 9 – redak 10, stupac 11]
-  .     lijevo = BVAR'n'
-  .     desno = BROJ'0'
-  .     manje = MANJE'<'
+  .     lijevo = BVAR'n'  @[Redak 9, stupac 9]
+  .     desno = BROJ'0'  @[Redak 9, stupac 15]
+  .     manje = MANJE'<'  @[Redak 9, stupac 13]
   .     veće = <nenavedeno>
-  .     jednako = JEDNAKO'='
+  .     jednako = JEDNAKO'='  @[Redak 9, stupac 11]
   .   onda = [...]:
   .   . Ispis:  @[Redak 10, stupac 7 – redak 11, stupac 11]
-  .   .   što = TEKST",To nije prirodni broj! Više sreće drugi put.'"
+  .   .   što = TEKST",To nije prirodni broj! Više sreće drugi put.'"  @[Redak 10, stupci 13–58]
   .   . Ispis:  @[Redak 11, stupci 7–20]
-  .   .   što = SLJEDEĆI'sljedeći'
+  .   .   što = SLJEDEĆI'sljedeći'  @[Redak 11, stupci 13–20]
   .   inače = [...]:
   .   . Pridruživanje:  @[Redak 12, stupac 5 – redak 15, stupac 9]
-  .   .   varijabla = BVAR'rješenje'
+  .   .   varijabla = BVAR'rješenje'  @[Redak 12, stupci 5–12]
   .   .   što = Osnovna:  @[Redak 13, stupac 34 – redak 15, stupac 9]
-  .   .     operacija = KROZ'÷'
+  .   .     operacija = KROZ'÷'  @[Redak 13, stupac 42]
   .   .     lijevo = Osnovna:
-  .   .       operacija = PUTA'×'
-  .   .       lijevo = BVAR'n'
+  .   .       operacija = PUTA'×'  @[Redak 13, stupac 35]
+  .   .       lijevo = BVAR'n'  @[Redak 13, stupac 34]
   .   .       desno = Osnovna:  @[Redak 13, stupci 36–40]
-  .   .         operacija = PLUS'+'
-  .   .         lijevo = BVAR'n'
-  .   .         desno = BROJ'1'
-  .   .     desno = BROJ'2'
+  .   .         operacija = PLUS'+'  @[Redak 13, stupac 38]
+  .   .         lijevo = BVAR'n'  @[Redak 13, stupac 37]
+  .   .         desno = BROJ'1'  @[Redak 13, stupac 39]
+  .   .     desno = BROJ'2'  @[Redak 13, stupac 44]
   .   . Ispis:  @[Redak 15, stupci 5–29]
-  .   .   što = TEKST",Zbroj prvih'"
+  .   .   što = TEKST",Zbroj prvih'"  @[Redak 15, stupci 11–23]
   .   . Ispis:  @[Redak 15, stupci 25–37]
-  .   .   što = BVAR'n'
+  .   .   što = BVAR'n'  @[Redak 15, stupac 31]
   .   . Ispis:  @[Redak 15, stupac 33 – redak 16, stupac 9]
-  .   .   što = TEKST",prirodnih brojeva'"
+  .   .   što = TEKST",prirodnih brojeva'"  @[Redak 15, stupci 39–57]
   .   . Ispis:  @[Redak 16, stupci 5–24]
-  .   .   što = TEKST",iznosi'"
+  .   .   što = TEKST",iznosi'"  @[Redak 16, stupci 11–18]
   .   . Ispis:  @[Redak 16, stupci 20–53]
   .   .   što = Konkatenacija:  @[Redak 16, stupci 26–53]
   .   .     lijevo = BrojUTekst:
-  .   .       broj = BVAR'rješenje'
-  .   .     desno = TEKST",,'"
+  .   .       broj = BVAR'rješenje'  @[Redak 16, stupci 33–40]
+  .   .     desno = TEKST",,'"  @[Redak 16, stupci 45–47]
   .   . Ispis:  @[Redak 16, stupci 49–62]
-  .   .   što = SLJEDEĆI'sljedeći'
+  .   .   što = SLJEDEĆI'sljedeći'  @[Redak 16, stupci 55–62]
   .   . Ispis:  @[Redak 17, stupci 5–49]
-  .   .   što = TEKST",što se može provjeriti i ručno:'"
+  .   .   što = TEKST",što se može provjeriti i ručno:'"  @[Redak 17, stupci 11–43]
   .   . Ispis:  @[Redak 17, stupci 45–58]
-  .   .   što = SLJEDEĆI'sljedeći'
+  .   .   što = SLJEDEĆI'sljedeći'  @[Redak 17, stupci 51–58]
   .   . Pridruživanje:  @[Redak 18, stupac 5 – redak 19, stupac 6]
-  .   .   varijabla = BVAR'zbroj'
-  .   .   što = BROJ'0'
+  .   .   varijabla = BVAR'zbroj'  @[Redak 18, stupci 5–9]
+  .   .   što = BROJ'0'  @[Redak 18, stupac 13]
   .   . Petlja:  @[Redak 19, stupac 5 – redak 24, stupac 23]
-  .   .   varijabla = BVAR'pribrojnik'
-  .   .   početak = BROJ'1'
-  .   .   kraj = BVAR'n'
+  .   .   varijabla = BVAR'pribrojnik'  @[Redak 19, stupci 8–17]
+  .   .   početak = BROJ'1'  @[Redak 19, stupac 19]
+  .   .   kraj = BVAR'n'  @[Redak 19, stupac 24]
   .   .   tijelo = [...]:
   .   .   . Grananje:  @[Redak 20, stupac 7 – redak 21, stupac 13]
   .   .   .   uvjet = Usporedba:  @[Redak 20, stupci 11–30]
-  .   .   .     lijevo = BVAR'pribrojnik'
-  .   .   .     desno = BROJ'1'
+  .   .   .     lijevo = BVAR'pribrojnik'  @[Redak 20, stupci 11–20]
+  .   .   .     desno = BROJ'1'  @[Redak 20, stupac 24]
   .   .   .     manje = <nenavedeno>
-  .   .   .     veće = VEĆE'>'
+  .   .   .     veće = VEĆE'>'  @[Redak 20, stupac 22]
   .   .   .     jednako = <nenavedeno>
   .   .   .   onda = [...]:
   .   .   .   . Ispis:  @[Redak 20, stupac 26 – redak 21, stupac 13]
-  .   .   .   .   što = TEKST",+'"
+  .   .   .   .   što = TEKST",+'"  @[Redak 20, stupci 32–34]
   .   .   .   inače = []
   .   .   . Ispis:  @[Redak 22, stupac 7 – redak 23, stupac 11]
-  .   .   .   što = BVAR'pribrojnik'
+  .   .   .   što = BVAR'pribrojnik'  @[Redak 22, stupci 13–22]
   .   .   . Pridruživanje:  @[Redak 23, stupac 7 – redak 24, stupac 12]
-  .   .   .   varijabla = BVAR'zbroj'
+  .   .   .   varijabla = BVAR'zbroj'  @[Redak 23, stupci 7–11]
   .   .   .   što = Osnovna:  @[Redak 23, stupac 15 – redak 24, stupac 12]
-  .   .   .     operacija = PLUS'+'
-  .   .   .     lijevo = BVAR'zbroj'
-  .   .   .     desno = BVAR'pribrojnik'
+  .   .   .     operacija = PLUS'+'  @[Redak 23, stupac 21]
+  .   .   .     lijevo = BVAR'zbroj'  @[Redak 23, stupci 15–19]
+  .   .   .     desno = BVAR'pribrojnik'  @[Redak 23, stupci 23–32]
   .   . Ispis:  @[Redak 25, stupci 5–19]
-  .   .   što = TEKST",='"
+  .   .   što = TEKST",='"  @[Redak 25, stupci 11–13]
   .   . Ispis:  @[Redak 25, stupci 15–31]
-  .   .   što = BVAR'zbroj'
+  .   .   što = BVAR'zbroj'  @[Redak 25, stupci 21–25]
   .   . Ispis:  @[Redak 25, stupci 27–40]
-  .   .   što = SLJEDEĆI'sljedeći'
+  .   .   što = SLJEDEĆI'sljedeći'  @[Redak 25, stupci 33–40]
   .   . Grananje:  @[Redak 26, stupac 5 – kraj]
   .   .   uvjet = Usporedba:  @[Redak 26, stupac 9 – redak 27, stupac 11]
-  .   .     lijevo = BVAR'zbroj'
-  .   .     desno = BVAR'rješenje'
+  .   .     lijevo = BVAR'zbroj'  @[Redak 26, stupci 9–13]
+  .   .     desno = BVAR'rješenje'  @[Redak 26, stupci 17–24]
   .   .     manje = <nenavedeno>
   .   .     veće = <nenavedeno>
-  .   .     jednako = JEDNAKO'='
+  .   .     jednako = JEDNAKO'='  @[Redak 26, stupac 15]
   .   .   onda = [...]:
   .   .   . Ispis:  @[Redak 27, stupci 7–65]
-  .   .   .   što = TEKST",Kao što vidimo, Gaußova dosjetka funkcionira.'"
+  .   .   .   što = TEKST",Kao što vidimo, Gaußova dosjetka funkcionira.'"  @[Redak 27, stupci 13–59]
   .   .   . Ispis:  @[Redak 27, stupci 61–74]
-  .   .   .   što = SLJEDEĆI'sljedeći'
+  .   .   .   što = SLJEDEĆI'sljedeći'  @[Redak 27, stupci 67–74]
   .   .   inače = [...]:
   .   .   . Ispis:  @[Redak 28, stupac 11 – redak 29, stupac 9]
-  .   .   .   što = TEKST",Hm, nešto nije u redu. Obratite se administratoru Svemira.'"
+  .   .   .   što = TEKST",Hm, nešto nije u redu. Obratite se administratoru Svemira.'"  @[Redak 28, stupci 17–76]
   .   .   . Ispis:  @[Redak 29, stupci 5–18]
-  .   .   .   što = SLJEDEĆI'sljedeći'
+  .   .   .   što = SLJEDEĆI'sljedeći'  @[Redak 29, stupci 11–18]
 
 Gaußova dosjetka 
 ---------------- 
@@ -1944,24 +1944,24 @@ SintaksnaGreška: Znakovi #22–#28: neočekivani token NAREDBA'naredba'
 Formula:  @[Znakovi #1–kraj]
   skupine = [...]:
   . Skupina:  @[Znakovi #1–#3]
-  .   čega = ATOM'Na'
-  .   koliko = BROJ'3'
+  .   čega = ATOM'Na'  @[Znakovi #1–#2]
+  .   koliko = BROJ'3'  @[Znak #3]
   . Skupina:  @[Znakovi #4–kraj]
   .   čega = Formula:  @[Znakovi #5–#13]
   .     skupine = [...]:
   .     . Skupina:  @[Znakovi #5–#7]
-  .     .   čega = ATOM'Co'
+  .     .   čega = ATOM'Co'  @[Znakovi #5–#6]
   .     .   koliko = <nenavedeno>
   .     . Skupina:  @[Znakovi #7–#12]
   .     .   čega = Formula:  @[Znakovi #8–#11]
   .     .     skupine = [...]:
   .     .     . Skupina:  @[Znakovi #8–#9]
-  .     .     .   čega = ATOM'C'
+  .     .     .   čega = ATOM'C'  @[Znak #8]
   .     .     .   koliko = <nenavedeno>
   .     .     . Skupina:  @[Znakovi #9–#10]
-  .     .     .   čega = ATOM'O'
-  .     .     .   koliko = BROJ'3'
-  .     .   koliko = BROJ'3'
+  .     .     .   čega = ATOM'O'  @[Znak #9]
+  .     .     .   koliko = BROJ'3'  @[Znak #10]
+  .     .   koliko = BROJ'3'  @[Znak #12]
   .   koliko = <nenavedeno>
 307.93011
 Tokenizacija: SnABcdefG
@@ -1988,12 +1988,12 @@ Molarna masa butana je 58.1237
 ###############################24_lambda_račun################################
 Aplikacija:  @[Znakovi #1–kraj]
   funkcija = Apstrakcija:  @[Znakovi #1–#7]
-    varijabla = SLOVO'x'
+    varijabla = SLOVO'x'  @[Znak #3]
     doseg = Aplikacija:  @[Znakovi #4–#7]
       funkcija = SLOVO'x'
       argument = SLOVO'x'
   argument = Apstrakcija:  @[Znakovi #8–#14]
-    varijabla = SLOVO'x'
+    varijabla = SLOVO'x'  @[Znak #10]
     doseg = Aplikacija:  @[Znakovi #11–#14]
       funkcija = SLOVO'x'
       argument = SLOVO'x'

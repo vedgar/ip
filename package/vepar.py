@@ -31,7 +31,7 @@ def lexer(gen):
 def paše(znak, uvjet): 
     """Zadovoljava li znak zadani uvjet (funkcija, znak ili skup)."""
     if isinstance(uvjet, str):
-        assert len(uvjet) == 1, 'Znakovi moraju biti duljine 1!'
+        assert len(uvjet) <= 1, 'Znakovi moraju biti duljine 1!'
         return znak == uvjet
     elif callable(uvjet):
         rezultat = uvjet(znak)
@@ -532,8 +532,8 @@ class Memorija:
         sadržaj, token = self.razriješi(lokacija)
         if self.redefinicija or sadržaj not in self.podaci:
             self.podaci[sadržaj] = vrijednost
-        elif isinstance(lokacija, Token): raise lokacija.redefinicija(token)
-        elif token: raise token.redefinicija()
+        elif isinstance(lokacija, Token): raise lokacija.redeklaracija(token)
+        elif token: raise token.redeklaracija()
         else: raise SemantičkaGreška(f'Nedozvoljena redefinicija {lokacija!r}')
 
     def __contains__(self, lokacija):

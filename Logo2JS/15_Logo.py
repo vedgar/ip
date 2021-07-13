@@ -134,7 +134,7 @@ def nacrtaj_sve():
 
 if __name__ == '__main__':
     for i, crtež in enumerate(crteži): print(i, crtež)
-    utipkano = input('Što da nacrtam? ')
+    utipkano = input('Što da nacrtam? (samo Enter: slučajni odabir, *: sve) ')
     if not utipkano: nacrtaj(random.choice(crteži))
     elif utipkano == '*': nacrtaj_sve()
     elif utipkano.isdecimal(): nacrtaj(crteži[int(utipkano)])
