@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Dokumentacija za vepar 2.0
-==========================
+Dokumentacija za vepar 2
+========================
 
 .. toctree::
    :maxdepth: 2
@@ -13,9 +13,8 @@ Dokumentacija za vepar 2.0
    tutorial/lexer
    tutorial/parser
    tutorial/semantic
-   refer/modules
+
    refer/vepar
-   refer/backend
 
 Vepar vam omogućuje da koristeći Python pišete vlastite programske
 jezike, prolazeći kroz uobičajene faze kao što su leksiranje,
@@ -41,9 +40,3 @@ vepar može puno bolje izložiti osnovne koncepte koji stoje u pozadini raznih
 faza interpretacije programa, razdvajajući ih i tretirajući svaki zasebno.
 Spoj toga i uobičajene Pythonove filozofije "sve je interaktivno, dinamično
 i istraživo" predstavlja dobru podlogu za učenje.
-
-
-Dodatno
-=======
-
-* :ref:`genindex`

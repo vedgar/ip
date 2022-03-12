@@ -291,6 +291,8 @@ def parsiraj_tablicu_TS(tablica):
         assert len(prijelazi) == len(znakovi)
         for znak, trojka in zip(znakovi, prijelazi):
             if trojka in set('.!'): nstanje, nznak, smjer = trojka, znak, ''
+            elif trojka.endswith(tuple('.!')):
+                nstanje, nznak, smjer = trojka[-1], trojka[:-1], ''
             else:
                 for smjer in '+-':
                     nznak, smjer, nstanje = trojka.partition(smjer)

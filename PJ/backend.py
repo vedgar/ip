@@ -1,3 +1,6 @@
+"""Pomoćne klase, funkcije i objekti za neke programe u PJ."""
+
+
 import collections, types, warnings, fractions
 
 
