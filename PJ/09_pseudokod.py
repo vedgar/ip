@@ -82,7 +82,7 @@ def pseudokod(lex):
 # pridruži -> AIME JEDNAKO aritm | LIME JEDNAKO log
 # log -> disjunkt | log ILI disjunkt
 # disjunkt -> aritm MANJE aritm | aritm JEDNAKO aritm 
-#         | ISTINA | LAŽ | LIME | LIME poziv | OTV log ZATV
+#         | ISTINA | LAŽ | LIME | LIME poziv
 # aritm -> član | aritm PLUS član | aritm MINUS član
 # član -> faktor | član ZVJEZDICA faktor
 # faktor -> BROJ | AIME | AIME poziv | OTV aritm ZATV | MINUS faktor
