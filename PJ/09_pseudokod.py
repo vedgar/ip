@@ -14,7 +14,7 @@ Podržani aritmetički izrazi:            Podržani logički uvjeti:
     izraz - izraz                           Uvjet Ili Uvjet
     izraz * izraz                           izraz < izraz
     -izraz                                  izraz = izraz
-    (izraz)                                 (Uvjet)
+    (izraz)
 
 Program se sastoji od jedne ili više deklaracija funkcija, s ili bez parametara.
     Jedna od njih mora biti program(parametri), od nje počinje izvršavanje.
