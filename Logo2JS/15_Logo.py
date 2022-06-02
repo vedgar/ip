@@ -2,7 +2,7 @@
 
 
 from vepar import *
-import itertools, math, pathlib, webbrowser, time, logging, random
+import itertools, math, pathlib, webbrowser, time, random
 
 
 class T(TipoviTokena):
@@ -35,7 +35,7 @@ def logo(lex):
 
 
 ### Beskontekstna gramatika
-# start -> naredba | start naredba
+# program -> naredba | program naredba
 # naredba -> naredba1 BROJ | PENUP | PENDOWN | REPEAT BROJ OTV program ZATV
 # naredba1 -> FORWARD | BACKWARD | LEFT | RIGHT
 
@@ -47,7 +47,7 @@ def logo(lex):
 #          Olovka: položaj:PENUP|PENDOWN
 
 class P(Parser):
-    def start(p) -> 'Program':
+    def program(p) -> 'Program':
         naredbe = [p.naredba()]
         while not p > KRAJ: naredbe.append(p.naredba())
         return Program(naredbe)

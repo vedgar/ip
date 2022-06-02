@@ -98,7 +98,7 @@ class P(Parser):
         while p >= T.KOMPOZICIJA: t = Kompozicija(t, p.desno())
         return t
 
-    def desno(p) -> 'funkcija*|osnovna*':
+    def desno(p) -> 'funkcija*|osnovna':
         if p >= T.OTV:
             rezultat = [p.funkcija()]
             while p >= T.ZAREZ: rezultat.append(p.funkcija())
