@@ -136,7 +136,7 @@ class Op(AST):
         elif o ^ {T.PLUS, T.PUTA}: return max(prvi, drugi)
         elif o ^ T.MINUS: return max(prvi, drugi, Tip.Z)
         # semantika: a div b := floor(a/b), a mod b := a - a div b * b
-        elif o ^ T.DIV: return Tip.N if prvi is drugi is Tip.N else tip.Z
+        elif o ^ T.DIV: return Tip.N if prvi is drugi is Tip.N else Tip.Z
         elif o ^ T.MOD: return Tip.Q if prvi is Tip.Q else drugi
         elif o ^ T.NA:
             if drugi is Tip.N: return prvi
@@ -153,7 +153,7 @@ ast = P('''
     rat d = 6
     d = d ^ 5
     ? b mod 1
-    ? c mod b
+    ? c div b
     ? 6 ^ -3 - 3
 ''')
 prikaz(ast, 3)
