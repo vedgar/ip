@@ -253,7 +253,7 @@ class Usporedba(AST):
     def vrijednost(self):
         l, d = self.lijevo.vrijednost(), self.desno.vrijednost()
         return -((self.manje and l < d) or (self.jednako and l == d)
-                   or (self.veće and l > d) or False)
+                   or (self.veće and l > d) or 0)
 
 class Osnovna(AST):
     operacija: 'T'
