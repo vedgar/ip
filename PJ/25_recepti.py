@@ -128,10 +128,8 @@ class Sastojak(AST):
 
     def popis(self, broj_osoba):
         if not self.ima:
-            if self.ime.sadržaj in rt.popis:
-                rt.popis[self.ime.sadržaj]+=(self.masa()/broj_osoba)
-            else:
-                rt.popis[self.ime.sadržaj]=(self.masa()/broj_osoba)
+            if self.ime not in rt.popis: rt.popis[self.ime] = 0
+            rt.popis[self.ime] += self.masa() / broj_osoba
 
     def provjera(self): return True
 
@@ -144,7 +142,7 @@ class SastojakZanemariveMase(AST):
     def masa(self): return 0
 
     def popis(self, broj_osoba):
-        if not self.ima: rt.popis[self.ime.sadržaj]=''
+        if not self.ima: rt.popis[self.ime] = ''
 
     def provjera(self): return True
 
@@ -196,6 +194,6 @@ prikaz(P(ulaz))
 if P(ulaz).provjera(): print('OK', end=' --- ') 
 else: print('NOTOK', end=' --- ')
 print(P(ulaz).vrijeme(), end=' --- ')
-print(', '.join(f'{ime} {količina}'.rstrip()
-               for ime,  količina in P(ulaz).popis()))
+print(', '.join(f'{ime.sadržaj} {količina}'.rstrip()
+                   for ime, količina in P(ulaz).popis()))
 
