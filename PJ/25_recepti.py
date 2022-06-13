@@ -196,5 +196,6 @@ prikaz(P(ulaz))
 if P(ulaz).provjera(): print('OK', end=' --- ') 
 else: print('NOTOK', end=' --- ')
 print(P(ulaz).vrijeme(), end=' --- ')
-for ime, količina in P(ulaz).popis(): print(ime, količina, end='  ')
+print(', '.join(f'{ime} {količina}'.rstrip()
+               for ime,  količina in P(ulaz).popis()))
 
