@@ -7,7 +7,7 @@ class T(TipoviTokena):
     IMA, G, SASTOJCI, PRIPREMA = '--ima--', 'g', '-SASTOJCI-', '-PRIPREMA-'
     class SASTOJCIOSOBE(Token):
         def vrijednost(self):
-            return int(''.join([znak for znak in self.sadržaj if znak.isdigit()]))
+            return int(''.join(filter(str.isdigit, self.sadržaj)))
     class BROJ(Token):
         def vrijednost(self):
             return int(self.sadržaj)
@@ -28,10 +28,7 @@ def rec(lex):
                 if lex.sadržaj == '-SASTOJCI':
                     if lex >= '-': yield lex.token(T.SASTOJCI)
                     else:
-                        lex >> ' '
-                        lex >> 'Z'
-                        lex >> 'A' 
-                        lex >> ' ' 
+                        for znak in ' ZA ': lex >> znak
                         lex.prirodni_broj('', nula = False)
                         lex >> '-'
                         yield lex.token(T.SASTOJCIOSOBE)
@@ -55,39 +52,37 @@ def rec(lex):
 # priprema -> PRIPREMA RIJEČ BROJ RIJEČ KOMENTAR?
 
 class P(Parser):
-    def recept(self):
-        return Recept(self >> T.KOMENTAR, self >> {T.SASTOJCI, T.SASTOJCIOSOBE}, self.sastojci(), self.priprema())
+    def recept(self): return Recept(self >> T.KOMENTAR,
+                                    self >> {T.SASTOJCI, T.SASTOJCIOSOBE},
+                                    self.sastojci(), self.priprema())
 
     def sastojci(self):
         sastojci = []
-        while self > {T.BROJ, T.RIJEČ}:
-            sastojci += [self.sastojak()]
+        while self > {T.BROJ, T.RIJEČ}: sastojci.append(self.sastojak())
         return sastojci
 
     def sastojak(self):
-        if količina := self >= T.BROJ:
-            mjera = self >> T.G;
+        if količina := self >= T.BROJ: mjera = self >> T.G
         ime = self >> T.RIJEČ
-        if self >= T.SASTOJCI:
-            return Podrecept(količina, mjera, ime, self.sastojci(), self.priprema())
-        elif ima := self >= T.IMA:
-            self >= T.KOMENTAR
+        if self >= T.SASTOJCI: return Podrecept(količina, mjera, ime,
+                                          self.sastojci(), self.priprema())
+        elif ima := self >= T.IMA: self >= T.KOMENTAR
         elif self >= T.KOMENTAR: pass
        
         if količina: return Sastojak(količina, mjera, ime, ima)
         else: return SastojakZanemariveMase(ime, ima)
 
     def priprema(self):
-        self >> T.PRIPREMA
-        self >> T.RIJEČ
+        self >> T.PRIPREMA, self >> T.RIJEČ
         minute = self >> T.BROJ
-        self >> T.RIJEČ
-        self >= T.KOMENTAR
+        self >> T.RIJEČ, self >= T.KOMENTAR
         return minute
 
 ### AST
-# Recept: naslov:KOMENTAR broj_osoba:SASTOJCIOSOBE sastojci:[sastojak] minute:BROJ
-# sastojak: Podrecept: količina:BROJ? mjera:G? ime:RIJEČ sastojci:[sastojak] minute:BROJ
+# Recept: naslov:KOMENTAR broj_osoba:SASTOJCIOSOBE
+#         sastojci:[sastojak] minute:BROJ
+# sastojak: Podrecept: količina:BROJ? mjera:G? ime:RIJEČ
+#                      sastojci:[sastojak] minute:BROJ
 #           Sastojak: količina:BROJ? mjera:G? ime:RIJEČ ima:IMA?
 #           SastojakZanemariveMase: ime:RIJEČ ima:IMA?
 
@@ -97,17 +92,15 @@ class Recept(AST):
     sastojci: 'sastojak+'
     minute: 'BROJ'
 
-    def provjera(self):
-        return all(s.provjera() for s in self.sastojci)
+    def provjera(self): return all(s.provjera() for s in self.sastojci)
 
     def popis(self):
         rt.popis=Memorija()
-        for s in self.sastojci:
-             s.popis(self.broj_osoba.vrijednost())
+        for s in self.sastojci: s.popis(self.broj_osoba.vrijednost())
         return rt.popis
 
-    def vrijeme(self):
-        return self.minute.vrijednost() + sum(s.vrijeme() for s in self.sastojci)
+    def vrijeme(self): return sum((s.vrijeme() for s in self.sastojci),
+                                  self.minute.vrijednost())
 
 class Podrecept(AST):
     količina: 'BROJ?'
@@ -120,11 +113,9 @@ class Podrecept(AST):
         return self.količina.vrijednost() == sum(s.masa() for s in self.sastojci)
 
     def popis(self, broj_osoba):
-        for s in self.sastojci:
-            s.popis(broj_osoba)
+        for s in self.sastojci: s.popis(broj_osoba)
 
-    def vrijeme(self):
-        return self.minute.vrijednost() + sum(s.vrijeme() for s in self.sastojci)
+    vrijeme = Recept.vrijeme
 
 class Sastojak(AST):
     količina: 'BROJ?'
@@ -142,27 +133,22 @@ class Sastojak(AST):
             else:
                 rt.popis[self.ime.sadržaj]=(self.masa()/broj_osoba)
 
-    def provjera(self):
-        return True
+    def provjera(self): return True
 
-    def vrijeme(self):
-        return 0
+    def vrijeme(self): return 0
 
 class SastojakZanemariveMase(AST):
     ime: 'RIJEČ'
     ima: 'IMA?'
 
-    def masa(self):
-        return 0
+    def masa(self): return 0
 
     def popis(self, broj_osoba):
         if not self.ima: rt.popis[self.ime.sadržaj]=''
 
-    def provjera(self):
-        return True
+    def provjera(self): return True
 
-    def vrijeme(self):
-        return 0
+    def vrijeme(self): return 0
 
 ulaz = '''
 
@@ -210,5 +196,5 @@ prikaz(P(ulaz))
 if P(ulaz).provjera(): print('OK', end=' --- ') 
 else: print('NOTOK', end=' --- ')
 print(P(ulaz).vrijeme(), end=' --- ')
-print(*[ime + ' ' + str(količina) for ime, količina in dict(P(ulaz).popis()).items()], sep=', ')
+for ime, količina in P(ulaz).popis(): print(ime, količina, end='  ')
 
