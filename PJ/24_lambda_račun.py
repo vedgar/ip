@@ -5,7 +5,7 @@ https://web.math.pmf.unizg.hr/~veky/B/IP.k2.19-06-28.pdf"""
 from vepar import *
 
 
-class Λ(enum.Enum):
+class Λ(TipoviTokena):
     LAMBDA, TOČKA, OTV, ZATV = 'λ.()'
     class SLOVO(Token):
         def slobodne(t): return {t}

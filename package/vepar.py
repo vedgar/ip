@@ -1,7 +1,7 @@
 """Leksička, sintaksna, semantička analiza te izvođenje programa."""
 
 
-__version__ = '2.4'
+__version__ = '2.5'
 
 
 import enum, types, collections, contextlib, itertools, functools, \
@@ -64,8 +64,48 @@ def omotaj(metoda):
     return omotano
 
 
-TipoviTokena = enum.Enum
+class EnumItem:
+    def __init__(self, name, value): self.name, self.value = name, value
 
+if False:
+  class TokenEnumDict(dict):
+    def __init__(self):
+        super().__init__(_back_ = {})
+    
+    def __setitem__(self, key, value):
+        if key.startswith('_'): return super().__setitem__(key, value)
+        item = EnumItem(key, value)
+        super().__setitem__(key, item)
+        self._back_[value] = item
+
+    def __getitem__(self, key): return self.forward[key]
+
+    def __call__(self, value): return self.backward[value]
+
+
+
+class TipoviTokenaMeta(type):
+    if False:
+        @classmethod
+        def __prepare__(cls, name, bases): return TokenEnumDict()
+
+    def __new__(metaclass, classname, bases, classdict):
+        cls = super().__new__(metaclass, classname, bases, classdict)
+        cls._back_ = {}
+        for name, value in vars(cls).copy().items():
+            if not name.startswith('_'):
+                item = cls()
+                item.name, item.value = name, value
+                setattr(cls, name, item)
+                cls._back_[value] = item
+        return cls
+
+    def __iter__(self):
+        for name, item in vars(self).items():
+            if not name.startswith('_'): yield item
+
+
+class TipoviTokena(metaclass=TipoviTokenaMeta): pass
 
 class Kontekst(type):
     """Metaklasa: upravitelj konteksta (with) za očekivanu grešku."""
