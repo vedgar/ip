@@ -93,7 +93,7 @@ class P(Parser):
 
 
 ### Apstraktna sintaksna stabla
-# Program: definicije:[(izraz,IME)] završni:izraz
+# Program: definicije:[(IME,izraz)] završni:izraz
 # izraz: BROJ: Token
 #        I: Token
 #        IME: Token
@@ -102,7 +102,7 @@ class P(Parser):
 
 
 class Program(AST):
-    definicije: '(izraz,IME)*'
+    definicije: '(IME,izraz)*'
     završni: 'izraz'
 
     def izvrši(program):
