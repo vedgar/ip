@@ -339,7 +339,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
 
     def __eq__(self, o):
         """Dva su tokena jednaka ako im se poklapa tip i sadržaj."""
-        return self.tip.name == o.tip.name and self.tip.sadržaj == o.tip.sadržaj
+        return self.tip.name == o.tip.name and self.sadržaj == o.sadržaj
 
     def __ne__(self, o):
         return not self.__eq__(o)
