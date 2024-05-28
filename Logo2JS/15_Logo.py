@@ -2,7 +2,7 @@
 
 
 from vepar import *
-import itertools, math, pathlib, webbrowser, time, random
+import math, pathlib, webbrowser, time, random
 
 
 class T(TipoviTokena):
