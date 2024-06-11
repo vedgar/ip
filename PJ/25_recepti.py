@@ -57,7 +57,7 @@ class P(Parser):
                                     self.sastojci(), self.priprema())
 
     def sastojci(self):
-        sastojci = []
+        sastojci = [self.sastojak()]
         while self > {T.BROJ, T.RIJEČ}: sastojci.append(self.sastojak())
         return sastojci
 
