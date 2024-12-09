@@ -102,8 +102,8 @@ class P(Parser):
 
 
 class Program(AST):
-    definicije: '(izraz,IME)*'
-    završni: 'izraz'
+    definicije: list[tuple[P.izraz,T.IME]]
+    završni: P.izraz
 
     def izvrši(program):
         rt.okolina = Memorija()
@@ -120,42 +120,43 @@ class Program(AST):
         yield ['OUT', r]
 
 class Binarna(AST):
-    op: 'T'
-    lijevo: 'izraz'
-    desno: 'izraz'
+    op: T
+    lijevo: P.izraz
+    desno: P.izraz
 
     def vrijednost(self):
-        o = self.op
-        x, y = self.lijevo.vrijednost(), self.desno.vrijednost()
+        lijevo, desno = self.lijevo.vrijednost(), self.desno.vrijednost()
         try:
-            if o ^ T.PLUS: return x + y
-            elif o ^ T.MINUS: return x - y
-            elif o ^ T.PUTA: return x * y
-            elif o ^ T.KROZ: return x / y
-            elif o ^ T.NA: return x ** y
-            else: assert False, f'nepokriveni slučaj binarnog operatora {o}'
+            match self.op.tip:
+                case T.PLUS: return lijevo + desno
+                case T.MINUS: return lijevo - desno
+                case T.PUTA: return lijevo * desno
+                case T.KROZ: return lijevo / desno
+                case T.NA: return lijevo ** desno
+                case _: assert False, f'nepokriveni binarni operator {self.op}'
         except ArithmeticError as ex: raise self.iznimka(ex)
 
     def tac(self):
-        r1 = yield from self.lijevo.tac()
-        r2 = yield from self.desno.tac()
-        yield [r:=next(rt.reg), '=', r1, self.op.tip.value, r2]
-        return r
+        rlijevo = yield from self.lijevo.tac()
+        rdesno = yield from self.desno.tac()
+        yield [rrezultat:=next(rt.reg), '=', rlijevo, self.op.tip.value, rdesno]
+        return rrezultat
 
 class Unarna(AST):
-    op: 'T'
-    ispod: 'izraz'
+    op: T
+    ispod: P.izraz
 
     def vrijednost(self):
-        o, z = self.op, self.ispod.vrijednost()
-        if o ^ T.MINUS: return -z
-        elif o ^ T.KONJ: return z.conjugate()
-        else: assert False, f'nepokriveni slučaj unarnog operatora {o}'
+        ispod = self.ispod.vrijednost()
+        match self.op.tip:
+            case T.MINUS: return -ispod
+            case T.KONJ: return ispod.conjugate()
+            case _: assert False, f'nepokriveni unarni operator {self.op}'
 
     def tac(self):
-        r1 = yield from self.ispod.tac()
-        yield [r:=next(rt.reg), '=', self.op.tip.value, r1]
-        return r
+        rispod = yield from self.ispod.tac()
+        yield [rrezultat:=next(rt.reg), '=', self.op.tip.value, rispod]
+        return rrezultat
 
 def izračunaj(string): 
     print('-' * 60)

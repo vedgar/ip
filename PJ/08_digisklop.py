@@ -48,26 +48,23 @@ class P(Parser):
 
 
 class Not(AST):
-    ulaz: 'sklop'
+    ulaz: P.sklop
     def uNand(self): return [self.ulaz.uNand()]
 
 class And(AST):
-    ulazi: 'sklop*'
+    ulazi: list[P.sklop]
     def uNand(self): return [[ulaz.uNand() for ulaz in self.ulazi]]
 
 class Or(AST):
-    ulazi: 'sklop*'
+    ulazi: list[P.sklop]
     def uNand(self): return [[ulaz.uNand()] for ulaz in self.ulazi]
 
 
-def pod_negacijom(sklop):
-    """Vraća x ako je sklop == [x], inače None."""
-    if isinstance(sklop, list) and len(sklop) == 1: return sklop[0]
-
 def optimiziraj(sklop):
     if isinstance(sklop, str): return sklop
-    opt = [optimiziraj(ulaz) for ulaz in sklop]
-    return pod_negacijom(pod_negacijom(opt)) or opt
+    match [optimiziraj(ulaz) for ulaz in sklop]:
+        case [[x]]: return x
+        case t: return t
 
 
 print(opis := "x ([yxx'] + y')")

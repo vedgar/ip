@@ -8,7 +8,8 @@ Izgrađeni su od osnovnih (inicijalnih) regularnih izraza:
 pomoću operatora:
     |       (infiksni) unija
             (ne piše se) konkatenacija
-    *,+,?   (postfiksni) Kleenejevi operatori"""
+    *,+,?   (postfiksni) Kleenejevi operatori
+    /2      (postfiksni) kvadriranje (?)"""
 
 
 from vepar import *
@@ -19,7 +20,7 @@ specijalni = '()|*+?'
 
 class T(TipoviTokena):
     OTV, ZATV, ILI, ZVIJEZDA, PLUS, UPITNIK = specijalni
-    PRAZAN, EPSILON = '/0', '/1'
+    PRAZAN, EPSILON, KVADRAT = '/0', '/1', '/2'
     class ZNAK(Token): pass
 
 @lexer
@@ -27,10 +28,10 @@ def ri(lex):
     for znak in lex:
         if znak in specijalni: yield lex.literal(T)
         elif znak == '/':
-            sljedeći = next(lex)
-            if not sljedeći: raise lex.greška('/ na kraju stringa')
-            elif sljedeći in {'/', *specijalni}: yield lex.token(T.ZNAK)
-            elif sljedeći in {'0', '1'}: yield lex.literal(T)
+            slj = next(lex)
+            if not slj: raise lex.greška('/ na kraju stringa')
+            elif slj == '/' or slj in specijalni: yield lex.token(T.ZNAK)
+            elif slj in {'0', '1', '2'}: yield lex.literal(T)
             else: raise lex.greška('nedefinirana /-sekvenca')
         else: yield lex.token(T.ZNAK)
 
@@ -38,7 +39,8 @@ def ri(lex):
 ### Beskontekstna gramatika
 # rx -> disjunkt | disjunkt ILI rx
 # disjunkt -> faktor | faktor disjunkt
-# faktor -> element | faktor ZVIJEZDA | faktor PLUS | faktor UPITNIK
+# faktor -> element | faktor postfiks
+# postfiks -> ZVIJEZDA | PLUS | UPITNIK | KVADRAT
 # element -> PRAZAN | EPSILON | ZNAK | OTV rx ZATV
 
 class P(Parser):
@@ -53,20 +55,22 @@ class P(Parser):
             return RI.Konkatenacija(faktor, self.disjunkt())
         else: return faktor
 
-    def faktor(self) -> 'element|Zvijezda|Plus|Upitnik':
+    def faktor(self) -> 'element|Zvijezda|Plus|Upitnik|Konkatenacija':
         trenutni = self.element()
-        while ...:
+        while self > {T.ZVIJEZDA, T.PLUS, T.UPITNIK, T.KVADRAT}:
             if self >= T.ZVIJEZDA: trenutni = RI.Zvijezda(trenutni)
             elif self >= T.PLUS: trenutni = RI.Plus(trenutni)
             elif self >= T.UPITNIK: trenutni = RI.Upitnik(trenutni)
-            else: return trenutni
+            elif self >= T.KVADRAT:
+                trenutni = RI.Konkatenacija(trenutni, trenutni)
+        return trenutni
 
     def element(self) -> 'Prazan|Epsilon|Elementarni|rx':
         if self >= T.PRAZAN: return RI.prazan
         elif self >= T.EPSILON: return RI.epsilon
         elif znak := self >= T.ZNAK:
             t = znak.sadržaj
-            if t.startswith('/'): kosa_crta, t = t
+            t.removeprefix('/')
             return RI.Elementarni(t)
         elif self >> T.OTV:
             u_zagradi = self.rx()
@@ -84,6 +88,6 @@ class P(Parser):
 #     Plus: r:rx
 #     Upitnik: r:rx
 
-ri(r := '(a(/*c?)+)?')
-prikaz(P(r))
-print(*P(r).početak(20))
+ri(r := 'a/2/2')
+#prikaz(rx := P(r))
+print(P(r).početak(20))

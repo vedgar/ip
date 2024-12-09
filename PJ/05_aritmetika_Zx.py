@@ -72,22 +72,22 @@ class P(Parser):
 #        Xna: eksponent:BROJ
 
 class Zbroj(AST):
-    lijevo: 'izraz'
-    desno: 'izraz'
+    lijevo: P.izraz
+    desno: P.izraz
     def prevedi(zbroj): return zbroj.lijevo.prevedi() + zbroj.desno.prevedi()
     
 class Umnožak(AST):
-    lijevo: 'izraz'
-    desno: 'izraz'
+    lijevo: P.izraz
+    desno: P.izraz
     def prevedi(umnožak):
         return umnožak.lijevo.prevedi() * umnožak.desno.prevedi()
 
 class Suprotan(AST):
-    od: 'izraz'
+    od: P.izraz
     def prevedi(self): return -self.od.prevedi()
     
 class Xna(AST):
-    eksponent: 'BROJ'
+    eksponent: T.BROJ
     def prevedi(self): return Polinom.x(self.eksponent.vrijednost())
 
 

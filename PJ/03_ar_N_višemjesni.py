@@ -1,4 +1,4 @@
-"""Aritmetika na N, s razlikom što su + i * lijevo asocirani višemjesni.
+"""Aritmetika na N, ali su + i * lijevo asocirani višemjesni. Nema ^.
 Uz implicitno množenje ako desni faktor počinje zagradom (npr. 2(3+1)=8).
 Implementiran je i optimizator, baš kao u originalnom aritmetika_N.py."""
 
@@ -54,7 +54,7 @@ nula, jedan = Token(T.BROJ, '0'), Token(T.BROJ, '1')
 
 
 class Zbroj(AST):
-    pribrojnici: 'izraz*'
+    pribrojnici: list[P.izraz]
 
     def vrijednost(zbroj):
         return sum(pribrojnik.vrijednost() for pribrojnik in zbroj.pribrojnici)
@@ -67,7 +67,7 @@ class Zbroj(AST):
 
 
 class Umnožak(AST):
-    faktori: 'izraz*'
+    faktori: list[P.izraz]
 
     def vrijednost(umnožak):
         return math.prod(faktor.vrijednost() for faktor in umnožak.faktori)

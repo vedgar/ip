@@ -7,6 +7,7 @@ Napisan je semantički analizator u obliku name resolvera:
 
 from vepar import *
 from backend import PristupLog
+from typing import Optional
 
 
 class T(TipoviTokena):
@@ -87,7 +88,7 @@ class P(Parser):
 
 class Skripta(AST):
     """Niz naredbi SQLa, svaka završava točkazarezom."""
-    naredbe: 'naredba*'
+    naredbe: list[P.naredba]
 
     def razriješi(skripta):
         rt.imena = Memorija(redefinicija=False)
@@ -96,14 +97,14 @@ class Skripta(AST):
 
 class Stupac(AST):
     """Specifikacija stupca u tablici."""
-    ime: 'IME'
-    tip: 'IME'
-    veličina: 'BROJ?'
+    ime: T.IME
+    tip: T.IME
+    veličina: Optional[T.BROJ]
 
 class Create(AST):
     """Naredba CREATE TABLE."""
-    tablica: 'IME'
-    specifikacije: 'Stupac*'
+    tablica: T.IME
+    specifikacije: list[Stupac]
 
     def razriješi(naredba):
         pristup = rt.imena[naredba.tablica] = Memorija(redefinicija=False)
@@ -112,8 +113,8 @@ class Create(AST):
         
 class Select(AST):
     """Naredba SELECT."""
-    tablica: 'IME'
-    stupci: 'IME*?'
+    tablica: T.IME
+    stupci: Optional[list[T.IME]]
 
     def razriješi(naredba):
         t = rt.imena[naredba.tablica]

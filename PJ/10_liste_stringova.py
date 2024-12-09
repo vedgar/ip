@@ -82,7 +82,7 @@ class P(Parser):
 #          STRING2: Token
 
 class Lista(AST):
-    elementi: 'element*'
+    elementi: list[P.element]
     def vrijednost(self): return [el.vrijednost() for el in self.elementi]
 
 

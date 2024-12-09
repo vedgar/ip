@@ -72,13 +72,13 @@ class P(Parser):
 # Program: naredbe:[naredba]
 
 class Program(AST):
-    naredbe: 'naredba*'
+    naredbe: list[P.naredba]
     def izvrši(program):
         for naredba in program.naredbe: naredba.izvrši()
 
 class Promjena(AST):
-    op: 'INC|DEC'
-    registar: 'REG'
+    op: T
+    registar: T.REG
     def izvrši(promjena):
         j = promjena.registar.broj()
         if promjena.op ^ T.INC: rt.stroj.inc(j)
@@ -86,8 +86,8 @@ class Promjena(AST):
         else: assert False, f'Nepoznata operacija {promjena.op}'
 
 class Petlja(AST):
-    registar: 'REG'
-    tijelo: 'Program'
+    registar: T.REG
+    tijelo: Program
     def izvrši(petlja):
         n = rt.stroj.registri[petlja.registar.broj()]
         for ponavljanje in range(n): petlja.tijelo.izvrši()

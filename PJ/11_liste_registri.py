@@ -25,7 +25,7 @@ def listlexer(lex):
                 n = lex.prirodni_broj(nakonL)
                 tok = lex.token(T.ID)
                 if 1 <= n <= 9: yield tok
-                else: raise tok.krivi_sadržaj('očekivan broj liste između 1 i 9')
+                else: raise tok.krivi_sadržaj('očekivan broj između 1 i 9')
             else:
                 lex * str.isalpha
                 yield lex.literal(T, case=False)
@@ -80,52 +80,52 @@ class P(Parser):
 
 class Program(AST):
     """Program u jeziku listâ."""
-    naredbe: 'naredba*'
+    naredbe: list[P.naredba]
     def izvrši(self):
         rt.mem = Memorija(redefinicija=False)
         for nar in self.naredbe: print(nar, ' --> ', nar.izvrši())
 
 class Deklaracija(AST):
     """Deklaracija liste."""
-    lista: 'ID'
+    lista: T.ID
     def izvrši(self): rt.mem[self.lista] = []
 
 class Provjera(AST):
     """Je li lista prazna?"""
-    lista: 'ID'
+    lista: T.ID
     def izvrši(self): return not rt.mem[self.lista]
 
 class Duljina(AST):
     """Broj elemenata u listi."""
-    lista: 'ID'
+    lista: T.ID
     def izvrši(self): return len(rt.mem[self.lista])
 
 class Dohvati(AST):
     """Element zadanog indeksa (brojeći od 0). Prevelik indeks javlja grešku."""
-    lista: 'ID'
-    indeks: 'BROJ'
+    lista: T.ID
+    indeks: T.BROJ
     def izvrši(self):
-        l, i = rt.mem[self.lista], self.indeks.vrijednost()
-        if i < len(l): return l[i]
+        lista, indeks = rt.mem[self.lista], self.indeks.vrijednost()
+        if indeks < len(lista): return lista[indeks]
         else: raise self.iznimka('Prevelik indeks')
         
 class Izbaci(AST):
     """Izbacuje element zadanog indeksa iz liste ili javlja grešku izvođenja."""
-    lista: 'ID'
-    indeks: 'BROJ'
+    lista: T.ID
+    indeks: T.BROJ
     def izvrši(self):
-        l, i = rt.mem[self.lista], self.indeks.vrijednost()
-        if i < len(l): del l[i]
+        lista, indeks = rt.mem[self.lista], self.indeks.vrijednost()
+        if indeks < len(lista): del lista[indeks]
         else: raise self.iznimka('Prevelik indeks')
 
 class Ubaci(AST):
     """Ubacuje vrijednost u listu na zadanom indeksu, ili javlja grešku."""
-    lista: 'ID'
-    element: 'BROJ|MINUSBROJ'
-    indeks: 'BROJ'
+    lista: T.ID
+    element: T
+    indeks: T.BROJ
     def izvrši(self):
-        l, i = rt.mem[self.lista], self.indeks.vrijednost()
-        if i <= len(l): l.insert(i, self.element.vrijednost())
+        lista, indeks = rt.mem[self.lista], self.indeks.vrijednost()
+        if indeks <= len(lista): lista.insert(indeks, self.element.vrijednost())
         else: raise self.iznimka('Prevelik indeks')
 
 

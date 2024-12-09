@@ -77,7 +77,7 @@ jedan = Token(T.BROJ, '1')
 
 
 class Zbroj(AST):
-    pribrojnici: 'izraz*'
+    pribrojnici: list[P.izraz]
     
     def vrijednost(izraz):
         a, b = izraz.pribrojnici
@@ -96,7 +96,7 @@ class Zbroj(AST):
 
 
 class Umnožak(AST):
-    faktori: 'izraz*'
+    faktori: list[P.izraz]
 
     def vrijednost(izraz):
         a, b = izraz.faktori
@@ -105,9 +105,9 @@ class Umnožak(AST):
     def optim(izraz):
         a, b = izraz.faktori
         a, b = a.optim(), b.optim()
-        if a == jedan: return b
+        if nula in [a, b]: return nula
+        elif a == jedan: return b
         elif b == jedan: return a
-        elif nula in [a, b]: return nula
         else: return Umnožak([a, b])
 
     def prevedi(izraz):
@@ -116,8 +116,8 @@ class Umnožak(AST):
 
 
 class Potencija(AST):
-    baza: 'izraz'
-    eksponent: 'izraz'
+    baza: P.izraz
+    eksponent: P.izraz
 
     def vrijednost(izraz):
         return izraz.baza.vrijednost() ** izraz.eksponent.vrijednost()
@@ -126,7 +126,7 @@ class Potencija(AST):
         b, e = izraz.baza.optim(), izraz.eksponent.optim()
         if e == nula: return jedan
         elif b == nula: return nula  # 0^0 je gore, jer prepoznamo sve nule
-        elif jedan in {b, e}: return b
+        elif jedan in [b, e]: return b
         else: return Potencija(b, e)
 
     def prevedi(izraz):
@@ -160,6 +160,7 @@ testiraj('(2+3)*4^1')
 testiraj('2^0^0^0^0')
 testiraj('2+(0+1*1*2)')
 testiraj('1+2*3^4+0*5^6*7+8*9')
+testiraj('(1+2)^(3*4)')
 with LeksičkaGreška: testiraj('2 3')
 with SintaksnaGreška: testiraj('2+')
 with SintaksnaGreška: testiraj('(2+3)45')

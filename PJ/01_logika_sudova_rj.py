@@ -25,16 +25,17 @@ class T(TipoviTokena):
 @lexer
 def ls(lex):
     for znak in lex:
-        if znak == 'P':
-            lex.prirodni_broj('')
-            yield lex.token(T.PVAR)
-        elif znak == '-':
-            lex >> '>'
-            yield lex.token(T.KOND)
-        elif znak == '<':
-            lex >> '-', lex >> '>'
-            yield lex.token(T.BIKOND)
-        else: yield lex.literal(T)
+        match znak:
+            case 'P':
+                lex.prirodni_broj('')
+                yield lex.token(T.PVAR)
+            case '-':
+                lex >> '>'
+                yield lex.token(T.KOND)
+            case '<':
+                lex >> '-', lex >> '>'
+                yield lex.token(T.BIKOND)
+            case _: yield lex.literal(T)
 
 
 ### Beskontekstna gramatika:
@@ -49,9 +50,9 @@ class P(Parser):
             ispod = p.formula()
             return Negacija(ispod)
         elif p >> T.OTV:
-            l, klasa, d = p.formula(), p.binvez(), p.formula()
+            lijevo, klasa, desno = p.formula(), p.binvez(), p.formula()
             p >> T.ZATV
-            return klasa(l, d)
+            return klasa(lijevo, desno)
 
     def binvez(p):
         if p >= T.KONJ: return Konjunkcija
@@ -71,7 +72,7 @@ class P(Parser):
 # Binarna: lijevo:formula desno:formula
 
 class Negacija(AST):
-    ispod: 'formula'
+    ispod: P.formula
     veznik = '¬'
 
     def vrijednost(negacija): return not negacija.ispod.vrijednost()
@@ -84,19 +85,19 @@ class Negacija(AST):
 
 
 class Binarna(AST):
-    lijevo: 'formula'
-    desno: 'formula'
+    lijevo: P.formula
+    desno: P.formula
 
     def vrijednost(self):
         klasa = type(self)
-        l, d = self.lijevo.vrijednost(), self.desno.vrijednost()
-        return klasa.tablica(l, d)
+        lijevo, desno = self.lijevo.vrijednost(), self.desno.vrijednost()
+        return klasa.tablica(lijevo, desno)
 
     def makni_neg(self):
         klasa = type(self)
-        l, lp = self.lijevo.makni_neg()
-        d, dp = self.desno.makni_neg()
-        return klasa.xform(l, d, lp, dp), klasa.tablica(lp, dp)
+        lijevo, lp = self.lijevo.makni_neg()
+        desno, dp = self.desno.makni_neg()
+        return klasa.xform(lijevo, desno, lp, dp), klasa.tablica(lp, dp)
 
     def ispis(self): return '(' + self.lijevo.ispis() + \
             self.veznik + self.desno.ispis() + ')'
@@ -105,19 +106,21 @@ class Binarna(AST):
 class Disjunkcija(Binarna):
     veznik = '∨'
 
-    def tablica(l, d): return l or d
+    def tablica(lijevo, desno): return lijevo or desno
 
-    def xform(l, d, lp, dp):
-        if lp and dp: return Disjunkcija(l, d)
-        if not lp and dp: return Kondicional(l, d)
-        if lp and not dp: return Kondicional(d, l)
-        return Konjunkcija(l, d)
+    def xform(lijevo, desno, lp, dp):
+        match lp, dp:
+            case False, False: return Konjunkcija(lijevo, desno)
+            case False, True: return Kondicional(lijevo, desno)
+            case True, False: return Kondicional(desno, lijevo)
+            case True, True: return Disjunkcija(lijevo, desno)
+            case _: assert False, 'nepokriveni slučaj!'
 
 
 class Konjunkcija(Binarna):
     veznik = '∧'
 
-    def tablica(l, d): return l and d
+    def tablica(lijevo, desno): return lijevo and desno
 
     def xform(l, d, lp, dp): return Disjunkcija.xform(l, d, not lp, not dp)
 
@@ -125,8 +128,8 @@ class Konjunkcija(Binarna):
 class Kondicional(Binarna):
     veznik = '→'
 
-    def tablica(l, d):
-        if l: return d
+    def tablica(lijevo, desno):
+        if lijevo: return desno
         return True
     
     def xform(l, d, lp, dp): return Disjunkcija.xform(l, d, not lp, dp)
@@ -135,7 +138,7 @@ class Kondicional(Binarna):
 class Bikondicional(Binarna):
     veznik = '↔'
 
-    def tablica(l, d): return l == d
+    def tablica(lijevo, desno): return lijevo == desno
 
     def xform(l, d, lp, dp): return Bikondicional(l, d)
 

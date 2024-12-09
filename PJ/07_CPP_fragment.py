@@ -10,6 +10,7 @@ Podržana je i naredba break za izlaz iz unutarnje petlje:
 
 
 from vepar import *
+from typing import Optional
 
 
 class T(TipoviTokena):
@@ -127,7 +128,7 @@ class Prekid(NelokalnaKontrolaToka): """Signal koji šalje naredba break."""
 #          Grananje: lijevo:IME desno:BROJ onda:naredba
 
 class Program(AST):
-    naredbe: 'naredba*'
+    naredbe: list[P.naredba]
 
     def izvrši(program):
         rt.mem = Memorija()
@@ -136,11 +137,11 @@ class Program(AST):
         except Prekid: raise SemantičkaGreška('nedozvoljen break izvan petlje')
 
 class Petlja(AST):
-    varijabla: 'IME'
-    početak: 'BROJ'
-    granica: 'BROJ'
-    inkrement: 'BROJ?'
-    blok: 'naredba*'
+    varijabla: T.IME
+    početak: T.BROJ
+    granica: T.BROJ
+    inkrement: Optional[T.BROJ]
+    blok: list[P.naredba]
 
     def izvrši(petlja):
         kv = petlja.varijabla  # kontrolna varijabla petlje
@@ -153,8 +154,8 @@ class Petlja(AST):
             rt.mem[kv] += inkr.vrijednost() if inkr else 1
 
 class Ispis(AST):
-    varijable: 'IME*'
-    novired: 'ENDL?'
+    varijable: list[T.IME]
+    novired: Optional[T.ENDL]
 
     def izvrši(ispis):
         for varijabla in ispis.varijable:
@@ -162,9 +163,9 @@ class Ispis(AST):
         if ispis.novired ^ T.ENDL: print()
 
 class Grananje(AST):
-    lijevo: 'IME'
-    desno: 'BROJ'
-    onda: 'naredba'
+    lijevo: T.IME
+    desno: T.BROJ
+    onda: P.naredba
 
     def izvrši(grananje):
         if grananje.lijevo.vrijednost() == grananje.desno.vrijednost():

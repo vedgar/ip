@@ -29,6 +29,7 @@ Memorija se također dinamički preoblikuje: svaka funkcija ima svoj prostor."""
 
 
 from vepar import *
+from typing import Optional
 
 
 class T(TipoviTokena):
@@ -217,7 +218,8 @@ def izvrši(funkcije, *argv):
 class Funkcija(AST):
     ime: 'IME'
     parametri: 'IME*'
-    tijelo: 'naredba'
+    tijelo: P.naredba
+
     def pozovi(funkcija, argumenti):
         lokalni = Memorija(zip(funkcija.parametri, argumenti))
         try: funkcija.tijelo.izvrši(mem=lokalni, unutar=funkcija)
@@ -227,6 +229,7 @@ class Funkcija(AST):
 class Poziv(AST):
     funkcija: 'Funkcija?'
     argumenti: 'izraz*'
+
     def vrijednost(poziv, mem, unutar):
         pozvana = poziv.funkcija
         if pozvana is nenavedeno: pozvana = unutar  # rekurzivni poziv
@@ -241,15 +244,17 @@ class Poziv(AST):
 
 def ispunjen(ast, mem, unutar):
     u = ast.uvjet.vrijednost(mem, unutar)
-    if ast.istinitost ^ T.JE: return u
-    elif ast.istinitost ^ T.NIJE: return not u
-    else: assert False, f'Tertium non datur! {ast.istinitost}'
+    match ast.istinitost.tip:
+        case T.JE: return u
+        case T.NIJE: return not u
+        case _: assert False, f'Tertium non datur! {ast.istinitost}'
 
 class Grananje(AST):
     istinitost: 'JE|NIJE'
     uvjet: 'log'
     onda: 'naredba'
     inače: 'naredba'
+
     def izvrši(grananje, mem, unutar):
         if ispunjen(grananje, mem, unutar): grananje.onda.izvrši(mem, unutar)
         else: grananje.inače.izvrši(mem, unutar)
@@ -258,27 +263,32 @@ class Petlja(AST):
     istinitost: 'JE|NIJE'
     uvjet: 'log'
     tijelo: 'naredba'
+
     def izvrši(petlja, mem, unutar):
         while ispunjen(petlja, mem, unutar): petlja.tijelo.izvrši(mem, unutar)
 
 class Blok(AST):
     naredbe: 'naredba*'
+
     def izvrši(blok, mem, unutar):
         for naredba in blok.naredbe: naredba.izvrši(mem, unutar)
 
 class Pridruživanje(AST):
     ime: 'IME'
     pridruženo: 'izraz'
+
     def izvrši(self, mem, unutar):
         mem[self.ime] = self.pridruženo.vrijednost(mem, unutar)
 
 class Vrati(AST):
     što: 'izraz'
+
     def izvrši(self, mem, unutar):
         raise Povratak(self.što.vrijednost(mem, unutar))
 
 class Disjunkcija(AST):
     disjunkti: 'log*'
+
     def vrijednost(disjunkcija, mem, unutar):
         return any(disjunkt.vrijednost(mem, unutar)
                 for disjunkt in disjunkcija.disjunkti)
@@ -287,24 +297,29 @@ class Usporedba(AST):
     lijevo: 'aritm'
     relacija: 'MANJE|JEDNAKO'
     desno: 'aritm'
+
     def vrijednost(usporedba, mem, unutar):
-        l = usporedba.lijevo.vrijednost(mem, unutar)
-        d = usporedba.desno.vrijednost(mem, unutar)
-        if usporedba.relacija ^ T.JEDNAKO: return l == d
-        elif usporedba.relacija ^ T.MANJE: return l < d
-        else: assert False, f'Nepoznata relacija {usporedba.relacija}'
+        lijevo = usporedba.lijevo.vrijednost(mem, unutar)
+        desno = usporedba.desno.vrijednost(mem, unutar)
+        match usporedba.relacija.tip:
+            case T.JEDNAKO: return lijevo == desno
+            case T.MANJE: return lijevo < desno
+            case _: assert False, f'Nepoznata relacija {usporedba.relacija}'
 
 class Zbroj(AST):
     pribrojnici: 'aritm*'
+
     def vrijednost(zbroj, mem, unutar):
         return sum(p.vrijednost(mem, unutar) for p in zbroj.pribrojnici)
     
 class Suprotan(AST):
     od: 'aritm'
+
     def vrijednost(self, mem, unutar): return -self.od.vrijednost(mem, unutar)
     
 class Umnožak(AST):
     faktori: 'aritm*'
+
     def vrijednost(umnožak, mem, unutar):
         return math.prod(f.vrijednost(mem, unutar) for f in umnožak.faktori)
 

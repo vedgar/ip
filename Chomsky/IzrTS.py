@@ -362,7 +362,6 @@ def Šantek():
         if i > 30: break
         prikaz(*konf)
 
-@doit
 def Pešut():
     T = TuringovStroj.iz_tablice('''*   0   1  _   x   y
                                  A  1+B !   !  0.  !   !
@@ -375,3 +374,131 @@ def Pešut():
                                  I  !   !   !   !  +D 0+''')
     print(T.rezultat('********'))
 
+def Veky():
+    T = TuringovStroj.iz_tablice('''*   /   _   a
+                                 A  +   +B  !   !
+                                 B a+E  !   -C  !
+                                 C  !  _.   !  _-D
+                                 D  !  *.   !  *-
+                                 E  +   !   -F  !
+                                 F _-G  !   !   !
+                                 G  -   !   !   +B''')
+    print(T.rezultat('***'))
+
+def Nora():
+    T = TuringovStroj.iz_tablice('''*     /   _
+                                 q0 +     +q1 !
+                                 q1 _+q2  !   -q5
+                                 q2 +     !   -q3
+                                 q3 _-q4  !   !
+                                 q4 -     !   +q1
+                                 q5 !     !   -q6
+                                 q6 !    *.   *-''')
+    print(T.rezultat('***/****/**'))
+    raise SystemExit
+    for i, konf in enumerate(T.izračunavanje('**/**')):
+        if i > 30: break
+        prikaz(*konf)
+
+def Manjkas():
+    T = TuringovStroj.iz_tablice('''*    /   _
+                                 S0 +    +S1 !
+                                 S1 /+S2 !   -S5
+                                 S2 +    !   -S3
+                                 S3 _-S4 !   !
+                                 S4 -   *+S1 !
+                                 S5 _.   !   !''')
+    print(T.rezultat('**/******'))
+
+def Kašnar():
+    T = TuringovStroj.iz_tablice('''*    /    $    _
+                                 A  +    +B   +    !
+                                 B  +    !    !    /-C
+                                 C  -    +D   !    !
+                                 D  +E   !    !    !
+                                 E  _+F  !    !    !
+                                 F  +    +    !    *-G
+                                 G  -    -H   !    !
+                                 H  -I   !    !    -J
+                                 I  -    !    !    +D
+                                 J  -    -    +K   -
+                                 K  _+L  !    !    !
+                                 L  +    +M   !    !
+                                 M  +    +N   !    +
+                                 N  +    !    !    *-O
+                                 O  -   -P    !    !
+                                 P  -   -Q    !    -
+                                 Q  -R   !    !    +S
+                                 R  -    !    !    +K
+                                 S  !   _+T   !    !
+                                 T  _+   +U   !    +
+                                 U  +    !    !    /-V
+                                 V  -   _+W   !    !
+                                 W  _-X  !    !    !
+                                 X  !    !    +Y   -
+                                 Y  !    !   !    *+Z
+                                 Z /-Ž   _.   !     +
+                                 Ž  +Š   !    !     -
+                                 Š  !    !    !    *+Z''')
+
+def Jović():
+    T = TuringovStroj.iz_tablice('''*   /    _
+                                 q0 +   +q1  !
+                                 q1 /+q3 !   -q2
+                                 q2 !    _.   !
+                                 q3 +    !    -q4
+                                 q4 /-q5 !    !
+                                 q5 -    +q6  !
+                                 q6 /+q7 _+q8 !
+                                 q7 +    -q4  !
+                                 q8 !    _+  -q9
+                                 q9 !   *-q10 -
+                                 q10 .   *-   !''')
+    print(T.rezultat('/****'))
+
+def Arić():
+    T = TuringovStroj.iz_tablice('''*   /   _    #
+                                 q0 +   +   #-q1 !
+                                 q1 -   +q3 !    !
+                                 q3 _+q4 !  !  _+q7
+                                 q4 _+q5 !  !    !
+                                 q5 +    !   _-q6 +
+                                 q6 -    !  +q3   -
+                                 q7 +   !  #-q8  !
+                                 q8 -  _+q9  -   !
+                                 q9 _-q10  ! +   _.
+                                 q10 +q11 !   -  !
+                                 q11 !   !   *+q9 !''')
+    print(T.rezultat('****/******'))
+
+def Baća():
+    T = TuringovStroj.iz_tablice('''*   /   _
+                                 q0 +   +q1 !
+                                 q1 +q2 !   +q3
+                                 q2 _+q1 !  !
+                                 q3 _-q4 .   -
+                                 q4 -   -q5  -
+                                 q5 -   !   *-q6
+                                 q6 +   +q7  !
+                                 q7 +   +q3  +''')
+    for i, konf in enumerate(T.izračunavanje('**/**')):
+        if i > 30: break
+        prikaz(*konf)
+
+@doit
+def Matasić():
+    T = TuringovStroj.iz_tablice('''*    /    _    o
+                                 q0  +   +q1  !    !
+                                 q1  +q2 !    -q3  !
+                                 q2 o+q1 !    -q1  !
+                                 q3 _-n* +qk  !   _-
+                                 n*  -   +p*  !    -
+                                 p*  +   !    -qk *+d
+                                 d   +   !    -qk  +e
+                                 qk  !   !    -N_  !
+                                 e   +   !    -q3  +
+                                 N_ _-N* !    !    !
+                                 N*  -  *.    !    !''')
+    for i, konf in enumerate(T.izračunavanje('**/**')):
+        if i > 30: break
+        prikaz(*konf)

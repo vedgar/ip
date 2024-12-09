@@ -113,8 +113,8 @@ class P(Parser):
 #           PRekurzija: baza:funkcija korak:funkcija
 
 class Kompozicija(AST):
-    lijeva: 'funkcija'
-    desne: 'funkcija*'
+    lijeva: P.funkcija
+    desne: list[P.funkcija]
 
     def mjesnost(self):
         l = self.lijeva.mjesnost()
@@ -129,8 +129,8 @@ class Kompozicija(AST):
         return self.lijeva.izračunaj(*međurezultati)
 
 class PRekurzija(AST):
-    baza: 'funkcija'
-    korak: 'funkcija'
+    baza: P.funkcija
+    korak: P.funkcija
 
     def mjesnost(self):
         k = self.baza.mjesnost()
@@ -167,3 +167,4 @@ print(b:=3, '^', e:=7, '=', izračunaj('pow', b, e))
 
 
 # DZ**: dokažite ekvivalentnost ovog sustava i programskog jezika LOOP
+#       rj: Diplomski rad, Ivan Avirović: LOOP-izračunljivost
