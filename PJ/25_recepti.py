@@ -7,7 +7,7 @@ class T(TipoviTokena):
     IMA, G, SASTOJCI, PRIPREMA = '--ima--', 'g', '-SASTOJCI-', '-PRIPREMA-'
     class SASTOJCIOSOBE(Token):
         def vrijednost(self):
-            return int(''.join(filter(str.isdigit, self.sadržaj)))
+            return int(''.join(filter(str.isdecimal, self.sadržaj)))
     class BROJ(Token):
         def vrijednost(self):
             return int(self.sadržaj)
@@ -36,7 +36,7 @@ def rec(lex):
             else:
                 lex - '-'
                 yield lex.literal(T)
-        elif znak.isdigit():
+        elif znak.isdecimal():
             lex.prirodni_broj(znak, nula = False)
             yield lex.token(T.BROJ)
         elif znak.isalpha():

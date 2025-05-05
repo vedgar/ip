@@ -28,7 +28,7 @@ def ls(lex):
             case 'P':
                 prvo = next(lex)
                 if not prvo.isdecimal(): raise lex.greška('očekivana znamenka')
-                if prvo != '0': lex * str.isdigit
+                if prvo != '0': lex * str.isdecimal
                 yield lex.token(T.PVAR)
             case '-':
                 lex >> '>'
