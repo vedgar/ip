@@ -70,7 +70,6 @@ class Negacija(AST):
     def vrijednost(negacija, I): return not negacija.ispod.vrijednost(I)
 
     def optim(negacija):
-        ispod_opt = negacija.ispod.optim()
         match ispod_opt := negacija.ispod.optim():
             case Negacija(ispod_ispod): return ispod_ispod
             case _: return Negacija(ispod_opt)
