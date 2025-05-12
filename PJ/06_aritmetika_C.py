@@ -102,7 +102,7 @@ class P(Parser):
 
 
 class Program(AST):
-    definicije: list[tuple[P.izraz,T.IME]]
+    definicije: list[tuple[T.IME,P.izraz]]
     završni: P.izraz
 
     def izvrši(program):
