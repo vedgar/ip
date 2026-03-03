@@ -6,23 +6,13 @@
 Dokumentacija za vepar 2
 ========================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Sadržaj:
-
-   tutorial/lexer
-   tutorial/parser
-   tutorial/semantic
-
-   refer/vepar
-
 Vepar vam omogućuje da koristeći Python pišete vlastite programske
 jezike, prolazeći kroz uobičajene faze kao što su leksiranje,
 parsiranje, proizvodnja apstraktnih sintaksnih stabala (AST),
 optimizacija, generiranje bajtkoda za virtualni stroj, te izvršavanje
 (interpretaciju u užem smislu).
 
-Ne trebate znati puno Pythona za to: vepar je framework (poput
+Ne trebate znati mnogo Pythona za to: vepar je framework (poput
 npr. Djanga) koji ima svoje konvencije i prilično rigidan uobičajeni
 stil pisanja, iz kojih ćete rijetko trebati izaći. Ipak, poznavanje
 Pythona sigurno će pomoći, jer ćete manje toga morati naučiti i
@@ -40,3 +30,12 @@ vepar može puno bolje izložiti osnovne koncepte koji stoje u pozadini raznih
 faza interpretacije programa, razdvajajući ih i tretirajući svaki zasebno.
 Spoj toga i uobičajene Pythonove filozofije "sve je interaktivno, dinamično
 i istraživo" predstavlja dobru podlogu za učenje.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Sadržaj:
+
+   tutorial/lexer
+   tutorial/parser
+   tutorial/semantic
+   refer/vepar

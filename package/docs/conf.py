@@ -18,11 +18,11 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'vepar'
-copyright = '2022, Veky'
+copyright = '2018–%Y, Veky'
 author = 'Veky'
 
 # The full version, including alpha/beta/rc tags
-version = release = '2.4'
+version = release = '2.8'
 
 
 # -- General configuration ---------------------------------------------------

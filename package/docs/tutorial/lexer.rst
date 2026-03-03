@@ -11,17 +11,17 @@ ključno je da se svi oni razvrstavaju u konačno mnogo *tipova*.
 Tipovi tokena su ono što zapravo upravlja kasnijom fazom sintaksne
 analize programa. To znači da, idealno, u sintaksnoj analizi ne bi
 smjelo biti bitno koji je točno niz znakova na određenom mjestu u
-programu (to zovemo *sadržaj* tokena), već samo njegov tip. Odnosno,
+programu (to zovemo *sadržajem* tokena), već samo njegov tip. Odnosno,
 ako je program sintaksno ispravan, ostat će takav i ako bilo koji token
 u njemu zamijenimo tokenom drugog sadržaja a istog tipa (recimo, broj
-``3`` zamijenimo brojem ``58``, ili ime varijable ``xy`` zamijenimo imenom ``t``).
+``3`` zamijenimo brojem ``580``, ili ime varijable ``xy`` zamijenimo imenom ``t``).
 
 Pored tipa i sadržaja, tokeni prepoznati u izvornom kodu imaju brojne metapodatke koji kazuju gdje token počinje (u kojem retku odnosno stupcu izvornog koda), gdje završava, je li uspješno obrađen od strane sintaksnog analizatora itd. No svaki token mora imati tip i sadržaj, koji su na tokenu ``t`` dostupni kao ``t.tip`` i ``t.sadržaj``.
 
 Tipovi tokena
 -------------
 
-Da bismo započeli leksičku analizu, moramo definirati enumeraciju --- klasu koja nabraja sve moguće tipove tokena. U vepru postoji bazna klasa ``TipoviTokena`` nasljeđivanjem od koje dobijemo svu potrebnu funkcionalnost. Evo primjera::
+Da bismo započeli leksičku analizu, moramo definirati enumeraciju --- klasu koja nabraja sve moguće tipove tokena. U vepru postoji klasa ``TipoviTokena`` nasljeđivanjem od koje dobijemo svu potrebnu funkcionalnost. Evo primjera::
 
         from vepar import *
         
@@ -36,7 +36,7 @@ Da bismo započeli leksičku analizu, moramo definirati enumeraciju --- klasu ko
                 def vrijednost(t): return 1j
             class IME(Token): pass
 
-Upravo navedeni primjer pokazuje nekoliko mogućnosti za definiranje tokena, od jednostavnijih prema složenijima.
+Navedeni primjer pokazuje nekoliko mogućnosti za definiranje tokena, od jednostavnijih prema složenijima.
 
 * obične inertne tokene koji uvijek (ili gotovo uvijek) imaju isti sadržaj (*literale*) definiramo navođenjem tipa lijevo od ``=`` i sadržaja desno. Dakle, token tipa ``T.PLUS`` ima podrazumijevani sadržaj ``'+'``.
 * više literala možemo definirati koristeći Pythonovo ugrađeno raspakiravanje stringova (za jednoznakovne tokene) i slogova (za višeznakovne). Dakle, token tipa ``T.PUTA`` ima podrazumijevani sadržaj ``'*'``, a token tipa ``T.RAZLIČITO`` ima podrazumijevani sadržaj ``'!='``.
@@ -89,7 +89,7 @@ Također, razne metode su nam na raspolaganju ako želimo pročitati samo jedan 
 
 ----
 
-Kad zaključimo da smo pročitali dovoljno znakova (što smo pročitali od zadnjeg stvorenog tokena možemo vidjeti u ``lex.sadržaj``), vrijeme je da od njih konstruiramo neki token. Na raspolaganju nam je nekoliko metoda.
+Kad zaključimo da smo pročitali dovoljno znakova (što smo pročitali od zadnjeg stvorenog tokena možemo vidjeti u ``lex.sadržaj``), vrijeme je da od njih konstruiramo neki token. Na raspolaganju nam je nekoliko metoda za tu svrhu.
 
 ``yield lex.token(T.TIP)``
         stvara i šalje dalje token tipa ``T.TIP`` i sadržaja ``lex.sadržaj``

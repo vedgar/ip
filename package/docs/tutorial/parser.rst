@@ -1,9 +1,9 @@
 Sintaksna analiza
 =================
 
-Naš program (niz znakova) pretvorili smo u niz tokena --- sada je vrijeme da taj niz obogatimo dodatnom strukturom. Nizovi su linearni, a nama trebaju grafovi u više dimenzija, koji predstavljaju kako se tokeni slažu u semantički smislene cjeline. U ogromnom broju slučajeva ti grafovi su zapravo stabla, i zovu se apstraktna sintaksna stabla (AST).
+Naš program (niz znakova) pretvorili smo u niz tokena --- sada je vrijeme da taj niz obogatimo dodatnom strukturom. Nizovi su linearni, a nama trebaju grafovi u više dimenzija, koji predstavljaju kako se tokeni slažu u semantički smislene cjeline. U ogromnom broju slučajeva ti grafovi su zapravo stabla, i zovu se apstraktnim sintaksnim stablima (AST).
 
-U nizu tokena ``BROJ'5'`` ``PLUS'+'`` ``BROJ'12'`` dobivenom leksičkom analizom ``5+12``, tokeni nisu ravnopravni: u izvjesnom smislu ovaj ``PLUS`` je "iznad", predstavlja *vrstu* izraza s kojom radimo (zbroj), a ``BROJ``\ evi su samo operandi, koji dolaze u igru tek nakon što znamo o kojoj vrsti izraza se radi. Čak njihov sintaksni identitet može ovisiti o onom što se očekuje na danom mjestu: recimo, u programskom jeziku C, nakon ``if`` i otvorene zagrade dolazi uvjet, a onda nakon zatvorene dolazi naredba. Svaki uvjet je ujedno i naredba, ali ne i obrnuto. Dakle, na najvišoj razini možemo reći "aha, radi se o ``if``-naredbi, ``IF`` ``OTV`` ``uvjet`` ``ZATV`` ``naredba``", a onda ``uvjet`` i ``naredba`` predstavljaju dijelove koji se na nižim razinama popunjavaju tokenima koji se nalaze između odgovarajućih mjesta. Recimo, ``if(i==3)break;`` bi se moglo prikazati kao
+U nizu tokena ``BROJ'5'`` ``PLUS'+'`` ``BROJ'12'`` dobivenom leksičkom analizom ``5+12``, tokeni nisu ravnopravni: u izvjesnom smislu ovaj ``PLUS`` je "iznad", predstavlja *vrstu* izraza s kojom radimo (zbroj), a ``BROJ``\ evi su samo operandi, koji dolaze u igru tek nakon što znamo o kojoj vrsti izraza se radi. Čak njihov sintaksni identitet može ovisiti o onom što se očekuje na danom mjestu: recimo, u programskom jeziku C, nakon ``if`` i otvorene zagrade dolazi izraz, a onda nakon zatvorene dolazi naredba. Svaki izraz se može lako pretvoriti u naredbu (dodavanjem ``;`` na kraj), ali ne i obrnuto. Dakle, na najvišoj razini možemo reći "aha, radi se o ``if``-naredbi, ``IF`` ``OTV`` ``izraz`` ``ZATV`` ``naredba``", a onda ``izraz`` i ``naredba`` predstavljaju dijelove koji se na nižim razinama popunjavaju tokenima koji se nalaze između odgovarajućih mjesta (jedna od mogućnosti je ``naredba -> izraz TOČKAZAREZ``). Recimo, ``if(i==3)break;`` bi se moglo prikazati kao
 
 .. code-block:: text
 
@@ -13,20 +13,20 @@ U nizu tokena ``BROJ'5'`` ``PLUS'+'`` ``BROJ'12'`` dobivenom leksičkom analizom
             desno = BROJ'3'    @[Znak #7]
           onda = BREAK'break'  @[Znakovi #9–#13]
 
-Ta ideja razina odnosno slaganja tokena u stabla, ključna je za sintaksnu analizu. Uglavnom ćemo dalje raditi s aritmetičkim izrazima jer su nam bliski, ali sve se može primijeniti na sintaksnu analizu brojnih formalnih jezika.
+Ta ideja razina odnosno slaganja tokena u stabla, ključna je za sintaksnu analizu. Ovaj tutorial uglavnom govori o aritmetičkim izrazima jer su nam bliski, ali sve se može primijeniti na sintaksnu analizu brojnih formalnih jezika.
 
 Beskontekstne gramatike
 -----------------------
 
 Formalizam koji nam omogućuje koncizno zapisivanje sintaksne strukture našeg jezika zove se *beskontekstna gramatika* (skraćeno BKG, engleski *context-free grammar*). BKG se sastoji od jednog ili više pravila oblika ``varijabla -> riječ``, gdje je ``riječ`` konačni niz varijabli i tipova tokena. Pravilo predstavlja jednu moguću realizaciju niza tokena koji pripada jeziku određenom tom varijablom (kažemo da varijabla *izvodi* niz tokena). Više pravila za istu varijablu često se piše u skraćenom obliku kao ``varijabla -> riječ1 | riječ2``. 
 
-Recimo, ako hoćemo reprezentirati zbrojeve jednog do tri broja, mogli bismo napisati gramatiku s 3 pravila
+Recimo, ako hoćemo reprezentirati zbrojeve do tri broja, mogli bismo napisati gramatiku s 3 pravila
 
 .. code-block:: text
 
         # zbroj -> BROJ | BROJ PLUS BROJ | BROJ PLUS BROJ PLUS BROJ
 
---- ali što ako hoćemo proizvoljno mnogo pribrojnika? U tom slučaju možemo koristiti rekurzivno pravilo
+--- ali što ako hoćemo omogućiti unos proizvoljno mnogo pribrojnika? U tom slučaju možemo koristiti rekurzivno pravilo
 
 .. code-block:: text
 
@@ -56,7 +56,7 @@ Da bismo to zapisali u našoj BKG, moramo uvesti još jednu varijablu. U tom kon
         # izraz -> član | član PLUS izraz
         # član -> BROJ | BROJ PUTA član
 
-Vidimo da smo preimenovali i početnu varijablu iz ``zbroj`` u ``izraz``. Vepru nije previše bitno: ako postoji varijabla imena ``start``, od nje kreće sintaksna analiza, a ako ne, kreće od prve varijable.
+Vidimo da smo preimenovali i početnu varijablu iz ``zbroj`` u ``izraz``. Vepru nije previše bitno: ako postoji varijabla imena ``start``, od nje kreće sintaksna analiza, a ako ne, kreće od prve napisane varijable. U novijim verzijama vepar omogućuje i poziv parsera počevši od bilo koje varijable.
 
 Sada je jasno kako bismo dodali još razina prioriteta: možete za vježbu dodati potenciranje. No što je sa zagradama? One nam omogućavaju da u član umjesto ``BROJ``\ a utrpamo cijeli izraz, samo ga moramo staviti u zagrade. Dakle
 
@@ -131,7 +131,7 @@ Da bismo mogli doista pokrenuti parser, trebamo još implementirati ASTove ``Zbr
 
         class Umnožak(Zbroj): pass
 
-Trebali bismo svaku klasu koja predstavlja AST naslijediti od klase ``AST``, ali zapravo, s obzirom na to da imaju iste atribute, možemo jednu naslijediti od druge. Sada napokon možemo vidjeti 1D i 2D prikaz našeg stabla:
+Trebali bismo svaku klasu koja predstavlja AST naslijediti od klase ``AST``, ali zapravo, s obzirom na to da imaju iste atribute, možemo jednu naslijediti od druge. Sada napokon možemo vidjeti 1D i 2D prikaz našeg stabla (umjesto ``P`` možemo pozvati eksplicitno ``P.izraz``, ili drugu metodu ako želimo početi od neke druge varijable --- ovdje bi to rezultiralo greškom, jer ``5+8*12`` nije ni član ni faktor; pokušajte!):
 
 .. code-block:: text
 
@@ -160,9 +160,9 @@ uvođenju oduzimanja, jer ``6-3-2`` nije isto što i ``6-(3-2)`` čak
 ni po vrijednosti. Dakle, moramo naučiti parsirati i lijevo asocirane
 operatore.
 
-Na prvi pogled, vrlo je jednostavno: samo umjesto ``član PLUS izraz`` u drugo pravilo za ``izraz`` napišemo ``izraz PLUS član``. Iako matematički sasvim točno, to nam ne pomaže za pisanje parsera, jer bi rekurzivna paradigma koju smo dosad koristili zahtijevala da unutar metode ``izraz`` prvo pozovemo metodu ``izraz``, što bi naravno dovelo do rušenja zbog beskonačne rekurzije. Taj fenomen se u teoriji parsiranja zove *lijeva rekurzija* (*left recursion*).
+Na prvi pogled, vrlo je jednostavno: samo umjesto ``član PLUS izraz`` u drugo pravilo za ``izraz`` napišemo ``izraz PLUS član``. Iako matematički sasvim točno, to nam ne pomaže za pisanje parsera, jer bi rekurzivna paradigma koju smo dosad koristili zahtijevala da unutar metode ``izraz`` prvo pozovemo metodu ``izraz``, što bi naravno dovelo do rušenja zbog beskonačne rekurzije. Taj fenomen se u teoriji parsiranja zove lijevom rekurzijom (*left recursion*).
 
-Možemo li bez rekurzije parsirati to? Sjetimo se gramatičkih sustava. Po lemi o fiksnoj točki (lijevolinearno), rješenje od ``izraz = izraz PLUS član | član`` je ``izraz = član (PLUS član)*``. Drugim riječima, samo trebamo pročitati ``član``, i onda nakon toga nula ili više puta (u neograničenoj petlji) čitati ``PLUS`` i ``član`` sve dok možemo. ::
+Možemo li bez rekurzije parsirati takav konstrukt? Sjetimo se gramatičkih sustava. Po lemi o fiksnoj točki (lijevolinearno), rješenje od ``izraz = izraz PLUS član | član`` je ``izraz = član (PLUS član)*``. Drugim riječima, samo trebamo pročitati ``član``, i onda nakon toga nula ili više puta (u neograničenoj petlji) čitati ``PLUS`` i ``član`` sve dok možemo. ::
         
         def izraz(p):
             stablo = p.član()
@@ -179,7 +179,7 @@ Naravno, koristeći ``>=``, cijela petlja se u jednoj liniji može zapisati kao:
 Asociranost
 -----------
 
-Potrebno je neko vrijeme da se priviknete na takav način pisanja, ali jednom kad uspijete, vidjet ćete da istu tehniku možete primijeniti na mnogo mjesta. Na primjer, iterativno možete parsirati i *višemjesne* (asocijativne) operatore --- gdje ne želite stablo povećavati u dubinu nego u širinu, držeći sve operande kao neposrednu djecu osnovnog operatora (npr. u listi). ::
+Potrebno je neko vrijeme da se priviknete na takav način pisanja, ali jednom kad uspijete, vidjet ćete da istu tehniku možete primijeniti na mnogim mjestima. Na primjer, iterativno možete parsirati i *višemjesne* (asocijativne) operatore --- gdje ne želite stablo povećavati u dubinu nego u širinu, držeći sve operande kao neposrednu djecu osnovnog operatora (npr. u listi). ::
 
         def izraz(p):
             pribrojnici = [p.član()]
@@ -197,6 +197,6 @@ istoj razini prioriteta kao što je uobičajeno, ne može ``+`` biti desno
 a ``-`` lijevo asociran: tada bi ``6-2+3`` bio dvoznačan (mogao bi imati
 vrijednost ``1`` ili ``7``), dok ``6+2-3`` ne bi uopće imao značenje.
 
-Drugim riječima, da bismo parsirali ``a$b¤c``, moramo odlučiti "kome ide ``b``". Ako su operatori ``$`` i ``¤`` različitog prioriteta, dohvatit će ga onaj koji je većeg prioriteta. Ali ako su na istoj razini, tada asociranost te razine određuje rezultat: ako je asocirana lijevo, to je ``(a$b)¤c``, a ako je asocirana desno, to je ``a$(b¤c)``.
+Drugim riječima, da bismo parsirali ``a$b¤c``, moramo odlučiti "kome ide ``b``". Ako su operatori ``$`` i ``¤`` različitog prioriteta, dohvatit će ga onaj koji je većeg prioriteta. Ali ako su na istoj razini, tada asociranost *te razine* (dakle, svih operatora na toj razini) određuje rezultat: ako je asocirana lijevo, to je ``(a$b)¤c``, a ako je asocirana desno, to je ``a$(b¤c)``.
 
 U istu paradigmu možemo uklopiti i unarne operatore, zamišljajući da su prefiksni operatori "desno asocirani" (rekurzivno parsirani), dok su postfiksni "lijevo asocirani" (iterativno parsirani). I opet, u skladu s upravo navedenim argumentom, ne možemo imati prefiksne i postfiksne operatore na istoj razini prioriteta, jer ne bismo znali kako parsirati ``$b¤`` ("kome ide ``b``").
