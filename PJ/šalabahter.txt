@@ -8,6 +8,7 @@ class T(TipoviTokena):
         JOŠNEKITIP = TipTokena()
         class TIPTOKENA(Token): ...listovi AST metoda...
 
+@lexer
 def mojlexer(lex):
     for znak in lex:
         if znak ...
@@ -15,7 +16,7 @@ def mojlexer(lex):
 Low level API:              High level API:
 --------------              ---------------
 znak = next(lex)            lex * str.is..., lex + ...
-lex.vrati()                 lex >> znak                lex - znak
+lex.vrati()                 lex >> znak   lex - znak   lex < znak
 pročitano = lex.sadržaj     lex.pročitaj_do(znak, uključivo:bool)
 yield lex.token(T.TIP)      if lex >= znak:  # sljedeće je pročitan znak
 raise LeksičkaGreška(…)     raise lex.greška(info:str)
@@ -46,11 +47,10 @@ Za izraze: * popišemo sve operatore
         def v2(self):
             if self > PRVITIP: ...  # sljedeći je PRVITIP (još nepojeden)
 
-        lexer = mojlexer  # ili koji već
-        start = v1        # ili koja već
+        start = v1        # ili koja već, nije nužno (inače počinje odozgo)
 
-P.tokeniziraj(string)  # inkrementalno, korisno samo za debug
-stablo = P(string)
+mojlexer(string)  # inkrementalno, korisno samo za debug
+stablo = P(string)    prikaz(stablo)   stablo.metoda(...)
 
 # Semantička analiza #
 ######################
@@ -62,7 +62,9 @@ class DrugoApstraktnoStablo(AST('atribut1 atribut2')): ...
 * te klase imaju metode koje rade dalju semantičku analizu
   (ili je možemo raditi u globalnoj funkciji pomoću operatora ^)
 - metode su najčešće rekurzivne, s bazom zadanom na tipovima tokena
-- često primaju parametar (mem), koji predstavlja stanje memorije:
+- u kontekstu objekta rt (runtime) držimo razne podatke korisne pri
+  semantičkoj analizi i izvršavanju, npr.
+. često se tamo nalazi objekt (mem), koji predstavlja stanje memorije:
   preslikavanje (Memory) tokena ili stringova (varijabli) u vrijednosti
 - pretvaranje u nativne (Pythonove) tipove: Python_tip(token.sadržaj...)
 
@@ -79,8 +81,8 @@ class DrugoApstraktnoStablo(AST('atribut1 atribut2')): ...
 Uglavnom preslikavanjem na Pythonove alate (slijed, grananje, petlje).
     npr. class Grananje(AST('uvjet onda inače')):
             def izvrši(self, mem):
-               if self.uvjet.vrijednost(mem): self.onda.izvrši(mem)
-               else: self.inače.izvrši(mem)
+               if self.uvjet.vrijednost(): self.onda.izvrši()
+               else: self.inače.izvrši()
 
 * Nelokalna kontrola toka (break, continue, return, throw, goto): izuzeci
   . class Prekid(NelokalnaKontrolaToka):

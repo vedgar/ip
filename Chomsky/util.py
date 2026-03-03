@@ -1,5 +1,5 @@
 import random, itertools, operator, types, pprint, contextlib, collections
-import textwrap, string, pdb, copy, abc, functools
+import textwrap, string, pdb, copy, abc, functools, io
 
 memoiziraj = functools.lru_cache(maxsize=None)
 
@@ -185,6 +185,17 @@ class PrazniString(str):
     __radd__, __rmul__, __str__ = __add__, __mul__, __repr__
 
 ε = PrazniString()
+
+
+def piši_tablicu(tablica):
+    broj_stupaca = max(len(redak) for redak in tablica)
+    for redak in tablica:
+        for j, ćelija in enumerate(redak): redak[j] = str(ćelija)
+        redak += [''] * (broj_stupaca - len(redak))
+    širine = [max(map(len, stupac)) for stupac in zip(*tablica, strict=True)]
+    van = io.StringIO()
+    for redak in tablica: print(*map(str.ljust, redak, širine), file=van)
+    return van.getvalue()    
 
 
 def parsiraj_tablicu_KA(tablica):

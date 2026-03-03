@@ -107,7 +107,7 @@ class P(Parser):
         onda = p.naredbe()
         inače = []
         if p >= T.INAČE: inače = p.naredbe()
-        p >> {T.NADALJE, KRAJ}
+        if not p > {T.SLJEDEĆI, KRAJ}: p >> T.NADALJE
         return Grananje(uvjet, onda, inače)
 
     def broj(p) -> 'Usporedba|račun|JednakTekst':
@@ -196,6 +196,7 @@ class Unos(AST):
                 t = input(prompt)
                 try: rt.memorija[v] = fractions.Fraction(t.replace('÷', '/'))
                 except ValueError: print(end='To nije racionalni broj! ')
+                except ZeroDivisionError: print(end='Nema dijeljenja nulom! ')
                 else: break
         else: assert False, f'Nepoznat tip varijable {v}'
 
@@ -276,6 +277,7 @@ class TekstUBroj(AST):
         arg = self.tekst.vrijednost()
         try: return fractions.Fraction(arg.replace('÷', '/'))
         except ValueError: raise GreškaIzvođenja(f'{arg!r} nije broj')
+        except ZeroDivisionError: raise GreškaIzvođenja('dijeljenje nulom')
 
 class BrojUTekst(AST):
     broj: 'broj'
@@ -292,20 +294,24 @@ class Konkatenacija(AST):
 ast = P('''
     ispis sljedeći ispis ,Gaußova dosjetka' ispis sljedeći
     crtice$ = ,'
-    za i=1 do 16
+    za i=1 do 16 'duljina stringa ,Gaußova dosjetka'
       crtice$ = crtice$ + ,-'
     sljedeći i
     ispis crtice$ ispis sljedeći 
     ispis ,Prirodni broj'
-    unos n
-    ako n = < 0 
-      ispis ,To nije prirodni broj! Više sreće drugi put.'
-      ispis sljedeći inače 'ovaj "inače" se odnosi na čitav ostatak programa'
+    treba = 0-1 'istina'
+    za pokušaj=1 do 10
+      ako treba
+        unos n
+        ako n = < 0 ispis ,To nije prirodni (pozitivni) broj!'
+        inače treba = 0 '»inače« se veže na najbliži »ako«'
+    sljedeći pokušaj
+    ako n > 0 'sve do kraja programa'
     rješenje =
                                  n×(n+1) ÷ 2
 
     ispis ,Zbroj prvih' ispis n ispis ,prirodnih brojeva' 
-    ispis ,iznosi' ispis tekst$(rješenje) + ,,' ispis sljedeći
+    ispis ,iznosi ' + tekst$(rješenje) + ,,' ispis sljedeći
     ispis ,što se može provjeriti i ručno:' ispis sljedeći
     zbroj = 0
     za pribrojnik=1 do n

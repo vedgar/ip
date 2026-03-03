@@ -69,9 +69,7 @@ class P(Parser):
         if self >= T.PRAZAN: return RI.prazan
         elif self >= T.EPSILON: return RI.epsilon
         elif znak := self >= T.ZNAK:
-            t = znak.sadržaj
-            t.removeprefix('/')
-            return RI.Elementarni(t)
+            return RI.Elementarni(znak.sadržaj.removeprefix('/'))
         elif self >> T.OTV:
             u_zagradi = self.rx()
             self >> T.ZATV
@@ -88,6 +86,6 @@ class P(Parser):
 #     Plus: r:rx
 #     Upitnik: r:rx
 
-ri(r := 'a/2/2')
+ri(r := 'a**')  # a** = a*+?  # a*+ = a**a*
 #prikaz(rx := P(r))
 print(P(r).početak(20))

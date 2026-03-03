@@ -26,6 +26,15 @@ class Polinom(collections.Counter):
 
     def __sub__(p, q): return p + -q
 
+    def __pow__(p, t):
+        if t < 0: raise ValueError('inappropriate exponent')
+        r = Polinom.konstanta(1)
+        while t:
+            t, o = divmod(t, 2)
+            if o: r *= p
+            p *= p
+        return r
+
     def __str__(p):
         monomi = []
         for e, k in sorted(p.items(), reverse=True):

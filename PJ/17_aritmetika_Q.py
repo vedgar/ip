@@ -24,7 +24,8 @@ def aq(lex):
         elif znak.isalnum():
             lex * {str.isalnum, '_'}
             yield lex.token(T.IME)
-        elif znak.isspace() and znak != '\n': lex.zanemari()
+        elif znak == '\n': yield lex.token(T.NOVIRED)
+        elif znak.isspace(): lex.zanemari()
         else: yield lex.literal(T)
 
 
@@ -51,7 +52,8 @@ class P(Parser):
 
     def član(p) -> 'faktor|Op':
         t = p.faktor()
-        while op := p >= {T.PUTA, T.KROZ}: t = Op(op, t, p.faktor())
+        while op := p >= {T.PUTA, T.KROZ}:
+            t = Op(op, t, p.faktor())
         return t
 
     def faktor(p) -> 'Op|IME|BROJ|izraz':
@@ -91,7 +93,7 @@ class Op(AST):
         if o ^ T.PLUS: return l + d
         elif o ^ T.MINUS: return l - d
         elif o ^ T.PUTA: return l * d
-        elif d: return l / d
+        elif d != 0: return l / d
         else: raise self.iznimka(
                 f'dijeljenje nulom pri pridruživanju {rt.pridruženo}')
 
@@ -102,7 +104,7 @@ ast = P('''\
     b = a + 3
     c = b - b
     b = a * -a
-    d = a / (c + 1)
+    d = a / (c + f)
     e = -3 / 3
 ''')
 prikaz(ast)

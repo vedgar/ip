@@ -8,7 +8,7 @@ argv.add_argument('--replace', action='store_true')
 argv = argv.parse_args()
 izlaz = io.StringIO()
 datoteke = sorted((datoteka for datoteka in pathlib.Path().glob('*/*.py')
-    if re.match('\d\d_', datoteka.stem)), key=operator.attrgetter('stem'))
+    if re.match(r'\d\d_', datoteka.stem)), key=operator.attrgetter('stem'))
 
 for datoteka in datoteke:
     t0 = time.perf_counter()

@@ -128,7 +128,8 @@ class Sastojak(AST):
 
     def popis(self, broj_osoba):
         if not self.ima:
-            if self.ime not in rt.popis or rt.popis[self.ime]=='': rt.popis[self.ime] = 0
+            if self.ime not in rt.popis or rt.popis[self.ime]=='':
+                rt.popis[self.ime] = 0
             rt.popis[self.ime] += self.masa() / broj_osoba
 
     def provjera(self): return True

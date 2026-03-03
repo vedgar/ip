@@ -19,6 +19,15 @@ class KonačniAutomat(types.SimpleNamespace):
         Pogledati funkciju util.parsiraj_tablicu_KA za detalje."""
         return klasa.iz_komponenti(*parsiraj_tablicu_KA(tablica))
 
+    def tablica(M):
+        Q, Σ, δ, q0, F = M.komponente
+        tablica = [[''] + sorted(Σ)]
+        for q in q0, *sorted(Q - {q0}):
+            redak = [q] + [δ[q, α] for α in sorted(Σ)]
+            if q in F: redak.append('#')
+            tablica.append(redak)
+        print(piši_tablicu(tablica))
+
     @property
     def komponente(M):
         """Sipser page 35 definition 1.5 - rastav u petorku."""

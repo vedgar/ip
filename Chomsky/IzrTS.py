@@ -12,6 +12,12 @@ def doit(func):
     the_func = func
     func()
 
+def β(*xevi): return '/'.join('o' * x for x in xevi)
+
+def βinv(riječ):
+    assert set(riječ) <= {'o', '/'}
+    return tuple(map(len, ''.join(riječ).split('/')))
+
 def Scizr():
     T = TuringovStroj.iz_tablice('''i   r   z   _   *
                                   0 +   +   +   -1  !
@@ -326,7 +332,9 @@ def Imrović_un2bin():
                                  C _-D  !   .   !   !
                                  D  -  1+E D-   !  1+A
                                  E  +B  !   !   .  0+''')
-    for n in range(129):
+    print(T.rezultat('********'))
+    raise SystemExit
+    for n in range(65):
         print(n, r := T.rezultat('*' * n), '0b' + r == bin(n), sep='\t')
 
 def Brigljević():
@@ -485,7 +493,6 @@ def Baća():
         if i > 30: break
         prikaz(*konf)
 
-@doit
 def Matasić():
     T = TuringovStroj.iz_tablice('''*    /    _    o
                                  q0  +   +q1  !    !
@@ -502,3 +509,103 @@ def Matasić():
     for i, konf in enumerate(T.izračunavanje('**/**')):
         if i > 30: break
         prikaz(*konf)
+
+def MatasićPismeni():
+    T = TuringovStroj.iz_tablice('''*    /    _    $    #
+                                 q0 $+nt $+ns !    !    !
+                                 nt +    *+ns *+ph !    !
+                                 ph !    !    #-q1 !    !
+                                 ...
+                                 ''')
+
+def inkrement():
+    T = TuringovStroj.iz_tablice('''0   1   _   *
+                                 A  !   !  0-B  !
+                                 B 1+C *-   -  1+D
+                                 C  !   !   -B 0+
+                                 D  !   !  0+B  0+''')
+    for i, konf in enumerate(T.izračunavanje('')):
+        if i > 99: break
+        print(i, end=' ')
+        prikaz(*konf)
+
+def potencijatri():
+    T = TuringovStroj.iz_tablice('''*   _   o   $
+                                 A $+B  !   !   !
+                                 B o+C  .   +   !
+                                 C o+D  !   +   !
+                                 D  +B  -E  +   !
+                                 E  -   !   -   +B''')
+    for i in range(30):
+        if T.prihvaća('*' * i): print(i, end=' ')
+
+    for konf in T.izračunavanje('*' * 7): prikaz(*konf)
+
+def testirajβhalf(T):
+    for duljina in range(15):
+        for riječ in product('o/', repeat=duljina):
+            riječ = ''.join(riječ)
+            try: x, y = βinv(riječ)
+            except ValueError: dobra = False
+            else: dobra = y == x // 2
+            if dobra: print(riječ)
+            if dobra != T.prihvaća(riječ): print('!!', riječ)
+
+def Debeljak():
+    testirajβhalf(TuringovStroj.iz_tablice('''o   /   _   #   *   m   p
+                                           A #+B  +P  !   !   !   !   !
+                                           B  +   +C  !   !   !   !   !
+                                           C *-D  !   -G  !   +   !   !
+                                           D  !   -E  !   !   -   !   !
+                                           E  -   !   !   +F  +F  !   !
+                                           F *+B  !   !   !   !   !   !
+                                           G  !   -H  !   !   -   !   !
+                                           H m-I  !   !   !   !   !   !
+                                           I  -   !   !   !  o-J  !   !
+                                           J  !   !   !   +N p+K  !   !
+                                           K  +   !   !   !   !   -L  !
+                                           L m-M  !   !   !   !   !   !
+                                           M  -   !   !   +N p+K  !   -
+                                           N  +O  !   !   !   !   .   +
+                                           O  !   !   !   !   !   .   !
+                                           P  !   !   .   !   !   !   !'''))
+
+def ČačićßGhalf():
+    testirajβhalf(TuringovStroj.iz_tablice('''o   /   _
+                                           A _+C  +B  !
+                                           B  !   !   .
+                                           C _+D  +B  !
+                                           D  +   +E  !
+                                           E  +   !   -F
+                                           F _-G  !   !
+                                           G  -   -   +A'''))
+
+def Miočić():
+    testirajβhalf(TuringovStroj.iz_tablice('''o   /   _   #
+                                           A #+B  !   !   !
+                                           B  +   +C  !   !
+                                           C /-D  +   -F  !
+                                           D /-E  -   !   !
+                                           E /+B  !   !   +H
+                                           F  !   -   !   .
+                                           H  !   !   .   !'''))
+
+def Baća():  # BRAVO!
+    testirajβhalf(TuringovStroj.iz_tablice('''o   /   _
+                                           0 _+1  +5  !
+                                           1 _+2  +5  !
+                                           2  +   +   -3
+                                           3 _-4  !   !
+                                           4  -   -   +0
+                                           5  !   !   .'''))
+    
+def Markušić():
+    testirajβhalf(TuringovStroj.iz_tablice('''o   /   _
+                                           P _+B  +C  !
+                                           C  !   !   .
+                                           B _+D  +C  !
+                                           D  +   +E  !
+                                           E  +   !  -F
+                                           F _-G  !   !
+                                           G  -   -   +H
+                                           H _+B  +C  !'''))
