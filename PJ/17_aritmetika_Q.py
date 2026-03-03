@@ -104,7 +104,7 @@ ast = P('''\
     b = a + 3
     c = b - b
     b = a * -a
-    d = a / (c + f)
+    d = a / (c + a)
     e = -3 / 3
 ''')
 prikaz(ast)

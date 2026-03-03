@@ -86,6 +86,6 @@ class P(Parser):
 #     Plus: r:rx
 #     Upitnik: r:rx
 
-ri(r := 'a**')  # a** = a*+?  # a*+ = a**a*
-#prikaz(rx := P(r))
-print(P(r).početak(20))
+ri(r := '01*|10*|1*0(0*1*)*')
+prikaz(rx := P(r))
+print(rx.početak(99))

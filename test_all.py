@@ -13,22 +13,24 @@ datoteke = sorted((datoteka for datoteka in pathlib.Path().glob('*/*.py')
 for datoteka in datoteke:
     t0 = time.perf_counter()
     print(datoteka.stem.center(78, '#'), flush=True, file=izlaz)
-    rezultat = subprocess.run([sys.executable, datoteka],
-                capture_output=True, check=True, text=True, input='2\n')
+    rezultat = subprocess.run([sys.executable, '-X', 'utf8', str(datoteka)],
+                capture_output=True, check=True, text=True,
+                encoding='utf-8', input='2\n')
     print(rezultat.stdout, end='', file=izlaz)
     print(format(time.perf_counter() - t0, '.3f'), datoteka)
 print(f'Ukupno {time.perf_counter()-t00:.3f}s')
 
-if argv.replace: službeni.write_text(izlaz.getvalue())
+if argv.replace: službeni.write_text(izlaz.getvalue(), encoding='utf-8')
 else:
-    fromlines = službeni.read_text().splitlines()
+    fromlines = službeni.read_text(encoding='utf-8').splitlines()
     tolines = izlaz.getvalue().splitlines()
     if fromlines == tolines: print('Nema razlike.')
     else:
         diff = difflib.HtmlDiff(wrapcolumn=79)
         diff = diff.make_file(fromlines, tolines, context=True)
         with tempfile.NamedTemporaryFile(
-                mode='w', prefix='_vepar_', delete=False) as tmp:
+                mode='w', prefix='_vepar_', delete=False,
+                encoding='utf-8') as tmp:
             print(diff, file=tmp)
         webbrowser.open(tmp.name, 2)
         time.sleep(6)
