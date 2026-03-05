@@ -332,8 +332,7 @@ prikaz(proba, 5)
 izvrši(proba)
 
 with SemantičkaGreška: P('f(x)=() f(x)=()')
-with SintaksnaGreška:
-    P('f(x) = vrati 7    program() = vrati f(Laž)')
+with SintaksnaGreška: P('f(x) = vrati 7    program() = vrati f(Laž)')
 with SintaksnaGreška: izvrši(P('program() = vrati2'))
 with LeksičkaGreška: P('program() = vrati 007')
 

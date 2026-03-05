@@ -194,7 +194,7 @@ with GreškaIzvođenja: izračunaj('2+2/0')
 with GreškaIzvođenja: izračunaj('0**i')
 
 # DZ: Dodajte implicitno množenje (barem s i, tako da radi npr. 2+3i)
-# *pritom pazite na izraze poput 6/3i (pogledajte https://youtu.be/Q0przEtP19s)
+# *pritom pazite na izraze poput 6/3i
 # DZ: Dodajte mogućnost upisa realnog broja bez vodeće nule, npr. 1/5=.2
 # DZ: Stritkno držanje IEEE-754 zahtijeva i ispravno tretiranje dijeljenja nulom
 # (a ako želite biti sasvim compliant, i potenciranja poput 0^-1): učinite to!
