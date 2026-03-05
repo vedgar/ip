@@ -35,18 +35,18 @@ class T(TipoviTokena):
 def ac(lex):
     for znak in lex:
         if znak.isspace(): lex.zanemari()
-        elif znak == '-': yield lex.token(T.STRELICA if lex >= '>' else T.MINUS)
-        elif znak == '*': yield lex.token(T.NA if lex >= '*' else T.PUTA)
         elif znak.isdecimal():
             lex * str.isdecimal
             if lex >= '.': lex * str.isdecimal
-            if lex >= 'e':
-                lex >= '-'
-                lex + str.isdecimal
+            if lex >= 'e': lex >= '-', lex + str.isdecimal
             yield lex.token(T.BROJ)
         elif znak.isalpha():
             lex * str.isalnum
             yield lex.literal_ili(T.IME)
+        elif znak == '-':
+            lex >= '>'
+            yield lex.literal(T)
+        elif znak == '*': yield lex.token(T.NA if lex >= '*' else T.PUTA)
         else: yield lex.literal(T)
 
 
@@ -109,7 +109,8 @@ class Program(AST):
         rt.okolina = Memorija()
         for ime, izraz in program.definicije:
             rt.okolina[ime] = izraz.vrijednost()
-        return program.završni.vrijednost()
+        rezultat = program.završni.vrijednost()
+        return rezultat if rezultat.imag else rezultat.real
 
     def kompajliraj(program):
         rt.reg = Registri()
@@ -173,7 +174,7 @@ izračunaj('''
     a^2^2^2^2^0 -> b
     b
 ''')
-izračunaj(f'''
+izračunaj('''
     8 -> d
     10^d -> n
     (1+1/n)^n -> e
@@ -182,10 +183,18 @@ izračunaj(f'''
     skoro0
 ''')
 izračunaj('6.02214076e23->NA 1.6605e-27->u 1/(NA*u)')
+
+# https://hansklav.home.xs4all.nl/rpn/Machform.gif
+izračunaj('''
+ (5*((((1+0.2*(350/661.5)^2)^3.5-1)*(1-6.875e-6*255e2)^-5.2656+1)^0.286-1))^2^-1
+'''.strip())
+
 with LeksičkaGreška: izračunaj('2e+3')
 with GreškaIzvođenja: izračunaj('2+2/0')
 with GreškaIzvođenja: izračunaj('0**i')
 
 # DZ: Dodajte implicitno množenje (barem s i, tako da radi npr. 2+3i)
+# *pritom pazite na izraze poput 6/3i (pogledajte https://youtu.be/Q0przEtP19s)
+# DZ: Dodajte mogućnost upisa realnog broja bez vodeće nule, npr. 1/5=.2
 # DZ: Stritkno držanje IEEE-754 zahtijeva i ispravno tretiranje dijeljenja nulom
 # (a ako želite biti sasvim compliant, i potenciranja poput 0^-1): učinite to!

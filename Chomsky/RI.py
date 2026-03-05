@@ -128,9 +128,9 @@ class Elementarni(Inicijalni):
     def enumerator(self): yield self.znak
 
 
-prazni, epsilon = Prazni(), Epsilon()
-a, b, c = Elementarni('a'), Elementarni('b'), Elementarni('c')
-nula, jedan = Elementarni('0'), Elementarni('1')
+prazni = Prazni()
+epsilon = Epsilon()
+a, b, c, nula, jedan = map(Elementarni, 'abc01')
 
 
 class Binarni(RegularniIzraz, abc.ABC):
@@ -224,10 +224,12 @@ class Zvijezda(RegularniIzraz):
         if Σ is None: Σ = self.korišteni_znakovi()
         return self.ispod.NKA(Σ).zvijezda()
 
-    def enumerator(self): yield from Upitnik(Plus(self.ispod))
+    def enumerator(self):
+        if self.trivijalan(): yield ε
+        else: yield from Upitnik(Plus(self.ispod))
 
 
-def Plus(ri): return Konkatenacija(Zvijezda(ri), ri)
+def Plus(ri): return Konkatenacija(ri, Zvijezda(ri))
 
 
 def Upitnik(ri): return Unija(epsilon, ri)

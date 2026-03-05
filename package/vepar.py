@@ -1,23 +1,27 @@
 """Leksička, sintaksna, semantička analiza te izvođenje programa."""
 
 
-__version__ = '2.5'
+__version__ = '2.8'
 
 
 import enum, types, collections, contextlib, itertools, functools, \
-        dataclasses, textwrap, inspect, math
+        dataclasses, textwrap, inspect, math, numbers
+
+from typing import Optional
 
 
 the_lexer = None
 
 def lexer(gen):
     global the_lexer
-    assert the_lexer is None, 'Lexer je već postavljen!'
-    assert inspect.isgeneratorfunction(gen), 'Lexer mora biti generator!'
+    if the_lexer is not None:
+        raise ReferenceError('Lexer je već postavljen!')
+    if not inspect.isgeneratorfunction(gen):
+        raise TypeError('Lexer mora biti generator!')
     the_lexer = gen
 
     @functools.wraps(gen)
-    def tokeniziraj(ulaz): 
+    def tokeniziraj(ulaz):
         """Pregledno ispisuje pronađene tokene, za debugiranje tokenizacije."""
         if '\n' not in ulaz: print('Tokenizacija:', ulaz)
         for token in the_lexer(Tokenizer(ulaz)):
@@ -30,82 +34,66 @@ def lexer(gen):
 def paše(znak, uvjet): 
     """Zadovoljava li znak zadani uvjet (funkcija, znak ili skup)."""
     if isinstance(uvjet, str):
-        assert len(uvjet) <= 1, 'Znakovi moraju biti duljine 1!'
+        if len(uvjet) > 1: raise ValueError('Znakovi moraju biti duljine 1')
         return znak == uvjet
     elif callable(uvjet):
         rezultat = uvjet(znak)
-        assert isinstance(rezultat, bool), 'Uvjet nije predikat!'
+        if not isinstance(rezultat, bool):
+            raise TypeError('Uvjet nije predikat')
         return rezultat
     elif isinstance(uvjet, (set, frozenset)):
         return any(paše(znak, disjunkt) for disjunkt in uvjet)
-    else: assert False, f'Nepoznata vrsta uvjeta {uvjet}!'
+    else: raise TypeError(f'Nepoznata vrsta uvjeta {uvjet}')
 
 def raspis(uvjet):
     if isinstance(uvjet, str): yield repr(uvjet)
     elif callable(uvjet): yield uvjet.__name__
     elif isinstance(uvjet, (set, frozenset)):
         yield from itertools.chain.from_iterable(map(raspis, uvjet))
-    else: assert False, f'Nepoznata vrsta uvjeta {uvjet}!'
+    else: raise TypeError(f'Nepoznata vrsta uvjeta {uvjet}')
 
 
-def omotaj(metoda):
-    """Jednostavni wrapper za metode parsera."""
-    @functools.wraps(metoda)
-    def omotano(self, *args, **kw):
-        početak = self.pogledaj()._početak
-        pvr = metoda(self, *args, **kw)
-        kraj = self.zadnji._kraj
-        if pvr is None: raise NoneInAST(textwrap.dedent(f'''
-            Sve metode parsera moraju vratiti vrijednost!
-            Provjerite metodu {metoda.__name__}.
-            Umjesto None vratite nenavedeno.'''))
-        if isinstance(pvr, AST): pvr._početak, pvr._kraj = početak, kraj
-        return pvr
-    return omotano
+class Omotač:
+    def __init__(omotano, metoda): omotano.metoda = metoda
 
-
-class EnumItem:
-    def __init__(self, name, value): self.name, self.value = name, value
-
-if False:
-  class TokenEnumDict(dict):
-    def __init__(self):
-        super().__init__(_back_ = {})
-    
-    def __setitem__(self, key, value):
-        if key.startswith('_'): return super().__setitem__(key, value)
-        item = EnumItem(key, value)
-        super().__setitem__(key, item)
-        self._back_[value] = item
-
-    def __getitem__(self, key): return self.forward[key]
-
-    def __call__(self, value): return self.backward[value]
-
+    def __get__(omotano, parser, tip_parsera):
+        @functools.wraps(omotano.metoda)
+        def omotana(*args, **kw):
+            nonlocal parser
+            if parser is None: parser, *args = args
+            if isinstance(parser, Parser):
+                početak = parser.pogledaj()._početak
+                pvr = omotano.metoda(parser, *args, **kw)
+                kraj = parser.zadnji._kraj
+                if pvr is None: raise NoneInAST(textwrap.dedent(f'''
+                    Sve metode parsera moraju vratiti vrijednost!
+                    Provjerite metodu {omotano.metoda.__name__}.
+                    Umjesto None vratite nenavedeno.'''))
+                if isinstance(pvr, AST): pvr._početak, pvr._kraj = početak, kraj
+                return pvr
+            elif isinstance(parser, str):
+                if args or kw: raise TypeError('Višak argumenata!')
+                return tip_parsera(parser, omotano.metoda.__name__)
+            else: raise TypeError(f'Parser pozvan s {type(parser).__name__}!')
+        return omotana
 
 
 class TipoviTokenaMeta(type):
-    if False:
-        @classmethod
-        def __prepare__(cls, name, bases): return TokenEnumDict()
-
     def __new__(metaclass, classname, bases, classdict):
         cls = super().__new__(metaclass, classname, bases, classdict)
-        cls._back_ = {}
         for name, value in vars(cls).copy().items():
             if not name.startswith('_'):
                 item = cls()
                 item.name, item.value = name, value
                 setattr(cls, name, item)
-                cls._back_[value] = item
         return cls
 
     def __iter__(self):
         for name, item in vars(self).items():
             if not name.startswith('_'): yield item
 
-
 class TipoviTokena(metaclass=TipoviTokenaMeta): pass
+
 
 class Kontekst(type):
     """Metaklasa: upravitelj konteksta (with) za očekivanu grešku."""
@@ -117,14 +105,6 @@ class Kontekst(type):
             return True
 
 
-class Runtime(types.SimpleNamespace):
-    """Globalni objekt za pamćenje runtime konteksta (npr. memorije)."""
-    def __delattr__(self, atribut):
-        with contextlib.suppress(AttributeError): super().__delattr__(atribut)
-
-rt = Runtime()
-
-
 # TODO: bolji API: Greška(poruka, pozicija ili token ili AST...)
 # ali ostaviti i lex.greška() i parser.greška() for convenience
 class Greška(Exception, metaclass=Kontekst): """Greška vezana uz poziciju."""
@@ -134,15 +114,18 @@ class SemantičkaGreška(Greška): """Greška nastala u semantičkoj analizi."""
 class GreškaIzvođenja(Greška): """Greška nastala u izvođenju."""
 
 
-class E(TipoviTokena): KRAJ = None
-KRAJ = E.KRAJ
-
-
 class NoneInAST(Exception): """U apstraktnom sintaksnom stablu se našao None."""
 
 
-cache = functools.lru_cache(maxsize=None)
+class Runtime(types.SimpleNamespace):
+    """Globalni objekt za pamćenje runtime konteksta (npr. memorije)."""
+    def __delattr__(self, atribut):
+        with contextlib.suppress(AttributeError): super().__delattr__(atribut)
 
+g = rt = Runtime()
+cache = functools.lru_cache(maxsize=None)
+class E(TipoviTokena): KRAJ = None
+KRAJ = E.KRAJ
 
 def Registri(prefiks='_t', start=0):
     for i in itertools.count(start): yield prefiks + str(i)
@@ -154,6 +137,18 @@ class NelokalnaKontrolaToka(Exception):
     def preneseno(self):
         """Vrijednost koja je prenesena "unatrag" prema korijenu."""
         return self.args[0] if self.args else nenavedeno
+
+
+def normaliziraj(što, case):
+    if isinstance(što, str): return što if case else što.casefold()
+    elif isinstance(što, Token):
+        if case: return što
+        rezultat = što._replace(sadržaj=što.sadržaj.casefold())
+        for svojstvo, vrijednost in vars(što).items():
+            setattr(rezultat, svojstvo, vrijednost)
+        return rezultat
+    else: raise TypeError(f'{što!r} se ne može normalizirati')
+
 
 class Tokenizer:
     """Klasa za rastavljanje niza znakova na tokene."""
@@ -183,7 +178,7 @@ class Tokenizer:
 
     def vrati(self):
         """Poništava čitanje zadnjeg pročitanog znaka."""
-        assert self.buffer is None, 'Buffer je pun'
+        if self.buffer is not None: raise MemoryError('Buffer je pun')
         self.buffer = self.pročitani.pop()
         if self.j: self.j -= 1
         else:
@@ -192,7 +187,7 @@ class Tokenizer:
             del self.gornji_j
 
     def pogledaj(self):
-        """'Viri' u sljedeći element, 'bez' čitanja."""
+        """Viri u sljedeći element, 'bez' čitanja."""
         znak = self.čitaj()
         self.vrati()
         return znak
@@ -248,28 +243,29 @@ class Tokenizer:
         if info: poruka += f'\n\t({info})'
         return LeksičkaGreška(poruka)
 
-    def token(self, tip):
+    def token(self, tip, *, reset=True):
         """Konstruira token zadanog tipa i pročitanog sadržaja."""
         t = Token(tip, self.sadržaj)
         t._početak = self.početak
         t._kraj = self.i, self.j
-        self.zanemari()
+        if reset: self.zanemari()
         return t
+
+    def _literal(self, odakle, case=True):
+        desno = normaliziraj(self.sadržaj, case)
+        for e in odakle:
+            lijevo = getattr(e.value, 'literal', e.value)
+            if isinstance(lijevo, str) and normaliziraj(lijevo, case) == desno:
+                return self.token(e)
 
     def literal(self, odakle, *, case=True):
         """Doslovni token s pročitanim sadržajem, ili leksička greška."""
-        t = self.sadržaj if case else self.sadržaj.casefold()
-        for e in odakle:
-            if e.value == t or getattr(e.value, 'literal', None) == t:
-                return self.token(e)
+        if rezultat := self._literal(odakle, case): return rezultat
         else: raise self.greška()
 
     def literal_ili(self, inače, *, case=True):
         """Doslovni token ako je nađen po sadržaju, ili token tipa inače."""
-        t = self.sadržaj if case else self.sadržaj.casefold()
-        for e in type(inače):
-            if e.value == t or getattr(e.value, 'literal', None) == t:
-                return self.token(e)
+        if rezultat := self._literal(type(inače), case): return rezultat
         else: return self.token(inače)
 
     def zanemari(self):
@@ -277,24 +273,19 @@ class Tokenizer:
         self.pročitani.clear()
         self.početak = self.i, self.j + 1
 
-    def __iter__(self):
-        """Omogućuje prolazak `for znak in lex:`."""
-        return iter(self.čitaj, '')
+    def __iter__(self): return iter(self.čitaj, '')
 
     def prirodni_broj(self, početak, *, nula=True):
         """Čita prirodni broj bez vodećih nula, ili nulu ako je dozvoljena."""
         if not početak: početak = self.čitaj()
-        if početak.isdecimal():
-            if int(početak):
-                pročitano = [početak]
-                while (z := self.čitaj()).isdecimal(): pročitano.append(z)
-                self.vrati()
-                return int(''.join(pročitano))
-            elif nula:
-                if not self.pogledaj().isdecimal(): return 0
-                else: raise self.greška('vodeće nule nisu dozvoljene')
-            else: raise self.greška('nula nije dozvoljena ovdje')
-        else: raise self.greška('očekivan prirodni broj')
+        if not početak.isdecimal(): raise self.greška('očekivan prirodni broj')
+        if broj := int(početak):
+            while (z := self.čitaj()).isdecimal(): broj = broj*10 + int(z)
+            self.vrati()
+            return broj
+        if not nula: raise self.greška('nula nije dozvoljena ovdje')
+        if not self.pogledaj().isdecimal(): return 0
+        raise self.greška('vodeće nule nisu dozvoljene')
 
     __next__ = čitaj
     __ge__ = slijedi
@@ -382,7 +373,7 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
 
 
 class Parser:
-    def __new__(cls, ulaz):
+    def __new__(cls, ulaz, start='start'):
         """(Tokenizira i) parsira ulaz u apstraktno sintaksno stablo."""
         if the_lexer is None:
             raise LookupError('Dekorirajte generator tokena s @lexer!')
@@ -390,7 +381,7 @@ class Parser:
         self.buffer = self.zadnji = None
         self.KRAJ = Token.kraj()
         self.stream = the_lexer(Tokenizer(ulaz))
-        rezultat = self.start()
+        rezultat = getattr(self, start)()
         self >> KRAJ
         return rezultat
 
@@ -400,8 +391,8 @@ class Parser:
             if ime.startswith('_'): continue
             if prva is None: prva = metoda
             if isinstance(metoda, types.FunctionType):
-                setattr(cls, ime, omotaj(metoda))
-        if not hasattr(cls, 'start'): cls.start = omotaj(prva)
+                setattr(cls, ime, Omotač(metoda))
+        if not hasattr(cls, 'start'): cls.start = Omotač(prva)
 
     def čitaj(self):
         """Čitanje sljedećeg tokena iz buffera ili inicijalnog niza."""
@@ -416,7 +407,7 @@ class Parser:
 
     def vrati(self):
         """Poništavanje čitanja zadnjeg pročitanog tokena."""
-        assert self.buffer is None, 'Buffer je pun'
+        if self.buffer is not None: raise MemoryError('Buffer je pun')
         self.buffer = self.zadnji
         return nenavedeno
 
@@ -446,25 +437,24 @@ class Parser:
         return self.zadnji.neočekivan()
 
 
-def prikaz(objekt, dubina:int=math.inf, uvlaka='', ime:str=None, rasponi=2):
+def prikaz(objekt, dubina:int=math.inf, uvlaka='', ime:str=None, detalj=2):
     """Vertikalni prikaz AST-a, do zadane dubine."""
     intro = uvlaka
     if ime is not None: intro += ime + ' = '
-    if isinstance(objekt, (str, int, Nenavedeno, enum.Enum)) \
-            or not dubina:
-        return print(intro, repr(objekt), sep='')
+    if isinstance(objekt, (str, numbers.Number, Nenavedeno, enum.Enum)) \
+            or not dubina: return print(intro, repr(objekt), sep='')
     elif isinstance(objekt, Token):
         r, tail = raspon(objekt), ''
-        if r != 'Nepoznata pozicija' and rasponi > 1: tail = '  @[' + r + ']'
+        if r != 'Nepoznata pozicija' and detalj > 1: tail = '  @[' + r + ']'
         return print(intro, repr(objekt), tail, sep='')
     elif isinstance(objekt, list):
         print(intro, end='[...]:\n' if objekt else '[]\n')
         for vrijednost in objekt:
-            prikaz(vrijednost, dubina-1, uvlaka+'. ')
+            prikaz(vrijednost, dubina-1, uvlaka+'. ', detalj=detalj)
     elif isinstance(objekt, Memorija):
         print(intro + type(objekt).__name__ + ':')
         for ime, vrijednost in objekt:
-            prikaz(vrijednost, dubina-1, uvlaka+': ', repr(ime))
+            prikaz(vrijednost, dubina-1, uvlaka+': ', repr(ime), detalj=detalj)
     elif isinstance(objekt, dict):
         print(intro, end='{:::}:\n' if objekt else '{}\n')
         for ključ, vrijednost in dict(objekt).items():
@@ -476,13 +466,15 @@ def prikaz(objekt, dubina:int=math.inf, uvlaka='', ime:str=None, rasponi=2):
     elif isinstance(objekt, (types.SimpleNamespace, AST)):
         header = intro + type(objekt).__name__ + ':'*bool(vars(objekt))
         r = raspon(objekt)
-        if r != 'Nepoznata pozicija' and rasponi: header += '  @[' + r + ']'
+        if r != 'Nepoznata pozicija' and detalj: header += '  @[' + r + ']'
         print(header)
         try: d, t = objekt.za_prikaz(), '~ '
         except AttributeError: d, t = vars(objekt), '  '
         for ime, vrijednost in d.items():
             if not ime.startswith('_'):
-                prikaz(vrijednost, dubina - 1, uvlaka + t, ime)
+                prikaz(vrijednost, dubina - 1, uvlaka + t, ime, detalj=detalj)
+    elif callable(objekt) or hasattr(objekt, '__name__'):
+        return print(intro, repr(objekt), sep='')
     else: raise TypeError(f'Ne znam lijepo prikazati {objekt}')
 
 
@@ -494,8 +486,10 @@ def raspon(ast):
         if ip == ik:
             if ip == 0:
                 if jp == jk: return f'Znak #{jp}'
+                elif jp + 1 == jk: return f'Znakovi #{jp}&#{jk}'
                 else: return f'Znakovi #{jp}–#{jk}'
             elif jp == jk: return f'Redak {ip}, stupac {jp}'
+            elif jp + 1 == jk: return f'Redak {ip}, stupci {jp}&{jk}'
             else: return f'Redak {ip}, stupci {jp}–{jk}'
         elif ik == 'zadnji':
             if ip == 0: return f'Znakovi #{jp}–kraj'
@@ -510,8 +504,11 @@ class AST:
 
     def __xor__(self, tip):
         """Vraća sebe (istina) ako je zadanog tipa, inače nenavedeno (laž)."""
-        if isinstance(tip, type) and isinstance(self, tip): return self
-        else: return nenavedeno
+        if isinstance(tip, type):
+            return self if isinstance(self, tip) else nenavedeno
+        elif isinstance(tip, set):
+            return self if any(self ^ t for t in tip) else nenavedeno
+        return nenavedeno
 
     iznimka = Token.iznimka
 
@@ -527,36 +524,40 @@ class Nenavedeno(AST):
     """Atribut koji nije naveden."""
     def __bool__(self): return False
     def __repr__(self): return type(self).__name__.lower().join('<>')
+    def __hash__(self): return hash(None)
 
 nenavedeno = Nenavedeno()
 
 
 class Memorija:
     """Memorija računala, indeksirana tokenima ili njihovim sadržajima."""
-    def __init__(self, podaci={}, *, redefinicija=True):
-        self.redefinicija = redefinicija
+    def __init__(self, podaci={}, *, redefinicija=True, case=True):
+        self.redefinicija, self.case = redefinicija, case
         self.podaci, self.token_sadržaja = {}, {}
         if isinstance(podaci, dict): podaci = podaci.items()
         elif not isinstance(podaci, (zip, Memorija)):
             raise TypeError(f'Memorija ne razumije podatke: {podaci}')
-        for ključ, vrijednost in podaci: self[ključ] = vrijednost
+        for ključ, vrijednost in podaci:
+            self[normaliziraj(ključ, case)] = vrijednost
 
     def provjeri(self, lokacija, sadržaj):
-        if sadržaj in self.podaci: return
-        if isinstance(lokacija, Token): raise lokacija.nedeklaracija()
-        raise LookupError(f'{lokacija!r} nije pronađeno u memoriji')
+        if normaliziraj(sadržaj, self.case) in self.podaci: return
+        elif isinstance(lokacija, Token): raise lokacija.nedeklaracija()
+        else: raise LookupError(f'{lokacija!r} nije pronađeno u memoriji')
 
     def razriješi(self, l):
         """Vraća sadržaj i čitav token (ili None ako ga ne zna) za l."""
         if isinstance(l, Token):
-            d = self.token_sadržaja.setdefault(l.sadržaj, l)
-            if l == d: return l.sadržaj, d
+            sadržaj = normaliziraj(l.sadržaj, self.case)
+            d = self.token_sadržaja.setdefault(sadržaj, l)
+            if l == d: return sadržaj, d
             else: raise d.krivi_tip(l.tip, d.tip)
-        elif isinstance(l, str): return l, self.token_sadržaja.get(l)
-        else: raise TypeError(f'Memorija nije indeksirana s {type(l)}!')
+        elif isinstance(l, str):
+            return normaliziraj(l, self.case), self.token_sadržaja.get(l)
+        else: raise TypeError(f'Memorija nije indeksirana s {type(l)}')
 
     def __delitem__(self, lokacija):
-        if not self.redefinicija:  # razmisliti o ovome, možda promijeniti
+        if not self.redefinicija:
             raise TypeError(f'Brisanje iz memorije zahtijeva redefiniciju')
         sadržaj, token = self.razriješi(lokacija)
         self.provjeri(lokacija, sadržaj)
@@ -586,4 +587,4 @@ class Memorija:
 
     def __len__(self): return len(self.podaci)
 
-    #TODO: dodati Memorija.imena kao dict(Memorija).keys(), koristiti u 04_...
+    def imena(self): return dict(Memorija).keys()

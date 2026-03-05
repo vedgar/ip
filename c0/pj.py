@@ -113,7 +113,7 @@ class E(enum.Enum):  # Everywhere
 class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
     """Klasa koja predstavlja tokene."""
     def __new__(cls, tip, sadržaj):
-        if isinstance(tip.value, type): cls = tip.value
+        if isinstance(tip, type): cls = tip
         return super().__new__(cls, tip, sadržaj)
 
     def __init__(self, *args):
@@ -122,8 +122,9 @@ class Token(collections.namedtuple('TokenTuple', 'tip sadržaj')):
         self.razriješen = False
     
     def __repr__(self):
-        ime, sadržaj = self.tip.name, self.sadržaj
-        if sadržaj not in {ime, ''}: ime += repr(self.sadržaj)
+        for atribut in 'name', '__name__':
+            if ime := getattr(self.tip, atribut, None): break
+        if self.sadržaj not in {ime, ''}: ime += repr(self.sadržaj)
         return ime
 
     def __pow__(self, tip):

@@ -367,7 +367,6 @@ program() = (
     vrati s
 )
 ''')
-prikaz(suma_faktorijela)
 izvrši(suma_faktorijela)
 
 tablice_istinitosti = P(modul + '''
@@ -403,7 +402,6 @@ program(m) = (
 )
 ''')
 print()
-prikaz(tablice_istinitosti)
 izvrši(tablice_istinitosti, 3)  # poziv iz komandne linije, prijenos m=3
 print()
 

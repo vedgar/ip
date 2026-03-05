@@ -18,11 +18,11 @@ sys.path.insert(0, os.path.abspath('..'))
 # -- Project information -----------------------------------------------------
 
 project = 'vepar'
-copyright = '2022, Veky'
+copyright = '2018–%Y, Veky'
 author = 'Veky'
 
 # The full version, including alpha/beta/rc tags
-version = release = '2.4'
+version = release = '2.8'
 
 
 # -- General configuration ---------------------------------------------------
@@ -60,4 +60,5 @@ html_theme = 'alabaster'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
+html_static_path = []

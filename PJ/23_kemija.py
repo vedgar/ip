@@ -25,7 +25,8 @@ class T(TipoviTokena):
 def kemija(lex):
     može_n = False
     for znak in lex:
-        if znak == 'n':
+        if znak == ' ': lex.zanemari()
+        elif znak == 'n':
             if može_n: yield lex.token(T.N)
             else: raise lex.greška('n ne može doći ovdje')
         elif znak.isdecimal():
@@ -85,12 +86,15 @@ class Skupina(AST):
         if skupina.koliko: m *= skupina.koliko.vrijednost()
         return m
 
+print(spoj('H2O').Mr())
+raise SystemExit
+
 
 natrijev_trikarbonatokobaltat = spoj('Na3[Co(CO3)3]')
 prikaz(natrijev_trikarbonatokobaltat)
 print(natrijev_trikarbonatokobaltat.Mr())
-for krivo in 'SnABcdefG', 'O Be', 'Es(n)':
+for krivo in 'SnABcdefG', 'Es(n)':
     with LeksičkaGreška: kemija(krivo)
     print()
 kemija(']nB')
-print('Molarna masa butana je', spoj('CH3(CH2)nCH3').Mr(n=2))
+print('Molarna masa butana je', spoj('CH3(CH2)2 CH3').Mr())

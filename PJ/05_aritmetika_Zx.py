@@ -2,8 +2,7 @@
 
 Aritmetika cijelih brojeva je specijalni slučaj, kad se x ne pojavljuje.
 Dozvoljeno je ispuštanje zvjezdice za množenje u slučajevima poput
-  23x, xxxx, 2(3+1), (x+1)x, (x)(7) -- ali ne x3: to znači potenciranje!
-  Također, zabranjeni su izrazi poput (x+2)3, te (već leksički) 2 3.
+  23x, xxxx, 2(3+1), (x+1)x, (x)(7) -- ali x3 ili (x+2)3 znači potenciranje!
 
 Semantički analizator je napravljen u obliku prevoditelja (kompajlera) u
   klasu Polinom, čiji objekti podržavaju operacije prstena i lijep ispis."""
@@ -32,14 +31,17 @@ def az(lex):
 
 
 ### Beskontekstna gramatika:
-# izraz -> član | izraz PLUS član | izraz MINUS član
+# izraz -> član | MINUS član | izraz PLUS član | izraz MINUS član
 # član -> faktor | član PUTA faktor | član faktorxz
-# faktor -> MINUS faktor | BROJ | faktorxz
-# faktorxz -> X | X BROJ | OTVORENA izraz ZATVORENA
+# faktor -> BROJ | faktorxz
+# faktorxz -> baza | baza BROJ
+# baza -> X | OTVORENA izraz ZATVORENA
 
 class P(Parser):
-    def izraz(p) -> 'Zbroj|član':
+    def izraz(p) -> 'Zbroj|član|Suprotan':
+        minus = p >= T.MINUS
         t = p.član()
+        if minus: t = Suprotan(t)
         while ...:
             if p >= T.PLUS: t = Zbroj(t, p.član())
             elif p >= T.MINUS: t = Zbroj(t, Suprotan(p.član()))
@@ -51,16 +53,14 @@ class P(Parser):
             trenutni = Umnožak(trenutni, p.faktor())
         return trenutni
 
-    def faktor(p) -> 'Suprotan|BROJ|Xna|X|izraz':
-        if p >= T.MINUS: return Suprotan(p.faktor())
-        elif broj := p >= T.BROJ: return broj
-        elif x := p >= T.X:
-            if eksponent := p >= T.BROJ: return Xna(eksponent)
-            else: return x
-        elif p >> T.OTVORENA:
-            u_zagradi = p.izraz()
+    def faktor(p) -> 'BROJ|izraz|X|Potencija':
+        if broj := p >= T.BROJ: return broj
+        elif p >= T.OTVORENA:
+            baza = p.izraz()
             p >> T.ZATVORENA
-            return u_zagradi
+        else: baza = p >> T.X
+        if eksponent := p >= T.BROJ: return Potencija(baza, eksponent)
+        else: return baza
 
 
 ### Apstraktna sintaksna stabla:
@@ -69,7 +69,7 @@ class P(Parser):
 #        Zbroj: lijevo:izraz desno:izraz
 #        Umnožak: lijevo:izraz desno:izraz
 #        Suprotan: od:izraz
-#        Xna: eksponent:BROJ
+#        Potencija: baza:izraz eksponent:BROJ
 
 class Zbroj(AST):
     lijevo: P.izraz
@@ -84,11 +84,13 @@ class Umnožak(AST):
 
 class Suprotan(AST):
     od: P.izraz
-    def prevedi(self): return -self.od.prevedi()
-    
-class Xna(AST):
+    def prevedi(suprotan): return -suprotan.od.prevedi()
+
+class Potencija(AST):
+    baza: P.izraz
     eksponent: T.BROJ
-    def prevedi(self): return Polinom.x(self.eksponent.vrijednost())
+    def prevedi(potencija):
+        return potencija.baza.prevedi() ** potencija.eksponent.vrijednost()
 
 
 def izračunaj(zadatak): print(zadatak, '=', P(zadatak).prevedi())
@@ -97,8 +99,8 @@ izračunaj('(5+2*8-3)(3-1)-(-4+2*19)')
 izračunaj('x-2+5x-(7x-5)')
 izračunaj('(((x-2)x+4)x-8)x+7')
 izračunaj('xx-2x+3')
-izračunaj('(x+1)' * 7)
+izračunaj('(x+1)7')
 izračunaj('-'.join(['(x2-2x3-(7x+5))'] * 2))
 izračunaj('x0+x0')
-with SintaksnaGreška: izračunaj('(x)x+(x)3')
+izračunaj('(x)x+(x)3')
 with LeksičkaGreška: izračunaj('x x')

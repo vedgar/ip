@@ -106,7 +106,7 @@ def ažuriraj(var, token_za_tip):
             if tip is pravi: raise var.redeklaracija()
             else: raise var.krivi_tip(tip, pravi)
         rt.symtab[var] = tip
-    return var.provjeri_tip()
+    return var.provjeri_tip()  # nedeklaracija (greška) ako nije već otprije
 
 class Program(AST):
     naredbe: 'naredba*'
