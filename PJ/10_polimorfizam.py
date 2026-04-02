@@ -67,7 +67,7 @@ class P(Parser):
     def element(p):
         if p >= T.UOTV: trenutni = Lista(p.elementi())
         else: trenutni = p >> {T.BROJ, T.STRING}
-        while p >= T.PLUS: trenutni = Skupa(trenutni, p.element())
+        if p >= T.PLUS: trenutni = Skupa(trenutni, p.element())
         return trenutni
 
     def elementi(p):
