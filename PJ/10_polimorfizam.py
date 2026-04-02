@@ -10,7 +10,7 @@ Unutar '...'-stringova \ nema nikakvo posebno značenje.
 
 Brojevi su samo prirodni (pozitivni).
 Implementiran je operator + koji zna zbrajati liste, stringove i brojeve.
-Operatori i rezultat su mu uvijek istog tipa (inače diže TypeError)."""
+Operandi i rezultat su mu uvijek istog tipa (inače diže TypeError)."""
 
 
 from vepar import *
