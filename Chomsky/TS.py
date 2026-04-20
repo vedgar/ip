@@ -47,6 +47,14 @@ class TuringovStroj(types.SimpleNamespace):
             if stanje == T.prihvat: break
             if (T.prijelaz[stanje, T.praznina] == (stanje, T.praznina, 1) and
                 pozicija == len(traka)): return
+            prvi = traka[0] if traka else T.praznina
+            if T.prijelaz[stanje, prvi] == (stanje, prvi, -1) and not pozicija:
+                return
         while traka and traka[~0] == T.praznina: del traka[~0]
         join_ok = all(type(znak) is str and len(znak) == 1 for znak in traka)
         return ''.join(traka) if join_ok else traka
+
+T = TuringovStroj.iz_tablice('''a   b   c   _
+                             q0 +   +   +   -L
+                             L  -   -   b. !''')
+print(T)

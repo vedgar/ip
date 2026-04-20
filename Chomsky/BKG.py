@@ -246,7 +246,7 @@ class BeskontekstnaGramatika(types.SimpleNamespace):
                 for B, C in širenja[A]:
                     if izvodi(B, i, k) and izvodi(C, k, j): return True
             return False
-        return izvodi(G.početna, 0, len(riječ))
+        return izvodi, izvodi(G.početna, 0, len(riječ))
 
     def ispiši_strelice(G):
         sažeta = collections.defaultdict(set, {G.početna: set()})

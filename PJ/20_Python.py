@@ -53,7 +53,7 @@ def source(string): print(string)
 
 if __name__ == '__main__':
     primjer = textwrap.dedent('''\
-        - (x := 2) * (y := 3)
+        for x in 2, 3: print(x)
     ''')  # slobodno eksperimentirajte!
     for funkcija in source, tokeni, stablo_parsiranja, \
                     apstablo, bytecode, izvršavanje:

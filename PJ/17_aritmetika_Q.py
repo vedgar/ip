@@ -99,13 +99,12 @@ class Op(AST):
 
 
 # Moramo staviti backslash na početak jer inače program počinje novim redom.
-ast = P('''\
+prikaz(ast := P('''\
     a = 3 / 7
     b = a + 3
     c = b - b
     b = a * -a
     d = a / (c + a)
     e = -3 / 3
-''')
-prikaz(ast)
+'''))
 for ime, vrijednost in ast.izvrši(): print(ime.sadržaj, vrijednost, sep='=')

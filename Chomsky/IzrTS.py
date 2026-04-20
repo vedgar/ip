@@ -609,3 +609,36 @@ def Markušić():
                                            F _-G  !   !
                                            G  -   -   +H
                                            H _+B  +C  !'''))
+
+binarni_inkrement = TuringovStroj.iz_tablice('''0   1   _   x
+                                             A 1+B x-   !  1+C
+                                             B  !   !   -A 0+
+                                             C  !   !  0+B 0+ ''')
+
+def broji_korake_binarnog_brojenja():
+    for i, konfiguracija in enumerate(binarni_inkrement.izračunavanje('0')):
+        stanje, pozicija, traka = konfiguracija
+        if stanje == 'A' and 'x' not in traka:
+            broj = int(''.join(traka).rstrip('_'), 2)
+            print(broj * 4 - i - 2 >> 1, end='')
+            # prikaz(*konfiguracija)
+
+@doit
+def Kumar952():
+    T = TuringovStroj.iz_tablice('''1   2   3   _
+                                 A _+B  !   !   +
+                                 B  +  _+C  !   +
+                                 C  !   +  _+D  +
+                                 D  !   !   -E  .
+                                 E  -F  -   !   -
+                                 F  -   !   !   +A''')
+    for duljina in range(9):
+        for riječ in product(T.abeceda, repeat=duljina):
+            if T.prihvaća(riječ) and ''.join(riječ) != ''.join(
+                    znak * riječ.count(znak) for znak in sorted(T.abeceda)):
+                print(riječ)
+        print(end=':')
+    for i, j, k in product(range(9), repeat=3):
+        if T.prihvaća('1'*i + '2'*j + '3'*k) != (0 < k <= min(i, j)):
+            print(i, j, k, sep='+', end='\t')
+        print(end='.')
