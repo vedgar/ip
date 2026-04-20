@@ -10,7 +10,7 @@ Unutar '...'-stringova \ nema nikakvo posebno značenje.
 
 Brojevi su samo prirodni (pozitivni).
 Implementiran je operator + koji zna zbrajati liste, stringove i brojeve.
-Operatori i rezultat su mu uvijek istog tipa (inače diže TypeError)."""
+Operandi i rezultat su mu uvijek istog tipa (inače diže TypeError)."""
 
 
 from vepar import *
@@ -67,7 +67,7 @@ class P(Parser):
     def element(p):
         if p >= T.UOTV: trenutni = Lista(p.elementi())
         else: trenutni = p >> {T.BROJ, T.STRING}
-        while p >= T.PLUS: trenutni = Skupa(trenutni, p.element())
+        if p >= T.PLUS: trenutni = Skupa(trenutni, p.element())
         return trenutni
 
     def elementi(p):

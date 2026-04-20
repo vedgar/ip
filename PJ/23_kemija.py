@@ -87,9 +87,6 @@ class Skupina(AST):
         return m
 
 print(spoj('H2O').Mr())
-raise SystemExit
-
-
 natrijev_trikarbonatokobaltat = spoj('Na3[Co(CO3)3]')
 prikaz(natrijev_trikarbonatokobaltat)
 print(natrijev_trikarbonatokobaltat.Mr())
