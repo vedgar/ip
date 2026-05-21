@@ -10,13 +10,15 @@ class Λ(TipoviTokena):
     class SLOVO(Token):
         def slobodne(t): return {t}
 
+lambde = {'λ', '^'}
+
 @lexer
 def λex(l):
     for znak in l:
         if znak.isspace(): l.zanemari()
-        elif znak in {'λ', '^'}:
+        elif znak in lambde:
             yield l.token(Λ.LAMBDA)
-            if (l >> str.isalpha) == 'λ': raise lex.greška('λ nije slovo!')
+            if (l >> {str.isalpha, '^'}) in lambde: raise l.greška('λ nije slovo!')
             yield l.token(Λ.SLOVO)
         elif znak.isalpha(): yield l.token(Λ.SLOVO)
         else: yield l.literal(Λ)

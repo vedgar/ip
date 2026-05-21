@@ -212,8 +212,10 @@ class Tokenizer:
     
     def nužno(self, uvjet):
         """Čita zadani znak, ili prijavljuje leksičku grešku."""
-        if not paše(self.čitaj(), uvjet):
+        znak = self.čitaj()
+        if not paše(znak, uvjet):
             raise self.greška(f"očekivano {' ili '.join(raspis(uvjet))}")
+        return znak
 
     def pročitaj_do(self, uvjet, *, uključivo=True, više_redova=False):
         """Čita sve znakove do ispunjenja uvjeta."""
