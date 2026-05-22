@@ -11,9 +11,7 @@ class T(TipoviTokena):
 
     class N(Token):
         literal = 'n'
-        def vrijednost(t): 
-            try: return rt.n
-            except AttributeError: raise t.nedeklaracija('n nije naveden')
+        def vrijednost(t): return rt.tablica[t]
 
     class ATOM(Token):
         def masa(t): return rt.tablica[t]
@@ -25,8 +23,7 @@ class T(TipoviTokena):
 def kemija(lex):
     može_n = False
     for znak in lex:
-        if znak == ' ': lex.zanemari()
-        elif znak == 'n':
+        if znak == 'n':
             if može_n: yield lex.token(T.N)
             else: raise lex.greška('n ne može doći ovdje')
         elif znak.isdecimal():
@@ -72,8 +69,6 @@ class Formula(AST):
         return sum(skupina.ukupno() for skupina in spoj.skupine)
 
     def Mr(spoj, **mase):
-        del rt.n
-        if 'n' in mase: rt.n = mase.pop('n')
         rt.tablica = Memorija(referentne_atomske_mase | mase)
         return spoj.masa()
 
@@ -94,4 +89,4 @@ for krivo in 'SnABcdefG', 'Es(n)':
     with LeksičkaGreška: kemija(krivo)
     print()
 kemija(']nB')
-print('Molarna masa butana je', spoj('CH3(CH2)2 CH3').Mr())
+print('Molarna masa butana je', spoj('CH3(CH2)2CH3').Mr())
