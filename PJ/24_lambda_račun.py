@@ -5,7 +5,7 @@ https://web.math.pmf.unizg.hr/~veky/B/IP.k2.19-06-28.pdf"""
 from vepar import *
 
 
-class Λ(TipoviTokena):
+class T(TipoviTokena):
     LAMBDA, TOČKA, OTV, ZATV = 'λ.()'
     class SLOVO(Token):
         def slobodne(t): return {t}
@@ -17,11 +17,11 @@ def λex(l):
     for znak in l:
         if znak.isspace(): l.zanemari()
         elif znak in lambde:
-            yield l.token(Λ.LAMBDA)
-            if (l >> {str.isalpha, '^'}) in lambde: raise l.greška('λ nije slovo!')
-            yield l.token(Λ.SLOVO)
-        elif znak.isalpha(): yield l.token(Λ.SLOVO)
-        else: yield l.literal(Λ)
+            yield l.token(T.LAMBDA)
+            if l > lambde: raise l.greška('λ nije slovo!')
+            elif l > str.isspace: raise l.greška('nedopušten razmak između lambde i vezanog slova')
+        elif znak.isalpha(): yield l.token(T.SLOVO)
+        else: yield l.literal(T)
 
 ### Beskontekstna gramatika:
 # izraz -> član | LAMBDA slova TOČKA izraz
@@ -31,26 +31,26 @@ def λex(l):
 
 # Oneliner BKG: start -> (LAMBDA SLOVO+ TOČKA)* (OTV start ZATV | SLOVO)+
 
-class λ(Parser):
+class P(Parser):
     def izraz(p) -> 'aps|član':
-        if p >= Λ.LAMBDA: return p.aps()
+        if p >= T.LAMBDA: return p.aps()
         return p.član()
 
     def aps(p) -> 'izraz|Apstrakcija':
-        if p >= Λ.TOČKA: return p.izraz()
-        return Apstrakcija(p >> Λ.SLOVO, p.aps())
+        if p >= T.TOČKA: return p.izraz()
+        return Apstrakcija(p >> T.SLOVO, p.aps())
 
     def član(p) -> 'faktor|Aplikacija':
         f = p.faktor()
-        while p > {Λ.OTV, Λ.SLOVO}: f = Aplikacija(f, p.faktor())
+        while p > {T.OTV, T.SLOVO}: f = Aplikacija(f, p.faktor())
         return f
 
     def faktor(p) -> 'izraz|SLOVO':
-        if p >= Λ.OTV:
+        if p >= T.OTV:
             u_zagradi = p.izraz()
-            p >> Λ.ZATV
+            p >> T.ZATV
             return u_zagradi
-        else: return p >> Λ.SLOVO
+        else: return p >> T.SLOVO
 
 
 ### Apstraktna sintaksna stabla
@@ -71,10 +71,10 @@ class Aplikacija(AST):
         return aplikacija.funkcija.slobodne() | aplikacija.argument.slobodne()
 
 
-def kombinator(l): return not λ(l).slobodne()
+def kombinator(l): return not P(l).slobodne()
 
-prikaz(λ('(^x.xx)(^x.xx)'), 3)
-print(λ('^xy.x') == λ('^x.^y.x'))
+prikaz(P('(^x.xx)(^x.xx)'), 3)
+print(P('^xy.x') == P('^x.^y.x'))
 print(kombinator('(^yx.(x))x'))
-with SintaksnaGreška: λ('^x.x^y.y')
-with LeksičkaGreška: λ('λ x.x')
+with SintaksnaGreška: P('^x.x^y.y')
+with LeksičkaGreška: P('λ x.x')
